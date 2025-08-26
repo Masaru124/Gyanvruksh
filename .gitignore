@@ -1,0 +1,8 @@
+.env
+.vscode/
+.idea/
+*.iml
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
