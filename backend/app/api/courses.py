@@ -11,8 +11,8 @@ router = APIRouter(prefix="/api/courses", tags=["courses"])
 
 @router.post("/", response_model=CourseOut, status_code=201)
 def create_course(payload: CourseCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    if not user.is_teacher:
-        raise HTTPException(status_code=403, detail="Only teachers can create courses")
+    if not user.is_teacher and user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only teachers and admins can create courses")
     c = Course(title=payload.title, description=payload.description, teacher_id=user.id)
     db.add(c)
     db.commit()

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:educonnect/services/api.dart';
-import 'package:educonnect/screens/register.dart';
+import 'package:educonnect/screens/role_selection.dart';
 import 'package:educonnect/screens/dashboard.dart';
+import 'package:educonnect/screens/admin_dashboard.dart';
+import 'package:educonnect/screens/navigation.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,7 +23,10 @@ class _LoginScreenState extends State<LoginScreen> {
       final ok = await ApiService().login(emailCtrl.text, passCtrl.text);
       if (!mounted) return;
       if (ok) {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const DashboardScreen()));
+        final me = ApiService().me();
+        if (me != null) {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => NavigationScreen(user: me)));
+        }
       } else {
         setState(() { error = "Invalid credentials"; });
       }
@@ -48,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 8),
             ElevatedButton(onPressed: loading ? null : _login, child: loading ? const CircularProgressIndicator() : const Text('Login')),
             const SizedBox(height: 12),
-            TextButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RegisterScreen())), child: const Text('Create account'))
+            TextButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RoleSelectionScreen())), child: const Text('Create account'))
           ],
         ),
       ),
