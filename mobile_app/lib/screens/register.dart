@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:educonnect/services/api.dart';
-import 'package:educonnect/screens/dashboard.dart';
+import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/screens/dashboard.dart';
 
 class RegisterScreen extends StatefulWidget {
   final String role;

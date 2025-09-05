@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:educonnect/services/api.dart';
-import 'package:educonnect/screens/role_selection.dart';
-import 'package:educonnect/screens/navigation.dart';
+import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/screens/role_selection.dart';
+import 'package:gyanvruksh/screens/navigation.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,22 +16,32 @@ class _LoginScreenState extends State<LoginScreen> {
   String? error;
 
   void _login() async {
-    setState(() { loading = true; error = null; });
+    setState(() {
+      loading = true;
+      error = null;
+    });
     try {
       final ok = await ApiService().login(emailCtrl.text, passCtrl.text);
       if (!mounted) return;
       if (ok) {
         final me = ApiService().me();
         if (me != null) {
-          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => NavigationScreen(user: me)));
+          Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => NavigationScreen(user: me)));
         }
       } else {
-        setState(() { error = "Invalid credentials"; });
+        setState(() {
+          error = "Invalid credentials";
+        });
       }
     } catch (e) {
-      setState(() { error = e.toString(); });
+      setState(() {
+        error = e.toString();
+      });
     } finally {
-      setState(() { loading = false; });
+      setState(() {
+        loading = false;
+      });
     }
   }
 
@@ -51,18 +61,18 @@ class _LoginScreenState extends State<LoginScreen> {
               Icon(Icons.school, size: 80, color: colorScheme.primary),
               const SizedBox(height: 16),
               Text(
-                'EduConnect',
+                'Gyanvruksh',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Empowering Education',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.7),
-                ),
+                      color: colorScheme.onSurface.withOpacity(0.7),
+                    ),
               ),
               const SizedBox(height: 40),
               // Email Field
@@ -101,7 +111,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: () {
                     // TODO: Implement forgot password
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Forgot password feature coming soon!')),
+                      const SnackBar(
+                          content:
+                              Text('Forgot password feature coming soon!')),
                     );
                   },
                   child: Text(
@@ -145,7 +157,8 @@ class _LoginScreenState extends State<LoginScreen> {
               // Create Account
               TextButton(
                 onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
+                  MaterialPageRoute(
+                      builder: (_) => const RoleSelectionScreen()),
                 ),
                 child: Text(
                   'Create Account',

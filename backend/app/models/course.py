@@ -10,4 +10,5 @@ class Course(Base):
     title: Mapped[str] = mapped_column(String(255), index=True)
     description: Mapped[str] = mapped_column(Text)
     teacher_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
+    total_hours: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

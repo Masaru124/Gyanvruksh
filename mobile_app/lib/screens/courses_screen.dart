@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:educonnect/services/api.dart';
+import 'package:gyanvruksh/services/api.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});

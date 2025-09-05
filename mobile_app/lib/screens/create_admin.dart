@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:educonnect/services/api.dart';
+import 'package:gyanvruksh/services/api.dart';
 
 class CreateAdminScreen extends StatefulWidget {
   const CreateAdminScreen({super.key});

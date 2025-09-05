@@ -1,0 +1,5 @@
+flutter_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/Gyanvruksh_ Tree of Knowledge Logo .png"
+  remove_alpha_ios: true

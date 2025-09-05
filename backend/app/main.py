@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, courses
+from app.api import auth, courses, gyanvruksh
 
-app = FastAPI(title="EduConnect API", version="0.1.0")
+app = FastAPI(title="Gyanvruksh API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,6 +14,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(courses.router)
+app.include_router(gyanvruksh.router)
 
 @app.get("/healthz")
 def health():

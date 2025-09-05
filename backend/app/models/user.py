@@ -31,4 +31,5 @@ class User(Base):
     company_details: Mapped[str] = mapped_column(String(255), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_teacher: Mapped[bool] = mapped_column(Boolean, default=False)  # Keep for backward compatibility
+    gyan_coins: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

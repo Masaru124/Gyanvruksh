@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:educonnect/services/api.dart';
+import 'package:gyanvruksh/services/api.dart';
 
 class ManageUsersScreen extends StatefulWidget {
   const ManageUsersScreen({super.key});

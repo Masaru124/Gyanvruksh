@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:educonnect/services/api.dart';
-import 'package:educonnect/screens/login.dart';
+import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/screens/login.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -34,7 +34,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         error = null;
       });
 
-      final user = ApiService().me();
+      final user = await ApiService().getProfile();
       if (user != null) {
         setState(() {
           userData = user;
@@ -234,6 +234,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           value: userData!['educational_qualification'],
                           icon: Icons.school,
                         ),
+
+                      const SizedBox(height: 12),
+
+                      _buildInfoCard(
+                        title: 'Gyan Coins',
+                        value: userData?['gyan_coins']?.toString() ?? '0',
+                        icon: Icons.monetization_on,
+                      ),
 
                       const SizedBox(height: 24),
 

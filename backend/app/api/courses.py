@@ -20,7 +20,7 @@ def create_course(payload: CourseCreate, db: Session = Depends(get_db), user: Us
     # Admin-created courses should have teacher_id = None so teachers can choose to teach them
     teacher_id = None if user.role == "admin" else user.id
 
-    c = Course(title=payload.title, description=payload.description, teacher_id=teacher_id)
+    c = Course(title=payload.title, description=payload.description, teacher_id=teacher_id, total_hours=payload.total_hours)
     db.add(c)
     db.commit()
     db.refresh(c)
@@ -210,5 +210,35 @@ def get_course_details(course_id: int, db: Session = Depends(get_db)):
         teacher_id=course.teacher_id,
         teacher_name=teacher_name,
         enrolled_students_count=enrolled_count,
+        total_hours=course.total_hours,
         created_at=course.created_at
     )
+
+@router.put("/enrollment/{enrollment_id}/hours")
+def update_hours_completed(enrollment_id: int, hours: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Update hours completed for a student's enrollment and award gyan coins"""
+    if user.role != "service_seeker" or user.sub_role != "student":
+        raise HTTPException(status_code=403, detail="Only students can update hours")
+
+    enrollment = db.query(Enrollment).filter(
+        Enrollment.id == enrollment_id,
+        Enrollment.student_id == user.id
+    ).first()
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="Enrollment not found")
+
+    # Calculate new coins to award
+    previous_hours = enrollment.hours_completed
+    new_hours = hours
+    hours_added = new_hours - previous_hours
+    coins_to_award = hours_added // 10  # 1 coin per 10 hours
+
+    if coins_to_award > 0:
+        user.gyan_coins += coins_to_award
+        db.commit()
+
+    enrollment.hours_completed = new_hours
+    db.commit()
+    db.refresh(enrollment)
+
+    return {"message": f"Hours updated. Awarded {coins_to_award} gyan coins.", "hours_completed": enrollment.hours_completed}

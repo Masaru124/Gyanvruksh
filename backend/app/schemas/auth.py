@@ -180,5 +180,6 @@ class UserOut(BaseModel):
     seller_record: Optional[str]
     company_details: Optional[str]
     is_teacher: bool
+    gyan_coins: int
 
     model_config = {"from_attributes": True}

@@ -1,4 +1,4 @@
-package com.example.educonnect
+package com.example.gyanvruksh
 
 import io.flutter.embedding.android.FlutterActivity
 

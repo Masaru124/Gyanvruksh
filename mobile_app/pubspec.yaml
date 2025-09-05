@@ -1,5 +1,5 @@
-name: educonnect
-description: EduConnect MVP Flutter app
+name: gyanvruksh
+description: Gyanvruksh MVP Flutter app
 publish_to: "none"
 version: 0.1.0+1
 
@@ -12,6 +12,7 @@ dependencies:
   http: ^1.2.2
   google_fonts: ^6.1.0
   fl_chart: ^0.66.2
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:

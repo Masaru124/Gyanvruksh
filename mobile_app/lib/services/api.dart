@@ -272,6 +272,26 @@ class ApiService {
     return null;
   }
 
+  Future<List<dynamic>> getLeaderboard() async {
+    if (_token == null) return [];
+    final res = await http.get(Uri.parse('$baseUrl/api/gyanvruksh/leaderboard'),
+        headers: {'Authorization': 'Bearer $_token'});
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  Future<Map<String, dynamic>?> getProfile() async {
+    if (_token == null) return null;
+    final res = await http.get(Uri.parse('$baseUrl/api/gyanvruksh/profile'),
+        headers: {'Authorization': 'Bearer $_token'});
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
   // Profile update API method
   Future<bool> updateProfile({
     String? fullName,

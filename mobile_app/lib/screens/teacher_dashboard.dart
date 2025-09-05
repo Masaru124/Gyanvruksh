@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:educonnect/services/api.dart';
-import 'package:educonnect/screens/courses_screen.dart';
-import 'package:educonnect/screens/messages_screen.dart';
-import 'package:educonnect/screens/profile_screen.dart';
+import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/screens/courses_screen.dart';
+import 'package:gyanvruksh/screens/messages_screen.dart';
+import 'package:gyanvruksh/screens/profile_screen.dart';
 
 class TeacherDashboard extends StatefulWidget {
   const TeacherDashboard({super.key});

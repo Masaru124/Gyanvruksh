@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:educonnect/screens/login.dart';
+import 'package:gyanvruksh/screens/login.dart';
 
 void main() {
-  runApp(const EduConnectApp());
+  runApp(const GyanvrukshApp());
 }
 
-class EduConnectApp extends StatelessWidget {
-  const EduConnectApp({super.key});
+class GyanvrukshApp extends StatelessWidget {
+  const GyanvrukshApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'EduConnect',
+      title: 'Gyanvruksh',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: const ColorScheme.light(
