@@ -1,6 +1,9 @@
+import sys
+sys.path.append('..')
 from app.database import Base, engine, SessionLocal
 from app.models.user import User
 from app.models.course import Course
+from app.models.enrollment import Enrollment
 from app.services.security import hash_password
 
 def init():
@@ -33,8 +36,55 @@ def init():
             db.add(admin_user)
             db.commit()
             print("✅ Default admin user created")
+
+        # Create default teacher user for testing
+        teacher_email = "teacher@example.com"
+        teacher_password = "teacher123"
+        existing_teacher = db.query(User).filter(User.email == teacher_email).first()
+        if existing_teacher:
+            print("⚠️ Default teacher user already exists")
+        else:
+            teacher_user = User(
+                email=teacher_email,
+                full_name="Default Teacher",
+                hashed_password=hash_password(teacher_password),
+                age=35,
+                gender="Other",
+                role="service_provider",
+                sub_role="teacher",
+                educational_qualification="Master's in Education",
+                preferred_language="English",
+                is_teacher=True
+            )
+            db.add(teacher_user)
+            db.commit()
+            print("✅ Default teacher user created")
+
+        # Create default student user for testing
+        student_email = "student@example.com"
+        student_password = "student123"
+        existing_student = db.query(User).filter(User.email == student_email).first()
+        if existing_student:
+            print("⚠️ Default student user already exists")
+        else:
+            student_user = User(
+                email=student_email,
+                full_name="Default Student",
+                hashed_password=hash_password(student_password),
+                age=20,
+                gender="Other",
+                role="service_seeker",
+                sub_role="student",
+                educational_qualification="Bachelor's in Computer Science",
+                preferred_language="English",
+                is_teacher=False
+            )
+            db.add(student_user)
+            db.commit()
+            print("✅ Default student user created")
+
     except Exception as e:
-        print(f"❌ Error creating default admin: {e}")
+        print(f"❌ Error creating default users: {e}")
     finally:
         db.close()
 

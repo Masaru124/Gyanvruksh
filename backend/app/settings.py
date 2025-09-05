@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     
     # Neon PostgreSQL Database URL
     # Format: postgresql://username:password@host:port/database?options
-    DATABASE_URL: str = ""
+    DATABASE_URL: str = "sqlite:///./educonnect.db"
 
     model_config = {"env_file": ".env", "case_sensitive": False}
 

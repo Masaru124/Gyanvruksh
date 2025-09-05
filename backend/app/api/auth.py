@@ -25,6 +25,20 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
         sub_role=payload.sub_role,
         educational_qualification=payload.educational_qualification,
         preferred_language=payload.preferred_language,
+        phone_number=payload.phone_number,
+        address=payload.address,
+        emergency_contact=payload.emergency_contact,
+        aadhar_card=payload.aadhar_card,
+        account_details=payload.account_details,
+        dob=payload.dob,
+        marital_status=payload.marital_status,
+        year_of_experience=payload.year_of_experience,
+        parents_contact_details=payload.parents_contact_details,
+        parents_email=payload.parents_email,
+        seller_type=payload.seller_type,
+        company_id=payload.company_id,
+        seller_record=payload.seller_record,
+        company_details=payload.company_details,
         is_teacher=payload.is_teacher
     )
     db.add(user)
@@ -98,3 +112,25 @@ def delete_user(user_id: int, db: Session = Depends(get_db), user: User = Depend
     db.delete(db_user)
     db.commit()
     return {"message": "User deleted successfully"}
+
+@router.post("/logout")
+def logout(user: User = Depends(get_current_user)):
+    # For JWT tokens, logout is handled client-side by clearing the token
+    # In a production app, you might want to implement token blacklisting
+    return {"message": "Logged out successfully"}
+
+@router.put("/me", response_model=UserOut)
+def update_profile(payload: UserCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Update current user's profile"""
+    # Update user fields
+    for key, value in payload.model_dump(exclude_unset=True).items():
+        if key == "password":
+            # Hash password if being updated
+            from app.services.security import hash_password
+            setattr(user, "hashed_password", hash_password(value))
+        elif key != "email":  # Don't allow email updates for security
+            setattr(user, key, value)
+
+    db.commit()
+    db.refresh(user)
+    return user

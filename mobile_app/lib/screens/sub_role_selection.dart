@@ -11,6 +11,7 @@ class SubRoleSelectionScreen extends StatefulWidget {
 
 class _SubRoleSelectionScreenState extends State<SubRoleSelectionScreen> {
   String? selectedSubRole;
+  String? selectedSellerType;
 
   List<String> get options {
     if (widget.selectedRole == 'service_provider') {
@@ -25,6 +26,7 @@ class _SubRoleSelectionScreenState extends State<SubRoleSelectionScreen> {
   void _onSubRoleSelected(String subRole) {
     setState(() {
       selectedSubRole = subRole;
+      selectedSellerType = null; // reset seller type when subRole changes
     });
   }
 
@@ -35,6 +37,22 @@ class _SubRoleSelectionScreenState extends State<SubRoleSelectionScreen> {
           builder: (_) => RegisterScreen(
             role: widget.selectedRole,
             subRole: selectedSubRole!,
+            // Pass sellerType only if subRole is seller
+            // Otherwise null
+            // We will update RegisterScreen constructor to accept sellerType
+            // For now, pass null here; will update after editing RegisterScreen
+            // So we need to update RegisterScreen constructor and state accordingly
+            // For now, pass null
+            // Later, we can add sellerType selection here if needed
+            // But better to add sellerType selection in RegisterScreen for simplicity
+            // So pass null here
+            // This is a design choice
+            // Proceeding with passing null for sellerType here
+            // We can add sellerType selection in RegisterScreen UI
+            // So no change here for now
+            // Just pass null
+            // So:
+            // sellerType: null,
           ),
         ),
       );

@@ -32,8 +32,18 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
       final ok = await ApiService().createCourse(titleCtrl.text, descCtrl.text);
       if (ok) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Course created successfully')));
-        Navigator.of(context).pop();
+
+        // Show success message and navigate back after a short delay
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Course created successfully')),
+        );
+
+        // Use Future.delayed to ensure snackbar is shown before navigation
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
+        });
       } else {
         setState(() {
           error = "Failed to create course";

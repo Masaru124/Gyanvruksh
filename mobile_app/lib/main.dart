@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:educonnect/screens/login.dart';
 
 void main() {
@@ -12,8 +13,31 @@ class EduConnectApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'EduConnect',
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.indigo),
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF3C6EFA), // Blue
+          secondary: Color(0xFFA58DF5), // Purple
+          tertiary: Color(0xFF26A69A), // Teal
+          surface: Colors.white, // Soft gray background
+          onPrimary: Colors.white,
+          onSecondary: Colors.white,
+          onSurface: Colors.black,
+        ),
+        textTheme: GoogleFonts.poppinsTextTheme(),
+        cardTheme: CardThemeData(
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+        ),
+      ),
       home: const LoginScreen(),
+      // For quick testing, you can set home: const DashboardScreen(),
     );
   }
 }

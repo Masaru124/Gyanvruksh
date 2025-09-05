@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:educonnect/screens/admin_dashboard.dart';
 import 'package:educonnect/screens/dashboard.dart';
+import 'package:educonnect/screens/teacher_dashboard.dart';
 import 'package:educonnect/screens/create_course.dart';
 import 'package:educonnect/screens/create_admin.dart';
 import 'package:educonnect/screens/manage_users.dart';
+import 'package:educonnect/screens/courses_screen.dart';
 
 class NavigationScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -25,6 +27,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
     super.initState();
     _studentPages = <Widget>[
       const DashboardScreen(),
+      const CoursesScreen(), // Added CoursesScreen to student pages
       // Add other student pages here
     ];
     _adminPages = <Widget>[
@@ -46,6 +49,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
     final rawRole = widget.user['role'] ?? '';
     final role = rawRole.toString().trim().toLowerCase();
     final isAdmin = role == 'admin';
+    final isTeacher = role == 'service_provider' || widget.user['is_teacher'] == true;
+
+    // If teacher, show teacher dashboard directly
+    if (isTeacher) {
+      return const TeacherDashboard();
+    }
 
     final pages = isAdmin ? _adminPages : _studentPages;
 
@@ -68,6 +77,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
               ]
             : const <BottomNavigationBarItem>[
                 BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+                BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Courses'),
                 // Add other student navigation items here
               ],
         currentIndex: _selectedIndex,

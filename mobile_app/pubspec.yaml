@@ -10,6 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.2.2
+  google_fonts: ^6.1.0
+  fl_chart: ^0.66.2
 
 dev_dependencies:
   flutter_test:
