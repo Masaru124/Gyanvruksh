@@ -2,11 +2,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  // For Android emulator: use 'http://10.0.2.2:8000'
-  // For iOS simulator: use 'http://localhost:8000'
-  // For physical device: use your computer's local IP address (e.g., 'http://192.168.1.100:8000')
+  // Hosted API URL
   static String baseUrl = const String.fromEnvironment('API_BASE_URL',
-      defaultValue: 'http://192.168.29.96:8000');
+      defaultValue: 'https://gyanvruksh.onrender.com');
 
   static String? _token;
   static Map<String, dynamic>? _me;

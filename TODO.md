@@ -1,4 +1,6 @@
-- [ ] Clean the outdated Windows build files in mobile_app/build/windows/x64/
-- [ ] Regenerate CMake build files for Windows
-- [ ] Update Android applicationId from "com.example.educonnect" to "com.example.gyanvruksh" for consistency
-- [ ] Test the Windows build to ensure the CMake error is resolved
+- [x] Add imports for asynccontextmanager, asyncio, httpx, and database Base/engine to backend/app/main.py
+- [x] Add APP_URL and PING_INTERVAL constants to backend/app/main.py
+- [x] Define the lifespan asynccontextmanager function with startup and shutdown logic in backend/app/main.py
+- [x] Update FastAPI app initialization to use lifespan parameter in backend/app/main.py
+- [x] Test the app startup and verify self-ping functionality
+- [x] Update mobile app API base URL to hosted URL
