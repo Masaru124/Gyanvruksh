@@ -1,3 +1,3 @@
-# educonnect
+# Gyanvruksh
 
 A new Flutter project.

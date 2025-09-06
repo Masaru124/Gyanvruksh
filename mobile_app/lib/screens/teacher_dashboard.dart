@@ -582,6 +582,111 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     );
   }
 
+  void _showNotifications() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Notifications',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2E3A59),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Sample notifications - in a real app, these would come from an API
+              _buildNotificationItem(
+                'New student enrolled',
+                'Alice Johnson joined your Mathematics class',
+                '2 hours ago',
+                Icons.person_add,
+              ),
+              _buildNotificationItem(
+                'Assignment submitted',
+                'Bob Smith submitted Physics assignment',
+                '4 hours ago',
+                Icons.assignment_turned_in,
+              ),
+              _buildNotificationItem(
+                'Class reminder',
+                'English class starts in 30 minutes',
+                '30 min ago',
+                Icons.schedule,
+              ),
+              _buildNotificationItem(
+                'Query received',
+                'Carol Davis asked a question about homework',
+                '1 day ago',
+                Icons.question_answer,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildNotificationItem(String title, String message, String time, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF667EEA).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: const Color(0xFF667EEA),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2E3A59),
+                  ),
+                ),
+                Text(
+                  message,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+                Text(
+                  time,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -601,9 +706,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
-            onPressed: () {
-              // TODO: Implement notifications
-            },
+            onPressed: _showNotifications,
           ),
         ],
       ),

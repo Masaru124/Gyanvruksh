@@ -65,7 +65,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
         availableCourses = courseList;
         isLoadingAvailable = false;
       });
-        } catch (e) {
+    } catch (e) {
       setState(() {
         availableError = e.toString();
         isLoadingAvailable = false;
@@ -96,6 +96,15 @@ class _CoursesScreenState extends State<CoursesScreen> {
     } finally {
       setState(() => isEnrolling = false);
     }
+  }
+
+  void _navigateToCourseDetails(dynamic course) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CourseDetailsScreen(course: course),
+      ),
+    );
   }
 
   @override
@@ -184,10 +193,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                   ),
                                   trailing: const Icon(Icons.arrow_forward_ios),
                                   onTap: () {
-                                    // TODO: Navigate to course details
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Course: ${course['title']}')),
-                                    );
+                                    _navigateToCourseDetails(course);
                                   },
                                 ),
                               );
@@ -277,6 +283,195 @@ class _CoursesScreenState extends State<CoursesScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class CourseDetailsScreen extends StatelessWidget {
+  final dynamic course;
+
+  const CourseDetailsScreen({super.key, required this.course});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(course['title'] ?? 'Course Details'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Course header
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Colors.white.withOpacity(0.2),
+                        child: const Icon(
+                          Icons.book,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          course['title'] ?? 'Untitled Course',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    course['description'] ?? 'No description available',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Course details
+            const Text(
+              'Course Information',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2E3A59),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Course details cards
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _buildDetailRow('Course ID', course['id']?.toString() ?? 'N/A'),
+                    const Divider(),
+                    _buildDetailRow('Subject', course['subject'] ?? 'Not specified'),
+                    const Divider(),
+                    _buildDetailRow('Grade Level', course['grade_level'] ?? 'Not specified'),
+                    const Divider(),
+                    _buildDetailRow('Duration', course['duration'] ?? 'Not specified'),
+                    const Divider(),
+                    _buildDetailRow('Credits', course['credits']?.toString() ?? 'Not specified'),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Additional information
+            if (course['prerequisites'] != null && course['prerequisites'].isNotEmpty)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Prerequisites',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2E3A59),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        course['prerequisites'],
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 24),
+
+            // Learning objectives
+            if (course['objectives'] != null && course['objectives'].isNotEmpty)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Learning Objectives',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2E3A59),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        course['objectives'],
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF2E3A59),
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            color: Colors.black87,
+          ),
+        ),
+      ],
     );
   }
 }

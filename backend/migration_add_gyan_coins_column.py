@@ -14,6 +14,18 @@ def run_migration():
     """Run the migration to add gyan_coins column"""
     try:
         with engine.connect() as conn:
+            # Check if column already exists
+            check_query = text("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'users' AND column_name = 'gyan_coins';
+            """)
+            result = conn.execute(check_query).fetchone()
+
+            if result:
+                print("✅ Column 'gyan_coins' already exists in users table. Skipping migration.")
+                return True
+
             # Add the gyan_coins column with default 0
             alter_query = text("""
             ALTER TABLE users

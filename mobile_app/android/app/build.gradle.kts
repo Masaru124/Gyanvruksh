@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.educonnect"
+    namespace = "com.example.gyanvruksh"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
