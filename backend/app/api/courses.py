@@ -5,6 +5,8 @@ from app.database import get_db
 from app.models.course import Course
 from app.models.user import User
 from app.models.enrollment import Enrollment
+from app.models.course_video import CourseVideo
+from app.models.course_note import CourseNote
 from app.schemas.course import CourseCreate, CourseOut, EnrollmentCreate, EnrollmentOut, CourseDetailOut
 from app.services.deps import get_current_user
 from typing import List
@@ -43,23 +45,8 @@ def available_courses(db: Session = Depends(get_db), user: User = Depends(get_cu
         raise HTTPException(status_code=403, detail="Only teachers can view available courses")
     return db.query(Course).filter(Course.teacher_id.is_(None)).order_by(Course.id.desc()).all()
 
-@router.post("/{course_id}/select", response_model=CourseOut)
-def select_course(course_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    """Allow teacher to select/assign themselves to a course"""
-    if not user.is_teacher and user.role != "service_provider":
-        raise HTTPException(status_code=403, detail="Only teachers can select courses")
-
-    course = db.query(Course).filter(Course.id == course_id).first()
-    if not course:
-        raise HTTPException(status_code=404, detail="Course not found")
-
-    if course.teacher_id is not None:
-        raise HTTPException(status_code=400, detail="Course is already assigned to another teacher")
-
-    course.teacher_id = user.id
-    db.commit()
-    db.refresh(course)
-    return course
+# Teachers cannot self-enroll - only admins can assign teachers
+# Removed select_course endpoint to prevent self-enrollment
 
 @router.get("/teacher/stats")
 def teacher_stats(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
@@ -242,3 +229,68 @@ def update_hours_completed(enrollment_id: int, hours: int, db: Session = Depends
     db.refresh(enrollment)
 
     return {"message": f"Hours updated. Awarded {coins_to_award} gyan coins.", "hours_completed": enrollment.hours_completed}
+
+# Admin-only endpoints for course management
+
+@router.post("/admin/{course_id}/assign-teacher")
+def assign_teacher_to_course(course_id: int, teacher_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Admin assigns a teacher to a course"""
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can assign teachers to courses")
+
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    teacher = db.query(User).filter(User.id == teacher_id, User.is_teacher == True).first()
+    if not teacher:
+        raise HTTPException(status_code=404, detail="Teacher not found")
+
+    course.teacher_id = teacher_id
+    db.commit()
+    db.refresh(course)
+    return {"message": f"Teacher {teacher.full_name} assigned to course {course.title}"}
+
+@router.post("/admin/{course_id}/upload-video")
+def upload_course_video(course_id: int, title: str, url: str, description: str = None, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Admin uploads a video to a course"""
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can upload videos to courses")
+
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    video = CourseVideo(course_id=course_id, title=title, url=url, description=description)
+    db.add(video)
+    db.commit()
+    db.refresh(video)
+    return {"message": "Video uploaded successfully", "video_id": video.id}
+
+@router.post("/admin/{course_id}/upload-note")
+def upload_course_note(course_id: int, title: str, content: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Admin uploads a note to a course"""
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can upload notes to courses")
+
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    note = CourseNote(course_id=course_id, title=title, content=content)
+    db.add(note)
+    db.commit()
+    db.refresh(note)
+    return {"message": "Note uploaded successfully", "note_id": note.id}
+
+@router.get("/{course_id}/videos")
+def get_course_videos(course_id: int, db: Session = Depends(get_db)):
+    """Get all videos for a course"""
+    videos = db.query(CourseVideo).filter(CourseVideo.course_id == course_id).order_by(CourseVideo.uploaded_at.desc()).all()
+    return [{"id": v.id, "title": v.title, "url": v.url, "description": v.description, "uploaded_at": v.uploaded_at.isoformat()} for v in videos]
+
+@router.get("/{course_id}/notes")
+def get_course_notes(course_id: int, db: Session = Depends(get_db)):
+    """Get all notes for a course"""
+    notes = db.query(CourseNote).filter(CourseNote.course_id == course_id).order_by(CourseNote.uploaded_at.desc()).all()
+    return [{"id": n.id, "title": n.title, "content": n.content, "uploaded_at": n.uploaded_at.isoformat()} for n in notes]

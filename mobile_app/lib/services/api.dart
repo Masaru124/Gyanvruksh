@@ -290,6 +290,47 @@ class ApiService {
     return null;
   }
 
+  // Admin course management API methods
+  Future<bool> assignTeacherToCourse(int courseId, int teacherId) async {
+    if (_token == null) return false;
+    final res = await http.post(Uri.parse('$baseUrl/api/courses/admin/$courseId/assign-teacher'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+        body: jsonEncode({'teacher_id': teacherId}));
+    return res.statusCode == 200;
+  }
+
+  Future<bool> uploadCourseVideo(int courseId, String title, String url, {String? description}) async {
+    if (_token == null) return false;
+    final res = await http.post(Uri.parse('$baseUrl/api/courses/admin/$courseId/upload-video'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+        body: jsonEncode({'title': title, 'url': url, 'description': description}));
+    return res.statusCode == 200;
+  }
+
+  Future<bool> uploadCourseNote(int courseId, String title, String content) async {
+    if (_token == null) return false;
+    final res = await http.post(Uri.parse('$baseUrl/api/courses/admin/$courseId/upload-note'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+        body: jsonEncode({'title': title, 'content': content}));
+    return res.statusCode == 200;
+  }
+
+  Future<List<dynamic>> getCourseVideos(int courseId) async {
+    final res = await http.get(Uri.parse('$baseUrl/api/courses/$courseId/videos'));
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  Future<List<dynamic>> getCourseNotes(int courseId) async {
+    final res = await http.get(Uri.parse('$baseUrl/api/courses/$courseId/notes'));
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
   Future<List<dynamic>> getChatMessages() async {
     if (_token == null) return [];
     final res = await http.get(Uri.parse('$baseUrl/api/chat/messages'),

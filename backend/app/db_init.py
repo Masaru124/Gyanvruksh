@@ -4,10 +4,20 @@ from app.database import Base, engine, SessionLocal
 from app.models.user import User
 from app.models.course import Course
 from app.models.enrollment import Enrollment
+from app.models.chat_message import ChatMessage
+from app.models.course_video import CourseVideo
+from app.models.course_note import CourseNote
 from app.services.security import hash_password
 
 def init():
     # Drop existing tables to recreate with updated schema
+    # Drop tables with foreign keys first to avoid constraints
+    from app.models.chat_message import ChatMessage
+    from app.models.course_video import CourseVideo
+    from app.models.course_note import CourseNote
+    ChatMessage.__table__.drop(bind=engine, checkfirst=True)
+    CourseVideo.__table__.drop(bind=engine, checkfirst=True)
+    CourseNote.__table__.drop(bind=engine, checkfirst=True)
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     print("✅ Tables recreated")

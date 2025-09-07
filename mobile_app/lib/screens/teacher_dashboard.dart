@@ -26,7 +26,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   bool isLoadingClasses = true;
   bool isLoadingQueries = true;
   bool isLoadingStats = true;
-  bool isSelectingCourse = false;
+
 
   @override
   void initState() {
@@ -126,29 +126,8 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     }
   }
 
-  Future<void> _selectCourse(int courseId, String courseTitle) async {
-    setState(() => isSelectingCourse = true);
-    try {
-      final success = await ApiService().selectCourse(courseId);
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Successfully selected $courseTitle')),
-        );
-        // Reload available courses to remove the selected one
-        await _loadAvailableCourses();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to select course')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error selecting course: $e')),
-      );
-    } finally {
-      setState(() => isSelectingCourse = false);
-    }
-  }
+  // Removed _selectCourse method since teachers cannot self-enroll
+  // Courses are now assigned by admins only
 
   void _onItemTapped(int index) {
     setState(() {
@@ -262,25 +241,12 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                         ),
                       ),
                       const Spacer(),
-                      ElevatedButton(
-                        onPressed: isSelectingCourse ? null : () => _selectCourse(course['id'], course['title']),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF667EEA),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
+                      const Text(
+                        'Contact admin to assign this course',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white70,
                         ),
-                        child: isSelectingCourse
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF667EEA)),
-                                ),
-                              )
-                            : const Text('Select Course'),
                       ),
                     ],
                   ),
@@ -589,6 +555,12 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     );
   }
 
+  void _logout() async {
+    final api = ApiService();
+    await api.logout();
+    Navigator.of(context).pushReplacementNamed('/login');
+  }
+
   void _showNotifications() {
     showModalBottomSheet(
       context: context,
@@ -714,6 +686,11 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
             onPressed: _showNotifications,
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: _logout,
+            tooltip: 'Logout',
           ),
         ],
       ),
