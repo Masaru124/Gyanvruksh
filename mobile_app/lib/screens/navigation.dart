@@ -8,6 +8,7 @@ import 'package:gyanvruksh/screens/manage_users.dart';
 import 'package:gyanvruksh/screens/courses_screen.dart';
 import 'package:gyanvruksh/screens/leaderboard_screen.dart';
 import 'package:gyanvruksh/screens/profile_screen.dart';
+import 'package:gyanvruksh/screens/chatroom_screen.dart';
 
 class NavigationScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -30,6 +31,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
     _studentPages = <Widget>[
       const DashboardScreen(),
       const CoursesScreen(), // Added CoursesScreen to student pages
+      const ChatroomScreen(), // Added ChatroomScreen to student pages
       const LeaderboardScreen(), // Added LeaderboardScreen to student pages
       const ProfileScreen(), // Added ProfileScreen to student pages
     ];
@@ -81,6 +83,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
             : const <BottomNavigationBarItem>[
                 BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
                 BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Courses'),
+                BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chatroom'),
                 BottomNavigationBarItem(icon: Icon(Icons.leaderboard), label: 'Leaderboard'),
                 BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
               ],

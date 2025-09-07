@@ -3,6 +3,7 @@ import 'package:gyanvruksh/services/api.dart';
 import 'package:gyanvruksh/screens/courses_screen.dart';
 import 'package:gyanvruksh/screens/messages_screen.dart';
 import 'package:gyanvruksh/screens/profile_screen.dart';
+import 'package:gyanvruksh/screens/chatroom_screen.dart';
 
 class TeacherDashboard extends StatefulWidget {
   const TeacherDashboard({super.key});
@@ -170,7 +171,13 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
           MaterialPageRoute(builder: (context) => const MessagesScreen()),
         );
         break;
-      case 3: // Profile
+      case 3: // Chatroom
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ChatroomScreen()),
+        );
+        break;
+      case 4: // Profile
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const ProfileScreen()),
@@ -738,6 +745,10 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
           BottomNavigationBarItem(
             icon: Icon(Icons.message),
             label: 'Messages',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat),
+            label: 'Chatroom',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),

@@ -290,6 +290,16 @@ class ApiService {
     return null;
   }
 
+  Future<List<dynamic>> getChatMessages() async {
+    if (_token == null) return [];
+    final res = await http.get(Uri.parse('$baseUrl/api/chat/messages'),
+        headers: {'Authorization': 'Bearer $_token'});
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
   // Profile update API method
   Future<bool> updateProfile({
     String? fullName,
