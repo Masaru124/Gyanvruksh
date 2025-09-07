@@ -11,10 +11,10 @@ class VideoPlayerScreen extends StatefulWidget {
   final String courseTitle;
 
   const VideoPlayerScreen({
-    super.key,
+    Key? key,
     required this.courseId,
     required this.courseTitle,
-  });
+  }) : super(key: key);
 
   @override
   State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
@@ -43,6 +43,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       });
 
       final videosData = await ApiService().getCourseVideos(widget.courseId);
+      print('Fetched videos data: $videosData');
       setState(() {
         videos = videosData;
         isLoading = false;
@@ -110,7 +111,14 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     }
 
     if (videoUrl.contains('drive.google.com')) {
-      // Handle Google Drive URLs - convert to direct download link
+      // Detect if URL is a folder URL and show error
+      if (videoUrl.contains('/drive/folders/')) {
+        setState(() {
+          error = 'Google Drive folder URLs cannot be streamed. Please provide a direct video file URL.';
+        });
+        return;
+      }
+      // Handle Google Drive file URLs - convert to direct download link
       String fileId = '';
       if (videoUrl.contains('/file/d/')) {
         fileId = videoUrl.split('/file/d/')[1].split('/')[0];
@@ -120,6 +128,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       if (fileId.isNotEmpty) {
         processedUrl = 'https://drive.google.com/uc?export=download&id=$fileId';
       }
+      print('Processed Google Drive URL: $processedUrl');
     }
 
     if (defaultTargetPlatform == TargetPlatform.windows) {
@@ -130,6 +139,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     }
 
       try {
+        print('Initializing video player with URL: $processedUrl');
         _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(processedUrl));
         await _videoPlayerController!.initialize();
 
@@ -152,6 +162,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           error = 'Video player initialization failed: $e';
         });
       }
+  }
+
+  // Method to test playing a sample public video URL
+  void _playSampleVideo() {
+    const sampleUrl = 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4';
+    _initializeVideo(sampleUrl);
   }
 
   @override

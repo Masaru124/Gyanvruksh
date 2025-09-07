@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gyanvruksh/services/api.dart';
 import 'package:gyanvruksh/screens/video_player_screen.dart';
+import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
+import 'package:gyanvruksh/widgets/custom_animated_button.dart';
+import 'package:gyanvruksh/widgets/neumorphism_container.dart';
+
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -108,192 +114,467 @@ class _CoursesScreenState extends State<CoursesScreen> {
     );
   }
 
-  void _navigateToVideoPlayer(int courseId, String courseTitle) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => VideoPlayerScreen(courseId: courseId, courseTitle: courseTitle),
+
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                colorScheme.primary.withValues(alpha: 0.1),
+                colorScheme.secondary.withValues(alpha: 0.1),
+                colorScheme.tertiary.withValues(alpha: 0.1),
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Modern Header
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: Row(
+                    children: [
+                      NeumorphismContainer(
+                        padding: const EdgeInsets.all(12),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Icon(
+                          FontAwesomeIcons.graduationCap,
+                          color: colorScheme.primary,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          'My Learning Journey',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: colorScheme.onSurface,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          _loadCourses();
+                          _loadAvailableCourses();
+                        },
+                        icon: Icon(
+                          Icons.refresh,
+                          color: colorScheme.primary,
+                        ),
+                        style: IconButton.styleFrom(
+                          backgroundColor: colorScheme.surface,
+                          padding: const EdgeInsets.all(12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Modern Tab Bar
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface.withValues(alpha: 0.8),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colorScheme.shadow.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: TabBar(
+                    indicator: BoxDecoration(
+                      color: colorScheme.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    labelColor: colorScheme.onPrimary,
+                    unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.7),
+                    tabs: const [
+                      Tab(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.book),
+                            SizedBox(width: 8),
+                            Text('My Courses'),
+                          ],
+                        ),
+                      ),
+                      Tab(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.explore),
+                            SizedBox(width: 8),
+                            Text('Discover'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Tab Content
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      // My Courses Tab
+                      _buildMyCoursesTab(theme, colorScheme),
+                      // Available Courses Tab
+                      _buildAvailableCoursesTab(theme, colorScheme),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Courses'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: () {
-                _loadCourses();
-                _loadAvailableCourses();
-              },
+  Widget _buildMyCoursesTab(ThemeData theme, ColorScheme colorScheme) {
+    if (isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 60,
+              height: 60,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Loading your courses...',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
             ),
           ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'My Courses'),
-              Tab(text: 'Available'),
-            ],
-          ),
         ),
-        body: TabBarView(
+      );
+    }
+
+    if (error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // My Courses Tab
-            isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.error, size: 64, color: Colors.red),
-                            const SizedBox(height: 16),
-                            Text('Error: $error'),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _loadCourses,
-                              child: const Text('Retry'),
-                            ),
-                          ],
+            Icon(
+              Icons.error_outline,
+              size: 80,
+              color: colorScheme.error.withOpacity(0.7),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Oops! Something went wrong',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error!,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            CustomAnimatedButton(
+              onPressed: _loadCourses,
+              text: 'Try Again',
+              backgroundColor: colorScheme.primary,
+              textColor: colorScheme.onPrimary,
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (myCourses.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            NeumorphismContainer(
+              padding: const EdgeInsets.all(32),
+              borderRadius: BorderRadius.circular(80),
+              child: Icon(
+                FontAwesomeIcons.bookOpen,
+                size: 64,
+                color: colorScheme.primary.withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Ready to start learning?',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Explore available courses and begin your journey',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            CustomAnimatedButton(
+              onPressed: () => DefaultTabController.of(context)?.animateTo(1),
+              text: 'Browse Courses',
+              backgroundColor: colorScheme.primary,
+              textColor: colorScheme.onPrimary,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(24),
+      itemCount: myCourses.length,
+      itemBuilder: (context, index) {
+        final course = myCourses[index];
+        return _buildCourseCard(course, index, true, theme, colorScheme);
+      },
+    );
+  }
+
+  Widget _buildAvailableCoursesTab(ThemeData theme, ColorScheme colorScheme) {
+    if (isLoadingAvailable) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 60,
+              height: 60,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Discovering courses...',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (availableError != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 80,
+              color: colorScheme.error.withOpacity(0.7),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Unable to load courses',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              availableError!,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            CustomAnimatedButton(
+              onPressed: _loadAvailableCourses,
+              text: 'Retry',
+              backgroundColor: colorScheme.primary,
+              textColor: colorScheme.onPrimary,
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (availableCourses.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            NeumorphismContainer(
+              padding: const EdgeInsets.all(32),
+              borderRadius: BorderRadius.circular(80),
+              child: Icon(
+                FontAwesomeIcons.magnifyingGlass,
+                size: 64,
+                color: colorScheme.primary.withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No courses available yet',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Courses will appear here once teachers add them',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(24),
+      itemCount: availableCourses.length,
+      itemBuilder: (context, index) {
+        final course = availableCourses[index];
+        return _buildCourseCard(course, index, false, theme, colorScheme);
+      },
+    );
+  }
+
+  Widget _buildCourseCard(dynamic course, int index, bool isEnrolled, ThemeData theme, ColorScheme colorScheme) {
+    return GlassmorphismCard(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      blurStrength: 10,
+      opacity: 0.1,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: () => _navigateToCourseDetails(course),
+        borderRadius: BorderRadius.circular(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                NeumorphismContainer(
+                  padding: const EdgeInsets.all(12),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Icon(
+                    isEnrolled ? FontAwesomeIcons.bookOpen : FontAwesomeIcons.plus,
+                    color: isEnrolled ? colorScheme.primary : Colors.green,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        course['title'] ?? 'Untitled Course',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: colorScheme.onSurface,
+                          fontWeight: FontWeight.bold,
                         ),
-                      )
-                    : myCourses.isEmpty
-                        ? const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.school, size: 64, color: Colors.grey),
-                                SizedBox(height: 16),
-                                Text(
-                                  'No courses enrolled yet',
-                                  style: TextStyle(fontSize: 18, color: Colors.grey),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Enroll in courses from the Available tab',
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: myCourses.length,
-                            itemBuilder: (context, index) {
-                              final course = myCourses[index];
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                child: ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: Theme.of(context).primaryColor,
-                                    child: const Icon(Icons.book, color: Colors.white),
-                                  ),
-                                  title: Text(
-                                    course['title'] ?? 'Untitled Course',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  subtitle: Text(
-                                    course['description'] ?? 'No description',
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  trailing: const Icon(Icons.arrow_forward_ios),
-                                  onTap: () {
-                                    _navigateToCourseDetails(course);
-                                  },
-                                ),
-                              );
-                            },
-                          ),
-            // Available Courses Tab
-            isLoadingAvailable
-                ? const Center(child: CircularProgressIndicator())
-                : availableError != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.error, size: 64, color: Colors.red),
-                            const SizedBox(height: 16),
-                            Text('Error: $availableError'),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _loadAvailableCourses,
-                              child: const Text('Retry'),
-                            ),
-                          ],
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        course['subject'] ?? 'General',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w500,
                         ),
-                      )
-                    : availableCourses.isEmpty
-                        ? const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.school_outlined, size: 64, color: Colors.grey),
-                                SizedBox(height: 16),
-                                Text(
-                                  'No courses available',
-                                  style: TextStyle(fontSize: 18, color: Colors.grey),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Courses will appear here when teachers are assigned',
-                                  style: TextStyle(color: Colors.grey),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: availableCourses.length,
-                            itemBuilder: (context, index) {
-                              final course = availableCourses[index];
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                child: ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: Colors.green,
-                                    child: const Icon(Icons.add, color: Colors.white),
-                                  ),
-                                  title: Text(
-                                    course['title'] ?? 'Untitled Course',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  subtitle: Text(
-                                    course['description'] ?? 'No description',
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  trailing: ElevatedButton(
-                                    onPressed: isEnrolling ? null : () => _enrollInCourse(course['id'], course['title']),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green,
-                                      foregroundColor: Colors.white,
-                                    ),
-                                    child: isEnrolling
-                                        ? const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                            ),
-                                          )
-                                        : const Text('Enroll'),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (!isEnrolled)
+                  CustomAnimatedButton(
+                    onPressed: isEnrolling ? () {} : () => _enrollInCourse(course['id'], course['title']),
+                    width: 80,
+                    height: 36,
+                    backgroundColor: Colors.green,
+                    text: isEnrolling ? '...' : 'Enroll',
+                    textColor: Colors.white,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              course['description'] ?? 'No description available',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurface.withOpacity(0.8),
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(
+                  Icons.access_time,
+                  size: 16,
+                  color: colorScheme.onSurface.withOpacity(0.6),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  course['duration'] ?? 'Duration not specified',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Icon(
+                  Icons.grade,
+                  size: 16,
+                  color: colorScheme.onSurface.withOpacity(0.6),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  course['grade_level'] ?? 'All levels',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
-    );
+    )
+        .animate()
+        .fadeIn(duration: 600.ms, delay: Duration(milliseconds: index * 100))
+        .slideY(begin: 0.2, end: 0, duration: 500.ms, delay: Duration(milliseconds: index * 100));
   }
 }
 
