@@ -11,6 +11,8 @@ class ManageCoursesScreen extends StatefulWidget {
 class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
   List<dynamic> courses = [];
   List<dynamic> teachers = [];
+  List<dynamic> courseVideos = [];
+  List<dynamic> courseNotes = [];
   bool loading = false;
   String? error;
   late BuildContext _mainContext;
@@ -224,7 +226,396 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
     );
   }
 
+  Future<void> _loadCourseMaterials(int courseId) async {
+    final videos = await ApiService().getCourseVideos(courseId);
+    final notes = await ApiService().getCourseNotes(courseId);
+    setState(() {
+      courseVideos = videos;
+      courseNotes = notes;
+    });
+  }
+
+  Future<void> _editCourse(dynamic course) async {
+    final titleCtrl = TextEditingController(text: course['title']);
+    final descCtrl = TextEditingController(text: course['description']);
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Course'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleCtrl,
+              decoration: const InputDecoration(labelText: 'Course Title'),
+            ),
+            TextField(
+              controller: descCtrl,
+              decoration: const InputDecoration(labelText: 'Course Description'),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (titleCtrl.text.isNotEmpty && descCtrl.text.isNotEmpty) {
+                Navigator.pop(context);
+                setState(() => loading = true);
+                try {
+                  final success = await ApiService().updateCourse(
+                    course['id'],
+                    titleCtrl.text,
+                    descCtrl.text,
+                  );
+                  if (success) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(_mainContext).showSnackBar(
+                        const SnackBar(content: Text('Course updated successfully')),
+                      );
+                    }
+                    _loadData();
+                  } else {
+                    if (mounted) {
+                      ScaffoldMessenger.of(_mainContext).showSnackBar(
+                        const SnackBar(content: Text('Failed to update course')),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(_mainContext).showSnackBar(
+                      SnackBar(content: Text('Error: $e')),
+                    );
+                  }
+                } finally {
+                  if (mounted) {
+                    setState(() => loading = false);
+                  }
+                }
+              }
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteCourse(dynamic course) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Course'),
+        content: Text('Are you sure you want to delete "${course['title']}"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => loading = true);
+      try {
+        final success = await ApiService().deleteCourse(course['id']);
+        if (success) {
+          if (mounted) {
+            ScaffoldMessenger.of(_mainContext).showSnackBar(
+              const SnackBar(content: Text('Course deleted successfully')),
+            );
+          }
+          _loadData();
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(_mainContext).showSnackBar(
+              const SnackBar(content: Text('Failed to delete course')),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(_mainContext).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => loading = false);
+        }
+      }
+    }
+  }
+
+  Future<void> _editVideo(int courseId, dynamic video) async {
+    final titleCtrl = TextEditingController(text: video['title']);
+    final urlCtrl = TextEditingController(text: video['url']);
+    final descCtrl = TextEditingController(text: video['description'] ?? '');
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Video'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleCtrl,
+              decoration: const InputDecoration(labelText: 'Video Title'),
+            ),
+            TextField(
+              controller: urlCtrl,
+              decoration: const InputDecoration(labelText: 'Video URL'),
+            ),
+            TextField(
+              controller: descCtrl,
+              decoration: const InputDecoration(labelText: 'Description (optional)'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (titleCtrl.text.isNotEmpty && urlCtrl.text.isNotEmpty) {
+                Navigator.pop(context);
+                setState(() => loading = true);
+                try {
+                  final success = await ApiService().updateCourseVideo(
+                    courseId,
+                    video['id'],
+                    titleCtrl.text,
+                    urlCtrl.text,
+                    description: descCtrl.text.isNotEmpty ? descCtrl.text : null,
+                  );
+                  if (success) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(_mainContext).showSnackBar(
+                        const SnackBar(content: Text('Video updated successfully')),
+                      );
+                    }
+                    _loadCourseMaterials(courseId);
+                  } else {
+                    if (mounted) {
+                      ScaffoldMessenger.of(_mainContext).showSnackBar(
+                        const SnackBar(content: Text('Failed to update video')),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(_mainContext).showSnackBar(
+                      SnackBar(content: Text('Error: $e')),
+                    );
+                  }
+                } finally {
+                  if (mounted) {
+                    setState(() => loading = false);
+                  }
+                }
+              }
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteVideo(int courseId, int videoId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Video'),
+        content: const Text('Are you sure you want to delete this video?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => loading = true);
+      try {
+        final success = await ApiService().deleteCourseVideo(courseId, videoId);
+        if (success) {
+          if (mounted) {
+            ScaffoldMessenger.of(_mainContext).showSnackBar(
+              const SnackBar(content: Text('Video deleted successfully')),
+            );
+          }
+          _loadCourseMaterials(courseId);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(_mainContext).showSnackBar(
+              const SnackBar(content: Text('Failed to delete video')),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(_mainContext).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => loading = false);
+        }
+      }
+    }
+  }
+
+  Future<void> _editNote(int courseId, dynamic note) async {
+    final titleCtrl = TextEditingController(text: note['title']);
+    final contentCtrl = TextEditingController(text: note['content']);
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Note'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleCtrl,
+              decoration: const InputDecoration(labelText: 'Note Title'),
+            ),
+            TextField(
+              controller: contentCtrl,
+              decoration: const InputDecoration(labelText: 'Note Content'),
+              maxLines: 5,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (titleCtrl.text.isNotEmpty && contentCtrl.text.isNotEmpty) {
+                Navigator.pop(context);
+                setState(() => loading = true);
+                try {
+                  final success = await ApiService().updateCourseNote(
+                    courseId,
+                    note['id'],
+                    titleCtrl.text,
+                    contentCtrl.text,
+                  );
+                  if (success) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(_mainContext).showSnackBar(
+                        const SnackBar(content: Text('Note updated successfully')),
+                      );
+                    }
+                    _loadCourseMaterials(courseId);
+                  } else {
+                    if (mounted) {
+                      ScaffoldMessenger.of(_mainContext).showSnackBar(
+                        const SnackBar(content: Text('Failed to update note')),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(_mainContext).showSnackBar(
+                      SnackBar(content: Text('Error: $e')),
+                    );
+                  }
+                } finally {
+                  if (mounted) {
+                    setState(() => loading = false);
+                  }
+                }
+              }
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteNote(int courseId, int noteId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Note'),
+        content: const Text('Are you sure you want to delete this note?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => loading = true);
+      try {
+        final success = await ApiService().deleteCourseNote(courseId, noteId);
+        if (success) {
+          if (mounted) {
+            ScaffoldMessenger.of(_mainContext).showSnackBar(
+              const SnackBar(content: Text('Note deleted successfully')),
+            );
+          }
+          _loadCourseMaterials(courseId);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(_mainContext).showSnackBar(
+              const SnackBar(content: Text('Failed to delete note')),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(_mainContext).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => loading = false);
+        }
+      }
+    }
+  }
+
   void _showCourseDetails(dynamic course) {
+    _loadCourseMaterials(course['id']);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -232,50 +623,115 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
         expand: false,
         builder: (context, scrollController) => Container(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                course['title'],
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(course['description']),
-              const SizedBox(height: 16),
-              Text('Teacher: ${course['teacher_id'] != null ? 'Assigned' : 'Not assigned'}'),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _showTeacherSelection(course),
-                      icon: const Icon(Icons.person_add),
-                      label: const Text('Assign Teacher'),
+          child: SingleChildScrollView(
+            controller: scrollController,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  course['title'],
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(course['description']),
+                const SizedBox(height: 16),
+                Text('Teacher: ${course['teacher_id'] != null ? 'Assigned' : 'Not assigned'}'),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showTeacherSelection(course),
+                        icon: const Icon(Icons.person_add),
+                        label: const Text('Assign Teacher'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _uploadVideo(course['id']),
+                        icon: const Icon(Icons.video_call),
+                        label: const Text('Upload Video'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _uploadNote(course['id']),
+                        icon: const Icon(Icons.note_add),
+                        label: const Text('Upload Note'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text('Videos:', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                if (courseVideos.isEmpty)
+                  const Text('No videos uploaded')
+                else
+                  SizedBox(
+                    height: 200,
+                    child: ListView.builder(
+                      itemCount: courseVideos.length,
+                      itemBuilder: (context, index) {
+                        final video = courseVideos[index];
+                        return ListTile(
+                          title: Text(video['title']),
+                          subtitle: Text(video['url']),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () => _editVideo(course['id'], video),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () => _deleteVideo(course['id'], video['id']),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _uploadVideo(course['id']),
-                      icon: const Icon(Icons.video_call),
-                      label: const Text('Upload Video'),
+                const SizedBox(height: 16),
+                Text('Notes:', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                if (courseNotes.isEmpty)
+                  const Text('No notes uploaded')
+                else
+                  SizedBox(
+                    height: 200,
+                    child: ListView.builder(
+                      itemCount: courseNotes.length,
+                      itemBuilder: (context, index) {
+                        final note = courseNotes[index];
+                        return ListTile(
+                          title: Text(note['title']),
+                          subtitle: Text(note['content'].length > 50 ? '${note['content'].substring(0, 50)}...' : note['content']),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () => _editNote(course['id'], note),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () => _deleteNote(course['id'], note['id']),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _uploadNote(course['id']),
-                      icon: const Icon(Icons.note_add),
-                      label: const Text('Upload Note'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -398,6 +854,12 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                                   case 'details':
                                     _showCourseDetails(course);
                                     break;
+                                  case 'edit':
+                                    _editCourse(course);
+                                    break;
+                                  case 'delete':
+                                    _deleteCourse(course);
+                                    break;
                                   case 'assign':
                                     _showTeacherSelection(course);
                                     break;
@@ -413,6 +875,14 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                                 const PopupMenuItem(
                                   value: 'details',
                                   child: Text('View Details'),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text('Edit Course'),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text('Delete Course'),
                                 ),
                                 const PopupMenuItem(
                                   value: 'assign',

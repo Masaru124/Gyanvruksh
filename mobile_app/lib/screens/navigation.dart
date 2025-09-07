@@ -5,6 +5,7 @@ import 'package:gyanvruksh/screens/teacher_dashboard.dart';
 import 'package:gyanvruksh/screens/create_course.dart';
 import 'package:gyanvruksh/screens/create_admin.dart';
 import 'package:gyanvruksh/screens/manage_users.dart';
+import 'package:gyanvruksh/screens/manage_courses.dart';
 import 'package:gyanvruksh/screens/courses_screen.dart';
 import 'package:gyanvruksh/screens/leaderboard_screen.dart';
 import 'package:gyanvruksh/screens/profile_screen.dart';
@@ -38,7 +39,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
     _adminPages = <Widget>[
       const AdminDashboardScreen(),
       const CreateCourseScreen(),
-      const CreateAdminScreen(),
+      const ManageCoursesScreen(),
       const ManageUsersScreen(),
     ];
   }
@@ -77,7 +78,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
             ? const <BottomNavigationBarItem>[
                 BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
                 BottomNavigationBarItem(icon: Icon(Icons.add_box), label: 'Create Course'),
-                BottomNavigationBarItem(icon: Icon(Icons.person_add), label: 'Create Admin'),
+                BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Manage Courses'),
                 BottomNavigationBarItem(icon: Icon(Icons.manage_accounts), label: 'Manage Users'),
               ]
             : const <BottomNavigationBarItem>[

@@ -96,22 +96,6 @@ class AdminDashboardScreen extends StatelessWidget {
                   ),
                   _buildDashboardCard(
                     context,
-                    icon: Icons.school,
-                    title: 'Manage Courses',
-                    description: 'Assign teachers, upload content',
-                    gradient: [
-                      Colors.orange.withOpacity(0.7),
-                      Colors.orange,
-                    ],
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ManageCoursesScreen()),
-                      );
-                    },
-                  ),
-                  _buildDashboardCard(
-                    context,
                     icon: Icons.analytics,
                     title: 'Analytics',
                     description: 'View platform statistics',

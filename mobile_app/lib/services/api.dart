@@ -373,6 +373,52 @@ class ApiService {
     return [];
   }
 
+  // Admin course management API methods - additional
+  Future<bool> deleteCourse(int courseId) async {
+    if (_token == null) return false;
+    final res = await http.delete(Uri.parse('$baseUrl/api/courses/admin/$courseId'),
+        headers: {'Authorization': 'Bearer $_token'});
+    return res.statusCode == 200;
+  }
+
+  Future<bool> updateCourse(int courseId, String title, String description) async {
+    if (_token == null) return false;
+    final res = await http.put(Uri.parse('$baseUrl/api/courses/admin/$courseId'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+        body: jsonEncode({'title': title, 'description': description}));
+    return res.statusCode == 200;
+  }
+
+  Future<bool> deleteCourseVideo(int courseId, int videoId) async {
+    if (_token == null) return false;
+    final res = await http.delete(Uri.parse('$baseUrl/api/courses/admin/$courseId/videos/$videoId'),
+        headers: {'Authorization': 'Bearer $_token'});
+    return res.statusCode == 200;
+  }
+
+  Future<bool> updateCourseVideo(int courseId, int videoId, String title, String url, {String? description}) async {
+    if (_token == null) return false;
+    final res = await http.put(Uri.parse('$baseUrl/api/courses/admin/$courseId/videos/$videoId'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+        body: jsonEncode({'title': title, 'url': url, 'description': description}));
+    return res.statusCode == 200;
+  }
+
+  Future<bool> deleteCourseNote(int courseId, int noteId) async {
+    if (_token == null) return false;
+    final res = await http.delete(Uri.parse('$baseUrl/api/courses/admin/$courseId/notes/$noteId'),
+        headers: {'Authorization': 'Bearer $_token'});
+    return res.statusCode == 200;
+  }
+
+  Future<bool> updateCourseNote(int courseId, int noteId, String title, String content) async {
+    if (_token == null) return false;
+    final res = await http.put(Uri.parse('$baseUrl/api/courses/admin/$courseId/notes/$noteId'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+        body: jsonEncode({'title': title, 'content': content}));
+    return res.statusCode == 200;
+  }
+
   Future<List<dynamic>> getChatMessages() async {
     if (_token == null) return [];
     final res = await http.get(Uri.parse('$baseUrl/api/chat/messages'),
