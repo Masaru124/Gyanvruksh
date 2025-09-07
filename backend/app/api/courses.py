@@ -283,11 +283,135 @@ def upload_course_note(course_id: int, title: str, content: str, db: Session = D
     db.refresh(note)
     return {"message": "Note uploaded successfully", "note_id": note.id}
 
+@router.get("/admin/courses")
+def admin_list_courses(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Admin: List all courses with details"""
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can view courses")
+
+    courses = db.query(Course).order_by(Course.id.desc()).all()
+    result = []
+    for c in courses:
+        teacher_name = None
+        if c.teacher_id:
+            teacher = db.query(User).filter(User.id == c.teacher_id).first()
+            teacher_name = teacher.full_name if teacher else None
+        enrolled_count = db.query(Enrollment).filter(Enrollment.course_id == c.id).count()
+        result.append({
+            "id": c.id,
+            "title": c.title,
+            "description": c.description,
+            "teacher_id": c.teacher_id,
+            "teacher_name": teacher_name,
+            "enrolled_students_count": enrolled_count,
+            "total_hours": c.total_hours,
+            "created_at": c.created_at.isoformat()
+        })
+    return result
+
+@router.delete("/admin/courses/{course_id}")
+def admin_delete_course(course_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Admin: Delete a course"""
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can delete courses")
+
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    db.delete(course)
+    db.commit()
+    return {"message": "Course deleted successfully"}
+
+@router.get("/admin/course-videos")
+def admin_list_course_videos(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Admin: List all course videos"""
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can view course videos")
+
+    videos = db.query(CourseVideo).order_by(CourseVideo.uploaded_at.desc()).all()
+    result = []
+    for v in videos:
+        course = db.query(Course).filter(Course.id == v.course_id).first()
+        result.append({
+            "id": v.id,
+            "course_id": v.course_id,
+            "course_title": course.title if course else None,
+            "title": v.title,
+            "url": v.url,
+            "description": v.description,
+            "uploaded_at": v.uploaded_at.isoformat()
+        })
+    return result
+
+@router.delete("/admin/course-videos/{video_id}")
+def admin_delete_course_video(video_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Admin: Delete a course video"""
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can delete course videos")
+
+    video = db.query(CourseVideo).filter(CourseVideo.id == video_id).first()
+    if not video:
+        raise HTTPException(status_code=404, detail="Course video not found")
+
+    db.delete(video)
+    db.commit()
+    return {"message": "Course video deleted successfully"}
+
+@router.get("/admin/course-notes")
+def admin_list_course_notes(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Admin: List all course notes"""
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can view course notes")
+
+    notes = db.query(CourseNote).order_by(CourseNote.uploaded_at.desc()).all()
+    result = []
+    for n in notes:
+        course = db.query(Course).filter(Course.id == n.course_id).first()
+        result.append({
+            "id": n.id,
+            "course_id": n.course_id,
+            "course_title": course.title if course else None,
+            "title": n.title,
+            "content": n.content,
+            "uploaded_at": n.uploaded_at.isoformat()
+        })
+    return result
+
+@router.delete("/admin/course-notes/{note_id}")
+def admin_delete_course_note(note_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Admin: Delete a course note"""
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can delete course notes")
+
+    note = db.query(CourseNote).filter(CourseNote.id == note_id).first()
+    if not note:
+        raise HTTPException(status_code=404, detail="Course note not found")
+
+    db.delete(note)
+    db.commit()
+    return {"message": "Course note deleted successfully"}
+
 @router.get("/{course_id}/videos")
 def get_course_videos(course_id: int, db: Session = Depends(get_db)):
     """Get all videos for a course"""
     videos = db.query(CourseVideo).filter(CourseVideo.course_id == course_id).order_by(CourseVideo.uploaded_at.desc()).all()
-    return [{"id": v.id, "title": v.title, "url": v.url, "description": v.description, "uploaded_at": v.uploaded_at.isoformat()} for v in videos]
+    # Convert Google Drive folder URLs to direct file URLs if possible
+    updated_videos = []
+    for v in videos:
+        url = v.url
+        # If URL is a Google Drive folder link, replace with direct file link if possible
+        if "drive.google.com/drive/folders" in url:
+            # Cannot stream folder, so skip or set error URL
+            url = ""
+        updated_videos.append({
+            "id": v.id,
+            "title": v.title,
+            "url": url,
+            "description": v.description,
+            "uploaded_at": v.uploaded_at.isoformat()
+        })
+    return updated_videos
 
 @router.get("/{course_id}/notes")
 def get_course_notes(course_id: int, db: Session = Depends(get_db)):

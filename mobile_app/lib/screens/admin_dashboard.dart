@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gyanvruksh/services/api.dart';
 import 'manage_users.dart';
 import 'create_course.dart';
+import 'manage_courses.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -74,11 +75,23 @@ class AdminDashboardScreen extends StatelessWidget {
                       theme.colorScheme.secondary.withOpacity(0.7),
                       theme.colorScheme.secondary,
                     ],
-                    onTap: () {
-                      Navigator.push(
+                    onTap: () async {
+                      print("📚 Navigating to CreateCourseScreen");
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const CreateCourseScreen()),
                       );
+                      print("📚 Returned from CreateCourseScreen with result: $result");
+
+                      if (result == true) {
+                        print("✅ Course created successfully, showing snackbar");
+                        // Course created successfully, show confirmation
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Course created successfully!')),
+                        );
+                      } else {
+                        print("⚠️ Course creation result was not true: $result");
+                      }
                     },
                   ),
                   _buildDashboardCard(
@@ -91,9 +104,9 @@ class AdminDashboardScreen extends StatelessWidget {
                       Colors.orange,
                     ],
                     onTap: () {
-                      // TODO: Navigate to course management screen
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Course management coming soon!')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ManageCoursesScreen()),
                       );
                     },
                   ),

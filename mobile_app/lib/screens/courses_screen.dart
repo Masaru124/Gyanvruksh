@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/screens/video_player_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -103,6 +104,15 @@ class _CoursesScreenState extends State<CoursesScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => CourseDetailsScreen(course: course),
+      ),
+    );
+  }
+
+  void _navigateToVideoPlayer(int courseId, String courseTitle) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VideoPlayerScreen(courseId: courseId, courseTitle: courseTitle),
       ),
     );
   }
@@ -287,16 +297,30 @@ class _CoursesScreenState extends State<CoursesScreen> {
   }
 }
 
-class CourseDetailsScreen extends StatelessWidget {
+class CourseDetailsScreen extends StatefulWidget {
   final dynamic course;
 
   const CourseDetailsScreen({super.key, required this.course});
 
   @override
+  State<CourseDetailsScreen> createState() => _CourseDetailsScreenState();
+}
+
+class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
+  void _navigateToVideoPlayer(int courseId, String courseTitle) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VideoPlayerScreen(courseId: courseId, courseTitle: courseTitle),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(course['title'] ?? 'Course Details'),
+        title: Text(widget.course['title'] ?? 'Course Details'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -331,7 +355,7 @@ class CourseDetailsScreen extends StatelessWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
-                          course['title'] ?? 'Untitled Course',
+                          widget.course['title'] ?? 'Untitled Course',
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -343,7 +367,7 @@ class CourseDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    course['description'] ?? 'No description available',
+                    widget.course['description'] ?? 'No description available',
                     style: const TextStyle(
                       fontSize: 16,
                       color: Colors.white70,
@@ -371,15 +395,15 @@ class CourseDetailsScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    _buildDetailRow('Course ID', course['id']?.toString() ?? 'N/A'),
+                    _buildDetailRow('Course ID', widget.course['id']?.toString() ?? 'N/A'),
                     const Divider(),
-                    _buildDetailRow('Subject', course['subject'] ?? 'Not specified'),
+                    _buildDetailRow('Subject', widget.course['subject'] ?? 'Not specified'),
                     const Divider(),
-                    _buildDetailRow('Grade Level', course['grade_level'] ?? 'Not specified'),
+                    _buildDetailRow('Grade Level', widget.course['grade_level'] ?? 'Not specified'),
                     const Divider(),
-                    _buildDetailRow('Duration', course['duration'] ?? 'Not specified'),
+                    _buildDetailRow('Duration', widget.course['duration'] ?? 'Not specified'),
                     const Divider(),
-                    _buildDetailRow('Credits', course['credits']?.toString() ?? 'Not specified'),
+                    _buildDetailRow('Credits', widget.course['credits']?.toString() ?? 'Not specified'),
                   ],
                 ),
               ),
@@ -388,7 +412,7 @@ class CourseDetailsScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Additional information
-            if (course['prerequisites'] != null && course['prerequisites'].isNotEmpty)
+            if (widget.course['prerequisites'] != null && widget.course['prerequisites'].isNotEmpty)
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -405,7 +429,7 @@ class CourseDetailsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        course['prerequisites'],
+                        widget.course['prerequisites'],
                         style: const TextStyle(
                           fontSize: 16,
                           color: Colors.black87,
@@ -418,8 +442,30 @@ class CourseDetailsScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
+            // Watch Videos Button
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () => _navigateToVideoPlayer(widget.course['id'], widget.course['title']),
+                icon: const Icon(Icons.play_circle_fill, size: 28),
+                label: const Text(
+                  'Watch Course Videos',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
             // Learning objectives
-            if (course['objectives'] != null && course['objectives'].isNotEmpty)
+            if (widget.course['objectives'] != null && widget.course['objectives'].isNotEmpty)
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -436,7 +482,7 @@ class CourseDetailsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        course['objectives'],
+                        widget.course['objectives'],
                         style: const TextStyle(
                           fontSize: 16,
                           color: Colors.black87,

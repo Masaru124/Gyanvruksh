@@ -67,12 +67,24 @@ class ApiService {
   }
 
   Future<bool> login(String email, String password) async {
+    // Clean the input to remove any unwanted characters
+    final cleanEmail = email.trim();
+    final cleanPassword = password.trim();
+
+    print("🌐 Making login request to: $baseUrl/api/auth/login");
+    print("📤 Request body: ${jsonEncode({'email': cleanEmail, 'password': cleanPassword})}");
+
     final res = await http.post(Uri.parse('$baseUrl/api/auth/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}));
+        body: jsonEncode({'email': cleanEmail, 'password': cleanPassword}));
+
+    print("📥 Response status: ${res.statusCode}");
+    print("📥 Response body: ${res.body}");
+
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
       _token = data['access_token'];
+      print("✅ Token received: ${_token != null ? 'Yes' : 'No'}");
       await _fetchMe();
       return true;
     }
@@ -80,11 +92,20 @@ class ApiService {
   }
 
   Future<void> _fetchMe() async {
-    if (_token == null) return;
+    if (_token == null) {
+      print("⚠️ No token available for _fetchMe");
+      return;
+    }
+    print("👤 Fetching user data from: $baseUrl/api/auth/me");
     final res = await http.get(Uri.parse('$baseUrl/api/auth/me'),
         headers: {'Authorization': 'Bearer $_token'});
+    print("👤 _fetchMe response status: ${res.statusCode}");
+    print("👤 _fetchMe response body: ${res.body}");
     if (res.statusCode == 200) {
       _me = jsonDecode(res.body);
+      print("✅ User data fetched successfully: $_me");
+    } else {
+      print("❌ Failed to fetch user data");
     }
   }
 
@@ -107,14 +128,29 @@ class ApiService {
   }
 
   Future<bool> createCourse(String title, String desc) async {
-    if (_token == null) return false;
+    if (_token == null) {
+      print("❌ No token available for createCourse");
+      return false;
+    }
+
+    print("📚 Making createCourse request to: $baseUrl/api/courses/");
+    print("📤 Request body: ${jsonEncode({'title': title, 'description': desc})}");
+    print("🔑 Using token: ${_token != null ? 'Yes' : 'No'}");
+
     final res = await http.post(Uri.parse('$baseUrl/api/courses/'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $_token'
         },
         body: jsonEncode({'title': title, 'description': desc}));
-    return res.statusCode == 201;
+
+    print("📥 Create course response status: ${res.statusCode}");
+    print("📥 Create course response body: ${res.body}");
+
+    final success = res.statusCode == 201;
+    print("📚 Create course result: $success");
+
+    return success;
   }
 
   Future<bool> createAdmin({
@@ -292,27 +328,87 @@ class ApiService {
 
   // Admin course management API methods
   Future<bool> assignTeacherToCourse(int courseId, int teacherId) async {
-    if (_token == null) return false;
-    final res = await http.post(Uri.parse('$baseUrl/api/courses/admin/$courseId/assign-teacher'),
-        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
-        body: jsonEncode({'teacher_id': teacherId}));
-    return res.statusCode == 200;
+    if (_token == null) {
+      print("❌ No token available for assignTeacherToCourse");
+      return false;
+    }
+
+    // Build URL with query parameters
+    final uri = Uri.parse('$baseUrl/api/courses/admin/$courseId/assign-teacher').replace(queryParameters: {
+      'teacher_id': teacherId.toString(),
+    });
+
+    print("👨‍🏫 Making assignTeacherToCourse request to: $uri");
+    print("📤 Query parameters: teacher_id=$teacherId");
+    print("🔑 Using token: ${_token != null ? 'Yes' : 'No'}");
+
+    final res = await http.post(uri,
+        headers: {'Authorization': 'Bearer $_token'});
+
+    print("📥 Assign teacher response status: ${res.statusCode}");
+    print("📥 Assign teacher response body: ${res.body}");
+
+    final success = res.statusCode == 200;
+    print("👨‍🏫 Assign teacher result: $success");
+
+    return success;
   }
 
   Future<bool> uploadCourseVideo(int courseId, String title, String url, {String? description}) async {
-    if (_token == null) return false;
-    final res = await http.post(Uri.parse('$baseUrl/api/courses/admin/$courseId/upload-video'),
-        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
-        body: jsonEncode({'title': title, 'url': url, 'description': description}));
-    return res.statusCode == 200;
+    if (_token == null) {
+      print("❌ No token available for uploadCourseVideo");
+      return false;
+    }
+
+    // Build URL with query parameters
+    final uri = Uri.parse('$baseUrl/api/courses/admin/$courseId/upload-video').replace(queryParameters: {
+      'title': title,
+      'url': url,
+      if (description != null) 'description': description,
+    });
+
+    print("🎥 Making uploadCourseVideo request to: $uri");
+    print("📤 Query parameters: title=$title, url=$url, description=$description");
+    print("🔑 Using token: ${_token != null ? 'Yes' : 'No'}");
+
+    final res = await http.post(uri,
+        headers: {'Authorization': 'Bearer $_token'});
+
+    print("📥 Upload video response status: ${res.statusCode}");
+    print("📥 Upload video response body: ${res.body}");
+
+    final success = res.statusCode == 200;
+    print("🎥 Upload video result: $success");
+
+    return success;
   }
 
   Future<bool> uploadCourseNote(int courseId, String title, String content) async {
-    if (_token == null) return false;
-    final res = await http.post(Uri.parse('$baseUrl/api/courses/admin/$courseId/upload-note'),
-        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
-        body: jsonEncode({'title': title, 'content': content}));
-    return res.statusCode == 200;
+    if (_token == null) {
+      print("❌ No token available for uploadCourseNote");
+      return false;
+    }
+
+    // Build URL with query parameters
+    final uri = Uri.parse('$baseUrl/api/courses/admin/$courseId/upload-note').replace(queryParameters: {
+      'title': title,
+      'content': content,
+    });
+
+    print("📝 Making uploadCourseNote request to: $uri");
+    print("📤 Query parameters: title=$title, content=$content");
+    print("🔑 Using token: ${_token != null ? 'Yes' : 'No'}");
+
+    final res = await http.post(uri,
+        headers: {'Authorization': 'Bearer $_token'});
+
+    print("📥 Upload note response status: ${res.statusCode}");
+    print("📥 Upload note response body: ${res.body}");
+
+    final success = res.statusCode == 200;
+    print("📝 Upload note result: $success");
+
+    return success;
   }
 
   Future<List<dynamic>> getCourseVideos(int courseId) async {

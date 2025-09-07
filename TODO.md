@@ -20,6 +20,7 @@
 - [x] Update admin dashboard in mobile_app/lib/screens/admin_dashboard.dart with course management, user management, logout
 - [x] Enhance manage users screen in mobile_app/lib/screens/manage_users.dart to show all user details
 - [x] Update teacher dashboard in mobile_app/lib/screens/teacher_dashboard.dart to remove self-enrollment, add logout
+- [x] Create manage courses screen in mobile_app/lib/screens/manage_courses.dart with full course management functionality
 
 ## Testing and Followup
 - [ ] Test WebSocket connection between backend and mobile app
