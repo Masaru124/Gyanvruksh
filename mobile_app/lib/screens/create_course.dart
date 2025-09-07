@@ -15,17 +15,12 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
   String? error;
 
   void _createCourse() async {
-    print("📚 Course creation started");
-    print("📝 Title: ${titleCtrl.text}");
-    print("📝 Description: ${descCtrl.text}");
-
     setState(() {
       loading = true;
       error = null;
     });
 
     if (titleCtrl.text.isEmpty || descCtrl.text.isEmpty) {
-      print("⚠️ Validation failed: Empty fields");
       setState(() {
         error = "Please fill all required fields";
         loading = false;
@@ -34,14 +29,10 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
     }
 
     try {
-      print("📡 Calling ApiService().createCourse()");
       final ok = await ApiService().createCourse(titleCtrl.text, descCtrl.text);
-      print("📡 Create course API response: $ok");
 
       if (ok) {
-        print("✅ Course created successfully");
         if (!mounted) {
-          print("⚠️ Widget not mounted after course creation");
           return;
         }
 
@@ -55,28 +46,21 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
         );
 
         // Navigate back after showing the message
-        print("🔄 Waiting 1 second before navigation");
         await Future.delayed(const Duration(seconds: 1));
         if (mounted) {
-          print("🚀 Navigating back with success result");
           Navigator.of(context).pop(true); // Pass true to indicate success
-        } else {
-          print("⚠️ Widget not mounted during navigation");
         }
       } else {
-        print("❌ Course creation failed");
         setState(() {
           error = "Failed to create course";
         });
       }
     } catch (e) {
-      print("💥 Course creation error: $e");
       setState(() {
         error = e.toString();
       });
     } finally {
       if (mounted) {
-        print("🔄 Setting loading to false");
         setState(() {
           loading = false;
         });

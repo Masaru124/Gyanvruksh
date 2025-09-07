@@ -396,18 +396,13 @@ def admin_delete_course_note(note_id: int, db: Session = Depends(get_db), user: 
 def get_course_videos(course_id: int, db: Session = Depends(get_db)):
     """Get all videos for a course"""
     videos = db.query(CourseVideo).filter(CourseVideo.course_id == course_id).order_by(CourseVideo.uploaded_at.desc()).all()
-    # Convert Google Drive folder URLs to direct file URLs if possible
+    # Return videos as is, no Google Drive to YouTube conversion
     updated_videos = []
     for v in videos:
-        url = v.url
-        # If URL is a Google Drive folder link, replace with direct file link if possible
-        if "drive.google.com/drive/folders" in url:
-            # Cannot stream folder, so skip or set error URL
-            url = ""
         updated_videos.append({
             "id": v.id,
             "title": v.title,
-            "url": url,
+            "url": v.url,
             "description": v.description,
             "uploaded_at": v.uploaded_at.isoformat()
         })

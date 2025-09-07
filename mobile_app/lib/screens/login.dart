@@ -20,53 +20,39 @@ class _LoginScreenState extends State<LoginScreen> {
     final cleanEmail = emailCtrl.text.trim();
     final cleanPassword = passCtrl.text.trim();
 
-    print("🔐 Login attempt started");
-    print("📧 Email: $cleanEmail");
-    print("🔑 Password length: ${cleanPassword.length}");
-
     setState(() {
       loading = true;
       error = null;
     });
 
     try {
-      print("📡 Calling ApiService().login()");
       final ok = await ApiService().login(cleanEmail, cleanPassword);
-      print("📡 Login API response: $ok");
 
       if (!mounted) {
-        print("⚠️ Widget not mounted, returning");
         return;
       }
 
       if (ok) {
-        print("✅ Login successful, fetching user data");
         final me = ApiService().me();
-        print("👤 User data: $me");
 
         if (me != null) {
-          print("🚀 Navigating to NavigationScreen");
           Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (_) => NavigationScreen(user: me)));
         } else {
-          print("❌ User data is null");
           setState(() {
             error = "Failed to fetch user data";
           });
         }
       } else {
-        print("❌ Login failed - invalid credentials");
         setState(() {
           error = "Invalid credentials";
         });
       }
     } catch (e) {
-      print("💥 Login error: $e");
       setState(() {
         error = "Login error: ${e.toString()}";
       });
     } finally {
-      print("🔄 Setting loading to false");
       setState(() {
         loading = false;
       });

@@ -23,7 +23,6 @@ def run_migration():
             result = conn.execute(check_query).fetchone()
 
             if result:
-                print("✅ Table 'chat_messages' already exists. Skipping migration.")
                 return True
 
             # Create the chat_messages table
@@ -37,17 +36,11 @@ def run_migration():
             """)
             conn.execute(create_query)
             conn.commit()
-            print("✅ Migration completed: chat_messages table created")
     except Exception as e:
-        print(f"❌ Migration failed: {e}")
         return False
     return True
 
 if __name__ == "__main__":
-    print("Running migration to create chat_messages table...")
     success = run_migration()
-    if success:
-        print("Migration completed successfully!")
-    else:
-        print("Migration failed!")
+    if not success:
         sys.exit(1)

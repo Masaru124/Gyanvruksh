@@ -108,34 +108,24 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
           ),
           TextButton(
             onPressed: () async {
-              print("🎥 Upload video button pressed");
-              print("📝 Title: ${titleCtrl.text}");
-              print("🔗 URL: ${urlCtrl.text}");
-              print("📝 Description: ${descCtrl.text}");
-
               if (titleCtrl.text.isNotEmpty && urlCtrl.text.isNotEmpty) {
-                print("✅ Validation passed, proceeding with upload");
                 Navigator.pop(context);
                 setState(() => loading = true);
                 try {
-                  print("📡 Calling ApiService().uploadCourseVideo()");
                   final success = await ApiService().uploadCourseVideo(
                     courseId,
                     titleCtrl.text,
                     urlCtrl.text,
                     description: descCtrl.text.isNotEmpty ? descCtrl.text : null,
                   );
-                  print("📡 Upload video API result: $success");
 
                   if (success) {
-                    print("✅ Video uploaded successfully");
                     if (mounted) {
                       ScaffoldMessenger.of(_mainContext).showSnackBar(
                         const SnackBar(content: Text('Video uploaded successfully')),
                       );
                     }
                   } else {
-                    print("❌ Video upload failed");
                     if (mounted) {
                       ScaffoldMessenger.of(_mainContext).showSnackBar(
                         const SnackBar(content: Text('Failed to upload video')),
@@ -143,7 +133,6 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                     }
                   }
                 } catch (e) {
-                  print("💥 Video upload error: $e");
                   if (mounted) {
                     ScaffoldMessenger.of(_mainContext).showSnackBar(
                       SnackBar(content: Text('Error: $e')),
@@ -151,12 +140,9 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                   }
                 } finally {
                   if (mounted) {
-                    print("🔄 Setting loading to false");
                     setState(() => loading = false);
                   }
                 }
-              } else {
-                print("⚠️ Validation failed: Title or URL is empty");
               }
             },
             child: const Text('Upload'),
@@ -195,32 +181,23 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
           ),
           TextButton(
             onPressed: () async {
-              print("📝 Upload note button pressed");
-              print("📝 Title: ${titleCtrl.text}");
-              print("📝 Content: ${contentCtrl.text}");
-
               if (titleCtrl.text.isNotEmpty && contentCtrl.text.isNotEmpty) {
-                print("✅ Validation passed, proceeding with note upload");
                 Navigator.pop(context);
                 setState(() => loading = true);
                 try {
-                  print("📡 Calling ApiService().uploadCourseNote()");
                   final success = await ApiService().uploadCourseNote(
                     courseId,
                     titleCtrl.text,
                     contentCtrl.text,
                   );
-                  print("📡 Upload note API result: $success");
 
                   if (success) {
-                    print("✅ Note uploaded successfully");
                     if (mounted) {
                       ScaffoldMessenger.of(_mainContext).showSnackBar(
                         const SnackBar(content: Text('Note uploaded successfully')),
                       );
                     }
                   } else {
-                    print("❌ Note upload failed");
                     if (mounted) {
                       ScaffoldMessenger.of(_mainContext).showSnackBar(
                         const SnackBar(content: Text('Failed to upload note')),
@@ -228,7 +205,6 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                     }
                   }
                 } catch (e) {
-                  print("💥 Note upload error: $e");
                   if (mounted) {
                     ScaffoldMessenger.of(_mainContext).showSnackBar(
                       SnackBar(content: Text('Error: $e')),
@@ -236,12 +212,9 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                   }
                 } finally {
                   if (mounted) {
-                    print("🔄 Setting loading to false");
                     setState(() => loading = false);
                   }
                 }
-              } else {
-                print("⚠️ Validation failed: Title or content is empty");
               }
             },
             child: const Text('Upload'),

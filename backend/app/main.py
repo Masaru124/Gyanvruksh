@@ -11,9 +11,6 @@ PING_INTERVAL = 5 * 60  # 5 minutes
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # ✅ On Startup
-    print("🚀 App is starting up...")
-
     # Create DB tables
     Base.metadata.create_all(bind=engine)
 
@@ -24,17 +21,13 @@ async def lifespan(app: FastAPI):
             try:
                 async with httpx.AsyncClient() as client:
                     res = await client.get(APP_URL)
-                    print(f"✅ Self-ping: {res.status_code}")
             except Exception as e:
-                print(f"❌ Self-ping failed: {e}")
+                pass
             await asyncio.sleep(PING_INTERVAL)
 
     asyncio.create_task(self_ping())
 
     yield  # 👈 App runs here
-
-    # ❌ On Shutdown (if needed)
-    print("🛑 App is shutting down...")
 
 app = FastAPI(title="Gyanvruksh API", version="0.1.0", lifespan=lifespan)
 

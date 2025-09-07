@@ -9,13 +9,26 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  # Core packages
   http: ^1.2.2
   google_fonts: ^6.1.0
-  fl_chart: ^0.66.2
-  flutter_launcher_icons: ^0.14.4
-  web_socket_channel: ^2.3.0
+
+  # Charts
+  fl_chart: ^1.1.0
+
+  # Webview
+  flutter_inappwebview: ^6.1.5
+
+  # Real-time comm
+  web_socket_channel: ^3.0.3
+
+  # Video playback
   video_player: ^2.8.7
   chewie: ^1.7.5
+
+  # YouTube
+  youtube_player_flutter: ^9.1.1
 
 dev_dependencies:
   flutter_test:
