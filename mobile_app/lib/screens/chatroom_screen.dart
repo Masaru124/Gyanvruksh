@@ -6,6 +6,13 @@ import 'package:gyanvruksh/services/api.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
 import 'package:gyanvruksh/widgets/custom_form_field.dart';
 import 'package:gyanvruksh/widgets/custom_animated_button.dart';
+import 'package:gyanvruksh/widgets/backgrounds/cinematic_background.dart';
+import 'package:gyanvruksh/widgets/particle_background.dart';
+import 'package:gyanvruksh/widgets/floating_elements.dart';
+import 'package:gyanvruksh/widgets/animated_wave_background.dart';
+import 'package:gyanvruksh/widgets/micro_interactions.dart';
+import 'package:gyanvruksh/widgets/animated_text_widget.dart';
+import 'package:gyanvruksh/theme/futuristic_theme.dart';
 import 'dart:convert';
 
 class ChatroomScreen extends StatefulWidget {
@@ -192,139 +199,191 @@ class _ChatroomScreenState extends State<ChatroomScreen>
     final user = ApiService().me();
 
     return Scaffold(
-      body: AnimatedBuilder(
-        animation: _backgroundAnimation,
-        builder: (context, child) {
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _backgroundAnimation.value ?? colorScheme.primary,
-                  colorScheme.secondary,
-                  colorScheme.tertiary,
-                ],
-              ),
-            ),
-            child: SafeArea(
-              child: Column(
-                children: [
-                  // Header
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    child: Row(
-                      children: [
-                        IconButton(
+      body: Stack(
+        children: [
+          // Cinematic Background
+          CinematicBackground(isDark: false),
+
+          // Enhanced Particle Background
+          ParticleBackground(
+            particleCount: 25,
+            maxParticleSize: 3.0,
+            particleColor: FuturisticColors.primary,
+          ),
+
+          // Floating Elements
+          FloatingElements(
+            elementCount: 6,
+            maxElementSize: 40,
+            icons: const [
+              Icons.chat,
+              Icons.message,
+              Icons.people,
+              Icons.forum,
+              Icons.question_answer,
+              Icons.group,
+            ],
+          ),
+
+          // Animated Wave Background
+          AnimatedWaveBackground(
+            color: FuturisticColors.neonBlue.withOpacity(0.03),
+            height: MediaQuery.of(context).size.height,
+          ),
+
+          SafeArea(
+            child: Column(
+              children: [
+                // Enhanced Header with Glassmorphism
+                GlassmorphismCard(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  blurStrength: 15,
+                  opacity: 0.1,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Row(
+                    children: [
+                      MicroInteractionWrapper(
+                        child: IconButton(
                           onPressed: () => Navigator.of(context).pop(),
                           icon: Icon(
                             Icons.arrow_back,
-                            color: colorScheme.onPrimary,
+                            color: colorScheme.onSurface,
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            'Community Chat',
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              color: colorScheme.onPrimary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: AnimatedTextWidget(
+                          text: 'Community Chat',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: colorScheme.onSurface,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: FuturisticColors.primary.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
+                          animationType: AnimationType.fade,
+                          duration: const Duration(milliseconds: 800),
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: _isConnected
-                                ? Colors.green.withOpacity(0.2)
-                                : Colors.red.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              _isConnected
+                                  ? FuturisticColors.primary.withOpacity(0.2)
+                                  : Colors.red.withOpacity(0.2),
+                              _isConnected
+                                  ? FuturisticColors.secondary.withOpacity(0.2)
+                                  : Colors.red.withOpacity(0.1),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                          child: Icon(
-                            _isConnected ? Icons.wifi : Icons.wifi_off,
-                            color: _isConnected ? Colors.green : Colors.red,
-                            size: 16,
-                          ),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                      ],
-                    ),
+                        child: Icon(
+                          _isConnected ? Icons.wifi : Icons.wifi_off,
+                          color: _isConnected ? FuturisticColors.primary : Colors.red,
+                          size: 16,
+                        ),
+                      ),
+                    ],
                   ),
+                )
+                .animate()
+                .fadeIn(duration: 600.ms)
+                .slideY(begin: -0.2, end: 0, duration: 500.ms),
 
-                  // Messages List
-                  Expanded(
-                    child: _messages.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  FontAwesomeIcons.comments,
-                                  size: 64,
-                                  color: colorScheme.onSurface.withOpacity(0.3),
+                // Messages List
+                Expanded(
+                  child: _messages.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                FontAwesomeIcons.comments,
+                                size: 64,
+                                color: colorScheme.onSurface.withOpacity(0.3),
+                              ),
+                              const SizedBox(height: 16),
+                              AnimatedTextWidget(
+                                text: 'No messages yet',
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  color: colorScheme.onSurface.withOpacity(0.6),
                                 ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'No messages yet',
-                                  style: theme.textTheme.headlineSmall?.copyWith(
-                                    color: colorScheme.onSurface.withOpacity(0.6),
-                                  ),
+                                animationType: AnimationType.fade,
+                                duration: const Duration(milliseconds: 600),
+                              ),
+                              const SizedBox(height: 8),
+                              AnimatedTextWidget(
+                                text: 'Start the conversation!',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurface.withOpacity(0.4),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Start the conversation!',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: colorScheme.onSurface.withOpacity(0.4),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            itemCount: _messages.length,
-                            itemBuilder: (context, index) {
-                              final message = _messages[index];
-                              final isMe = message['user_id'] == user?['id'];
-                              return _buildMessageBubble(message, isMe, index);
-                            },
+                                animationType: AnimationType.fade,
+                                duration: const Duration(milliseconds: 600),
+                              ),
+                            ],
                           ),
-                  ),
-
-                  // Message Input
-                  GlassmorphismCard(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    blurStrength: 15,
-                    opacity: 0.1,
-                    borderRadius: BorderRadius.circular(0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: CustomFormField(
-                            controller: _messageController,
-                            labelText: 'Message',
-                            hintText: 'Type a message...',
-                            prefixIcon: Icons.message_outlined,
-                            maxLines: 3,
-                          ),
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          itemCount: _messages.length,
+                          itemBuilder: (context, index) {
+                            final message = _messages[index];
+                            final isMe = message['user_id'] == user?['id'];
+                            return _buildMessageBubble(message, isMe, index);
+                          },
                         ),
-                        const SizedBox(width: 12),
-                        CustomAnimatedButton(
-                          text: '',
+                ),
+
+                // Enhanced Message Input
+                GlassmorphismCard(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
+                  blurStrength: 15,
+                  opacity: 0.1,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: CustomFormField(
+                          controller: _messageController,
+                          labelText: 'Message',
+                          hintText: 'Type a message...',
+                          prefixIcon: Icons.message_outlined,
+                          maxLines: 3,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      MicroInteractionWrapper(
+                        child: CustomAnimatedButton(
+                          text: 'Send',
                           onPressed: _sendMessage,
                           width: 50,
                           height: 50,
-                          backgroundColor: colorScheme.primary,
+                          backgroundColor: FuturisticColors.primary,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                )
+                .animate()
+                .fadeIn(duration: 600.ms, delay: 400.ms)
+                .slideY(begin: 0.2, end: 0, duration: 500.ms),
+              ],
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }

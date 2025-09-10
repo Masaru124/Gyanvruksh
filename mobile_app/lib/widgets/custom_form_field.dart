@@ -113,15 +113,6 @@ class _CustomFormFieldState extends State<CustomFormField>
             return Container(
               decoration: BoxDecoration(
                 borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
-                boxShadow: _internalFocusNode.hasFocus
-                    ? [
-                        BoxShadow(
-                          color: colorScheme.primary.withValues(alpha: 0.1),
-                          blurRadius: 8,
-                          spreadRadius: 2,
-                        ),
-                      ]
-                    : null,
               ),
               child: TextFormField(
                 controller: widget.controller,

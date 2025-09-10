@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gyanvruksh/services/api.dart';
 import 'package:gyanvruksh/screens/courses_screen.dart';
 import 'package:gyanvruksh/screens/messages_screen.dart';
 import 'package:gyanvruksh/screens/profile_screen.dart';
 import 'package:gyanvruksh/screens/chatroom_screen.dart';
+import 'package:gyanvruksh/widgets/backgrounds/cinematic_background.dart';
+import 'package:gyanvruksh/widgets/particle_background.dart';
+import 'package:gyanvruksh/widgets/floating_elements.dart';
+import 'package:gyanvruksh/widgets/animated_wave_background.dart';
+import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
+import 'package:gyanvruksh/widgets/glowing_button.dart';
+import 'package:gyanvruksh/widgets/micro_interactions.dart';
+import 'package:gyanvruksh/widgets/animated_text_widget.dart';
+import 'package:gyanvruksh/theme/futuristic_theme.dart';
 
 class TeacherDashboard extends StatefulWidget {
   const TeacherDashboard({super.key});
@@ -165,34 +176,40 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     }
   }
 
-  Widget _buildAvailableCourses() {
+  Widget _buildAvailableCourses(ThemeData theme, ColorScheme colorScheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Select Available Courses to Teach',
-          style: TextStyle(
-            fontSize: 20,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF2E3A59),
+            shadows: [
+              Shadow(
+                color: FuturisticColors.primary.withOpacity(0.3),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 16),
         SizedBox(
           height: 200,
           child: isLoadingCourses
-              ? const Center(
+              ? Center(
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF667EEA)),
+                    strokeWidth: 3,
+                    valueColor: AlwaysStoppedAnimation<Color>(FuturisticColors.primary),
                   ),
                 )
               : availableCourses.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
                         'No available courses at the moment',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 16,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: colorScheme.onSurface.withOpacity(0.6),
                         ),
                       ),
                     )
@@ -200,243 +217,256 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                       scrollDirection: Axis.horizontal,
                       itemCount: availableCourses.length,
                       itemBuilder: (context, index) {
-              final course = availableCourses[index];
-              return Container(
-                width: 280,
-                margin: const EdgeInsets.only(right: 16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.purple.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        course['title'],
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        course['description'],
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white70,
-                        ),
-                      ),
-                      const Spacer(),
-                      const Text(
-                        'Contact admin to assign this course',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
+                        final course = availableCourses[index];
+                        return GlassmorphismCard(
+                          width: 280,
+                          margin: const EdgeInsets.only(right: 16),
+                          padding: const EdgeInsets.all(20),
+                          blurStrength: 12,
+                          opacity: 0.1,
+                          borderRadius: BorderRadius.circular(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                course['title'],
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: colorScheme.onSurface,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                course['description'],
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurface.withOpacity(0.8),
+                                ),
+                              ),
+                              const Spacer(),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      FuturisticColors.primary.withOpacity(0.2),
+                                      FuturisticColors.secondary.withOpacity(0.2),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Contact admin to assign this course',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: FuturisticColors.primary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        .animate()
+                        .fadeIn(duration: 600.ms, delay: Duration(milliseconds: index * 100))
+                        .slideX(begin: 0.2, end: 0, duration: 500.ms, delay: Duration(milliseconds: index * 100));
                       },
                     ),
         ),
       ],
-    );
+    )
+    .animate()
+    .fadeIn(duration: 600.ms, delay: 200.ms)
+    .slideY(begin: 0.1, end: 0, duration: 500.ms);
   }
 
-  Widget _buildUpcomingClasses() {
-    return Container(
+  Widget _buildUpcomingClasses(ThemeData theme, ColorScheme colorScheme) {
+    return GlassmorphismCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      blurStrength: 12,
+      opacity: 0.1,
+      borderRadius: BorderRadius.circular(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Upcoming Classes',
-            style: TextStyle(
-              fontSize: 18,
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: colorScheme.onSurface,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF2E3A59),
+              shadows: [
+                Shadow(
+                  color: FuturisticColors.primary.withOpacity(0.3),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
           ...upcomingClasses.map((classInfo) => Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF667EEA).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.class_,
-                    color: Color(0xFF667EEA),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        classInfo['subject'],
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF2E3A59),
-                        ),
+            child: MicroInteractionWrapper(
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          FuturisticColors.primary.withOpacity(0.2),
+                          FuturisticColors.secondary.withOpacity(0.2),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      Text(
-                        '${classInfo['class']} • ${classInfo['time']}',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.class_,
+                      color: FuturisticColors.primary,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          classInfo['subject'],
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: colorScheme.onSurface,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          '${classInfo['class']} • ${classInfo['time']}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           )),
         ],
       ),
-    );
+    )
+    .animate()
+    .fadeIn(duration: 600.ms, delay: 300.ms)
+    .slideY(begin: 0.1, end: 0, duration: 500.ms);
   }
 
-  Widget _buildStudentQueries() {
-    return Container(
+  Widget _buildStudentQueries(ThemeData theme, ColorScheme colorScheme) {
+    return GlassmorphismCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      blurStrength: 12,
+      opacity: 0.1,
+      borderRadius: BorderRadius.circular(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Student Queries',
-            style: TextStyle(
-              fontSize: 18,
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: colorScheme.onSurface,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF2E3A59),
+              shadows: [
+                Shadow(
+                  color: FuturisticColors.primary.withOpacity(0.3),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
           ...studentQueries.map((query) => Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF764BA2).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.question_answer,
-                    color: Color(0xFF764BA2),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        query['student'],
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF2E3A59),
-                        ),
+            child: MicroInteractionWrapper(
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          FuturisticColors.primary.withOpacity(0.2),
+                          FuturisticColors.secondary.withOpacity(0.2),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      Text(
-                        query['query'],
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      Text(
-                        query['time'],
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.question_answer,
+                      color: FuturisticColors.primary,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          query['student'],
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: colorScheme.onSurface,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          query['query'],
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurface.withOpacity(0.8),
+                          ),
+                        ),
+                        Text(
+                          query['time'],
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           )),
         ],
       ),
-    );
+    )
+    .animate()
+    .fadeIn(duration: 600.ms, delay: 400.ms)
+    .slideY(begin: 0.1, end: 0, duration: 500.ms);
   }
 
-  Widget _buildPerformanceOverview() {
-    return Container(
+  Widget _buildPerformanceOverview(ThemeData theme, ColorScheme colorScheme) {
+    return GlassmorphismCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.purple.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      blurStrength: 12,
+      opacity: 0.1,
+      borderRadius: BorderRadius.circular(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Performance Overview',
-            style: TextStyle(
-              fontSize: 18,
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: colorScheme.onSurface,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              shadows: [
+                Shadow(
+                  color: FuturisticColors.primary.withOpacity(0.3),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
@@ -444,8 +474,10 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
             children: [
               Expanded(
                 child: isLoadingStats
-                    ? _buildLoadingCard()
+                    ? _buildLoadingCard(theme, colorScheme)
                     : _buildStatCard(
+                        theme,
+                        colorScheme,
                         'Total Students',
                         performanceStats['totalStudents']?.toString() ?? '0',
                         Icons.people,
@@ -454,8 +486,10 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
               const SizedBox(width: 12),
               Expanded(
                 child: isLoadingStats
-                    ? _buildLoadingCard()
+                    ? _buildLoadingCard(theme, colorScheme)
                     : _buildStatCard(
+                        theme,
+                        colorScheme,
                         'Avg Attendance',
                         '${performanceStats['averageAttendance'] ?? 0}%',
                         Icons.calendar_today,
@@ -468,8 +502,10 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
             children: [
               Expanded(
                 child: isLoadingStats
-                    ? _buildLoadingCard()
+                    ? _buildLoadingCard(theme, colorScheme)
                     : _buildStatCard(
+                        theme,
+                        colorScheme,
                         'Engagement',
                         '${performanceStats['engagementRate'] ?? 0}%',
                         Icons.trending_up,
@@ -478,8 +514,10 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
               const SizedBox(width: 12),
               Expanded(
                 child: isLoadingStats
-                    ? _buildLoadingCard()
+                    ? _buildLoadingCard(theme, colorScheme)
                     : _buildStatCard(
+                        theme,
+                        colorScheme,
                         'Assignments',
                         performanceStats['completedAssignments']?.toString() ?? '0',
                         Icons.assignment_turned_in,
@@ -489,34 +527,46 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
           ),
         ],
       ),
-    );
+    )
+    .animate()
+    .fadeIn(duration: 600.ms, delay: 500.ms)
+    .slideY(begin: 0.1, end: 0, duration: 500.ms);
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon) {
+  Widget _buildStatCard(ThemeData theme, ColorScheme colorScheme, String title, String value, IconData icon) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        gradient: LinearGradient(
+          colors: [
+            FuturisticColors.primary.withOpacity(0.1),
+            FuturisticColors.secondary.withOpacity(0.1),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: FuturisticColors.primary.withOpacity(0.2),
+          width: 1,
+        ),
       ),
       child: Column(
         children: [
-          Icon(icon, color: Colors.white, size: 24),
+          Icon(icon, color: FuturisticColors.primary, size: 24),
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 20,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: colorScheme.onSurface,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.white70,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurface.withOpacity(0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -525,29 +575,39 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     );
   }
 
-  Widget _buildLoadingCard() {
+  Widget _buildLoadingCard(ThemeData theme, ColorScheme colorScheme) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        gradient: LinearGradient(
+          colors: [
+            FuturisticColors.primary.withOpacity(0.05),
+            FuturisticColors.secondary.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: FuturisticColors.primary.withOpacity(0.1),
+          width: 1,
+        ),
       ),
-      child: const Column(
+      child: Column(
         children: [
           SizedBox(
             width: 24,
             height: 24,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              valueColor: AlwaysStoppedAnimation<Color>(FuturisticColors.primary),
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Loading...',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.white70,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurface.withOpacity(0.6),
             ),
           ),
         ],
@@ -562,11 +622,15 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   }
 
   void _showNotifications() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      backgroundColor: colorScheme.surface,
       builder: (BuildContext context) {
         return Container(
           padding: const EdgeInsets.all(20),
@@ -574,35 +638,42 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Notifications',
-                style: TextStyle(
-                  fontSize: 20,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF2E3A59),
                 ),
               ),
               const SizedBox(height: 16),
               // Sample notifications - in a real app, these would come from an API
               _buildNotificationItem(
+                theme,
+                colorScheme,
                 'New student enrolled',
                 'Alice Johnson joined your Mathematics class',
                 '2 hours ago',
                 Icons.person_add,
               ),
               _buildNotificationItem(
+                theme,
+                colorScheme,
                 'Assignment submitted',
                 'Bob Smith submitted Physics assignment',
                 '4 hours ago',
                 Icons.assignment_turned_in,
               ),
               _buildNotificationItem(
+                theme,
+                colorScheme,
                 'Class reminder',
                 'English class starts in 30 minutes',
                 '30 min ago',
                 Icons.schedule,
               ),
               _buildNotificationItem(
+                theme,
+                colorScheme,
                 'Query received',
                 'Carol Davis asked a question about homework',
                 '1 day ago',
@@ -615,53 +686,59 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     );
   }
 
-  Widget _buildNotificationItem(String title, String message, String time, IconData icon) {
+  Widget _buildNotificationItem(ThemeData theme, ColorScheme colorScheme, String title, String message, String time, IconData icon) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF667EEA).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              color: const Color(0xFF667EEA),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2E3A59),
-                  ),
+      child: MicroInteractionWrapper(
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    FuturisticColors.primary.withOpacity(0.1),
+                    FuturisticColors.secondary.withOpacity(0.1),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                Text(
-                  message,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                ),
-                Text(
-                  time,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: FuturisticColors.primary,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    message,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface.withOpacity(0.8),
+                    ),
+                  ),
+                  Text(
+                    time,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -669,76 +746,196 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(
-        title: const Text(
-          'EduConnect Teacher',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
+      body: Stack(
+        children: [
+          // Cinematic Background
+          CinematicBackground(isDark: false),
+
+          // Enhanced Particle Background
+          ParticleBackground(
+            particleCount: 30,
+            maxParticleSize: 4.0,
+            particleColor: FuturisticColors.primary,
           ),
-        ),
-        backgroundColor: theme.colorScheme.primary,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.white),
-            onPressed: _showNotifications,
+
+          // Floating Elements
+          FloatingElements(
+            elementCount: 8,
+            maxElementSize: 45,
+            icons: const [
+              Icons.school,
+              Icons.people,
+              Icons.assignment,
+              Icons.grade,
+              Icons.class_,
+              Icons.question_answer,
+              Icons.calendar_today,
+              Icons.trending_up,
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: _logout,
-            tooltip: 'Logout',
+
+          // Animated Wave Background
+          AnimatedWaveBackground(
+            color: FuturisticColors.neonBlue.withOpacity(0.04),
+            height: MediaQuery.of(context).size.height,
+          ),
+
+          SafeArea(
+            child: Column(
+              children: [
+                // Enhanced App Bar with Glassmorphism
+                GlassmorphismCard(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  blurStrength: 15,
+                  opacity: 0.1,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Row(
+                    children: [
+                      MicroInteractionWrapper(
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                FuturisticColors.primary,
+                                FuturisticColors.secondary,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.school,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          'EduConnect Teacher',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: colorScheme.onSurface,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: FuturisticColors.primary.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      MicroInteractionWrapper(
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.notifications,
+                            color: colorScheme.primary,
+                            size: 24,
+                          ),
+                          onPressed: _showNotifications,
+                          style: IconButton.styleFrom(
+                            backgroundColor: colorScheme.surface.withOpacity(0.8),
+                            padding: const EdgeInsets.all(8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      MicroInteractionWrapper(
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.logout,
+                            color: colorScheme.primary,
+                            size: 24,
+                          ),
+                          onPressed: _logout,
+                          tooltip: 'Logout',
+                          style: IconButton.styleFrom(
+                            backgroundColor: colorScheme.surface.withOpacity(0.8),
+                            padding: const EdgeInsets.all(8),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+                .animate()
+                .fadeIn(duration: 600.ms)
+                .slideY(begin: -0.2, end: 0, duration: 500.ms),
+
+                // Main Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildAvailableCourses(theme, colorScheme),
+                        const SizedBox(height: 24),
+                        _buildUpcomingClasses(theme, colorScheme),
+                        const SizedBox(height: 24),
+                        _buildStudentQueries(theme, colorScheme),
+                        const SizedBox(height: 24),
+                        _buildPerformanceOverview(theme, colorScheme),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Enhanced Bottom Navigation
+                GlassmorphismCard(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  blurStrength: 12,
+                  opacity: 0.15,
+                  borderRadius: BorderRadius.circular(20),
+                  child: BottomNavigationBar(
+                    items: const <BottomNavigationBarItem>[
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.home),
+                        label: 'Home',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.book),
+                        label: 'Courses',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.message),
+                        label: 'Messages',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.chat),
+                        label: 'Chatroom',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.person),
+                        label: 'Profile',
+                      ),
+                    ],
+                    currentIndex: _selectedIndex,
+                    selectedItemColor: FuturisticColors.primary,
+                    unselectedItemColor: colorScheme.onSurface.withOpacity(0.6),
+                    onTap: _onItemTapped,
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    type: BottomNavigationBarType.fixed,
+                  ),
+                )
+                .animate()
+                .fadeIn(duration: 600.ms, delay: 400.ms)
+                .slideY(begin: 0.2, end: 0, duration: 500.ms),
+              ],
+            ),
           ),
         ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildAvailableCourses(),
-            const SizedBox(height: 24),
-            _buildUpcomingClasses(),
-            const SizedBox(height: 24),
-            _buildStudentQueries(),
-            const SizedBox(height: 24),
-            _buildPerformanceOverview(),
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: 'Courses',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.message),
-            label: 'Messages',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'Chatroom',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFF667EEA),
-        unselectedItemColor: Colors.grey,
-        onTap: _onItemTapped,
-        backgroundColor: Colors.white,
-        elevation: 8,
-        type: BottomNavigationBarType.fixed,
       ),
     );
   }

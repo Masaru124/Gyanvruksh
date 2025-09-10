@@ -6,6 +6,14 @@ import 'package:gyanvruksh/screens/video_player_screen.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
 import 'package:gyanvruksh/widgets/custom_animated_button.dart';
 import 'package:gyanvruksh/widgets/neumorphism_container.dart';
+import 'package:gyanvruksh/widgets/backgrounds/cinematic_background.dart';
+import 'package:gyanvruksh/widgets/particle_background.dart';
+import 'package:gyanvruksh/widgets/floating_elements.dart';
+import 'package:gyanvruksh/widgets/animated_wave_background.dart';
+import 'package:gyanvruksh/widgets/glowing_button.dart';
+import 'package:gyanvruksh/widgets/micro_interactions.dart';
+import 'package:gyanvruksh/widgets/animated_text_widget.dart';
+import 'package:gyanvruksh/theme/futuristic_theme.dart';
 
 
 class CoursesScreen extends StatefulWidget {
@@ -124,123 +132,178 @@ class _CoursesScreenState extends State<CoursesScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                colorScheme.primary.withValues(alpha: 0.1),
-                colorScheme.secondary.withValues(alpha: 0.1),
-                colorScheme.tertiary.withValues(alpha: 0.1),
+        body: Stack(
+          children: [
+            // Cinematic Background
+            CinematicBackground(isDark: false),
+
+            // Enhanced Particle Background
+            ParticleBackground(
+              particleCount: 35,
+              maxParticleSize: 4.0,
+              particleColor: FuturisticColors.primary,
+            ),
+
+            // Floating Elements
+            FloatingElements(
+              elementCount: 10,
+              maxElementSize: 50,
+              icons: const [
+                Icons.book,
+                Icons.school,
+                Icons.lightbulb,
+                Icons.computer,
+                Icons.star,
+                Icons.grade,
+                Icons.access_time,
+                Icons.explore,
+                Icons.search,
+                Icons.play_circle,
               ],
             ),
-          ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                // Modern Header
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  child: Row(
-                    children: [
-                      NeumorphismContainer(
-                        padding: const EdgeInsets.all(12),
-                        borderRadius: BorderRadius.circular(16),
-                        child: Icon(
-                          FontAwesomeIcons.graduationCap,
-                          color: colorScheme.primary,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          'My Learning Journey',
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            color: colorScheme.onSurface,
-                            fontWeight: FontWeight.bold,
+
+            // Animated Wave Background
+            AnimatedWaveBackground(
+              color: FuturisticColors.neonBlue.withOpacity(0.05),
+              height: MediaQuery.of(context).size.height,
+            ),
+
+            SafeArea(
+              child: Column(
+                children: [
+                  // Modern Header with Glassmorphism
+                  GlassmorphismCard(
+                    margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    padding: const EdgeInsets.all(16),
+                    blurStrength: 15,
+                    opacity: 0.1,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Row(
+                      children: [
+                        MicroInteractionWrapper(
+                          child: NeumorphismContainer(
+                            padding: const EdgeInsets.all(12),
+                            borderRadius: BorderRadius.circular(16),
+                            child: Icon(
+                              FontAwesomeIcons.graduationCap,
+                              color: colorScheme.primary,
+                              size: 24,
+                            ),
                           ),
                         ),
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          _loadCourses();
-                          _loadAvailableCourses();
-                        },
-                        icon: Icon(
-                          Icons.refresh,
-                          color: colorScheme.primary,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: AnimatedTextWidget(
+                            text: 'My Learning Journey',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              color: colorScheme.onSurface,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(
+                                  color: FuturisticColors.primary.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            animationType: AnimationType.fade,
+                            duration: const Duration(milliseconds: 800),
+                          ),
                         ),
-                        style: IconButton.styleFrom(
-                          backgroundColor: colorScheme.surface,
-                          padding: const EdgeInsets.all(12),
+                        MicroInteractionWrapper(
+                          child: IconButton(
+                            onPressed: () {
+                              _loadCourses();
+                              _loadAvailableCourses();
+                            },
+                            icon: Icon(
+                              Icons.refresh,
+                              color: colorScheme.primary,
+                            ),
+                            style: IconButton.styleFrom(
+                              backgroundColor: colorScheme.surface.withOpacity(0.8),
+                              padding: const EdgeInsets.all(12),
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Modern Tab Bar
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 24),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface.withValues(alpha: 0.8),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: colorScheme.shadow.withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: TabBar(
-                    indicator: BoxDecoration(
-                      color: colorScheme.primary,
-                      borderRadius: BorderRadius.circular(12),
+                      ],
                     ),
-                    labelColor: colorScheme.onPrimary,
-                    unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.7),
-                    tabs: const [
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.book),
-                            SizedBox(width: 8),
-                            Text('My Courses'),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.explore),
-                            SizedBox(width: 8),
-                            Text('Discover'),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 600.ms)
+                  .slideY(begin: -0.2, end: 0, duration: 500.ms),
 
-                // Tab Content
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      // My Courses Tab
-                      _buildMyCoursesTab(theme, colorScheme),
-                      // Available Courses Tab
-                      _buildAvailableCoursesTab(theme, colorScheme),
-                    ],
+                  // Modern Tab Bar with Glassmorphism
+                  GlassmorphismCard(
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.all(4),
+                    blurStrength: 12,
+                    opacity: 0.15,
+                    borderRadius: BorderRadius.circular(20),
+                    child: TabBar(
+                      indicator: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            FuturisticColors.primary,
+                            FuturisticColors.secondary,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: FuturisticColors.primary.withOpacity(0.3),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      labelColor: colorScheme.onPrimary,
+                      unselectedLabelColor: colorScheme.onSurface.withOpacity(0.8),
+                      tabs: const [
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.book),
+                              SizedBox(width: 8),
+                              Text('My Courses'),
+                            ],
+                          ),
+                        ),
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.explore),
+                              SizedBox(width: 8),
+                              Text('Discover'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 600.ms, delay: 200.ms)
+                  .slideY(begin: -0.1, end: 0, duration: 400.ms),
+
+                  // Tab Content
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        // My Courses Tab
+                        _buildMyCoursesTab(theme, colorScheme),
+                        // Available Courses Tab
+                        _buildAvailableCoursesTab(theme, colorScheme),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -341,7 +404,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
             ),
             const SizedBox(height: 32),
             CustomAnimatedButton(
-              onPressed: () => DefaultTabController.of(context)?.animateTo(1),
+              onPressed: () => DefaultTabController.of(context).animateTo(1),
               text: 'Browse Courses',
               backgroundColor: colorScheme.primary,
               textColor: colorScheme.onPrimary,

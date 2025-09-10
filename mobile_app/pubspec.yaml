@@ -50,6 +50,15 @@ dependencies:
   flutter_svg: ^2.0.9
   intl: ^0.19.0
 
+  # Storage and persistence
+  shared_preferences: ^2.2.3
+
+  # Advanced animation libraries for futuristic UI
+  rive: ^0.13.0
+  animated_text_kit: ^4.2.2
+  flutter_animator: ^3.2.2
+  flutter_sequence_animation: ^4.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

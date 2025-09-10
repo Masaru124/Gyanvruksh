@@ -12,9 +12,16 @@ import 'package:gyanvruksh/screens/courses_screen.dart';
 import 'package:gyanvruksh/screens/leaderboard_screen.dart';
 import 'package:gyanvruksh/screens/profile_screen.dart';
 import 'package:gyanvruksh/screens/chatroom_screen.dart';
+import 'package:gyanvruksh/screens/onboarding_screen.dart';
 import 'package:gyanvruksh/blocs/theme_bloc.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
-import 'package:gyanvruksh/utils/responsive_utils.dart';
+import 'package:gyanvruksh/widgets/particle_background.dart';
+import 'package:gyanvruksh/widgets/floating_elements.dart';
+import 'package:gyanvruksh/widgets/glowing_button.dart';
+import 'package:gyanvruksh/widgets/animated_wave_background.dart';
+import 'package:gyanvruksh/widgets/micro_interactions.dart';
+import 'package:gyanvruksh/theme/futuristic_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NavigationScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -30,6 +37,8 @@ class _NavigationScreenState extends State<NavigationScreen>
   int _selectedIndex = 0;
   late AnimationController _navController;
   late Animation<double> _navAnimation;
+  bool _hasSeenOnboarding = false;
+  bool _isLoading = true;
 
   late final List<Widget> _studentPages;
   late final List<Widget> _adminPages;
@@ -122,6 +131,17 @@ class _NavigationScreenState extends State<NavigationScreen>
         color: const Color(0xFF26A69A),
       ),
     ];
+
+    _checkOnboardingStatus();
+  }
+
+  Future<void> _checkOnboardingStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final seen = prefs.getBool('has_seen_onboarding') ?? false;
+    setState(() {
+      _hasSeenOnboarding = seen;
+      _isLoading = false;
+    });
   }
 
   @override
@@ -146,12 +166,26 @@ class _NavigationScreenState extends State<NavigationScreen>
 
     return Container(
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            colorScheme.surface.withOpacity(0.95),
+            colorScheme.surface,
+          ],
+        ),
+        border: Border(
+          top: BorderSide(
+            color: FuturisticColors.neonBlue.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+            color: FuturisticColors.neonBlue.withOpacity(0.1),
+            blurRadius: 20,
+            spreadRadius: 5,
+            offset: const Offset(0, -5),
           ),
         ],
       ),
@@ -166,18 +200,38 @@ class _NavigationScreenState extends State<NavigationScreen>
           return BottomNavigationBarItem(
             icon: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              padding: EdgeInsets.all(isSelected ? 8 : 6),
+              padding: EdgeInsets.all(isSelected ? 10 : 8),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? item.color.withOpacity(0.1)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
+                gradient: isSelected
+                    ? LinearGradient(
+                        colors: [
+                          item.color.withOpacity(0.2),
+                          item.color.withOpacity(0.1),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: item.color.withOpacity(0.3),
+                          blurRadius: 8,
+                          spreadRadius: 2,
+                        ),
+                      ]
+                    : null,
               ),
               child: FaIcon(
                 item.icon,
-                size: isSelected ? 24 : 20,
+                size: isSelected ? 26 : 22,
                 color: isSelected ? item.color : colorScheme.onSurface.withOpacity(0.6),
-              ),
+              )
+                  .animate(target: isSelected ? 1 : 0)
+                  .scale(begin: const Offset(1, 1), end: const Offset(1.1, 1.1), duration: 200.ms)
+                  .then()
+                  .scale(begin: const Offset(1.1, 1.1), end: const Offset(1, 1), duration: 200.ms),
             ),
             label: item.label,
           );
@@ -195,155 +249,176 @@ class _NavigationScreenState extends State<NavigationScreen>
     final colorScheme = theme.colorScheme;
     final navItems = isAdmin ? _adminNavItems : _studentNavItems;
 
-    return Container(
-      width: 280,
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(2, 0),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  colorScheme.primary,
-                  colorScheme.secondary,
-                ],
+    return Stack(
+      children: [
+        // Animated Wave Background
+        AnimatedWaveBackground(
+          color: FuturisticColors.neonBlue.withOpacity(0.1),
+          height: MediaQuery.of(context).size.height,
+        ),
+
+        // Particle Background
+        ParticleBackground(
+          particleCount: 15,
+          particleColor: FuturisticColors.neonBlue,
+        ),
+
+        Container(
+          width: 280,
+          decoration: BoxDecoration(
+            color: colorScheme.surface.withOpacity(0.9),
+            borderRadius: const BorderRadius.only(
+              topRight: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: FuturisticColors.neonBlue.withOpacity(0.2),
+                blurRadius: 20,
+                spreadRadius: 5,
+                offset: const Offset(5, 0),
               ),
-            ),
-            child: Column(
-              children: [
-                Hero(
-                  tag: 'app_logo',
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: colorScheme.onPrimary.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(
-                      FontAwesomeIcons.graduationCap,
-                      color: colorScheme.onPrimary,
-                      size: 30,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Gyanvruksh',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: colorScheme.onPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  isAdmin ? 'Admin Panel' : 'Learning Hub',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onPrimary.withOpacity(0.8),
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
-
-          // Navigation Items
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              itemCount: navItems.length,
-              itemBuilder: (context, index) {
-                final item = navItems[index];
-                final isSelected = index == _selectedIndex;
-
-                return AnimatedBuilder(
-                  animation: _navAnimation,
-                  builder: (context, child) {
-                    return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? item.color.withOpacity(0.1)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        leading: FaIcon(
-                          item.icon,
-                          color: isSelected
-                              ? item.color
-                              : colorScheme.onSurface.withOpacity(0.6),
-                          size: 20,
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      FuturisticColors.neonBlue,
+                      FuturisticColors.neonPurple,
+                    ],
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Hero(
+                      tag: 'app_logo',
+                      child: Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: colorScheme.onPrimary.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        title: Text(
-                          item.label,
-                          style: theme.textTheme.bodyLarge?.copyWith(
+                        child: Icon(
+                          FontAwesomeIcons.graduationCap,
+                          color: colorScheme.onPrimary,
+                          size: 30,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Gyanvruksh',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: colorScheme.onPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isAdmin ? 'Admin Panel' : 'Learning Hub',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onPrimary.withOpacity(0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Navigation Items
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  itemCount: navItems.length,
+                  itemBuilder: (context, index) {
+                    final item = navItems[index];
+                    final isSelected = index == _selectedIndex;
+
+                    return AnimatedBuilder(
+                      animation: _navAnimation,
+                      builder: (context, child) {
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          decoration: BoxDecoration(
                             color: isSelected
-                                ? item.color
-                                : colorScheme.onSurface,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                ? item.color.withOpacity(0.1)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ),
-                        onTap: () => _onItemTapped(index),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          child: ListTile(
+                            leading: FaIcon(
+                              item.icon,
+                              color: isSelected
+                                  ? item.color
+                                  : colorScheme.onSurface.withOpacity(0.6),
+                              size: 20,
+                            ),
+                            title: Text(
+                              item.label,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                color: isSelected
+                                    ? item.color
+                                    : colorScheme.onSurface,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              ),
+                            ),
+                            onTap: () => _onItemTapped(index),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        )
+                            .animate(target: isSelected ? 1 : 0)
+                            .scaleXY(begin: 1, end: 1.05, duration: 200.ms);
+                      },
+                    );
+                  },
+                ),
+              ),
+
+              // Theme Toggle
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: GlassmorphismCard(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  blurStrength: 10,
+                  opacity: 0.1,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Dark Mode',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface,
                         ),
                       ),
-                    )
-                        .animate(target: isSelected ? 1 : 0)
-                        .scaleXY(begin: 1, end: 1.05, duration: 200.ms);
-                  },
-                );
-              },
-            ),
-          ),
-
-          // Theme Toggle
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: GlassmorphismCard(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              blurStrength: 10,
-              opacity: 0.1,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Dark Mode',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  BlocBuilder<ThemeBloc, ThemeState>(
-                    builder: (context, state) {
-                      return Switch(
-                        value: state.isDark,
-                        onChanged: (value) {
-                          context.read<ThemeBloc>().add(ToggleTheme());
+                      BlocBuilder<ThemeBloc, ThemeState>(
+                        builder: (context, state) {
+                          return Switch(
+                            value: state.isDark,
+                            onChanged: (value) {
+                              context.read<ThemeBloc>().add(ToggleTheme());
+                            },
+                            activeColor: colorScheme.primary,
+                          );
                         },
-                        activeColor: colorScheme.primary,
-                      );
-                    },
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
