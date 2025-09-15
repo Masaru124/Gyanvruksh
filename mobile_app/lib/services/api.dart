@@ -462,4 +462,165 @@ class ApiService {
     }
     return false;
   }
+
+  // Categories API methods
+  Future<List<dynamic>> getCategories() async {
+    final res = await http.get(Uri.parse('$baseUrl/api/categories/'));
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  Future<Map<String, dynamic>?> getCategory(int categoryId) async {
+    final res = await http.get(Uri.parse('$baseUrl/api/categories/$categoryId'));
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  // Lessons API methods
+  Future<List<dynamic>> getLessons({int? courseId}) async {
+    final uri = Uri.parse('$baseUrl/api/lessons/').replace(queryParameters: {
+      if (courseId != null) 'course_id': courseId.toString(),
+    });
+    final res = await http.get(uri);
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  Future<Map<String, dynamic>?> getLesson(int lessonId) async {
+    final res = await http.get(Uri.parse('$baseUrl/api/lessons/$lessonId'));
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  Future<bool> createLesson(int courseId, String title, String description, String contentType,
+      {String? contentUrl, String? contentText, int durationMinutes = 0, int orderIndex = 0, bool isFree = false}) async {
+    if (_token == null) return false;
+    final res = await http.post(Uri.parse('$baseUrl/api/lessons/'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+        body: jsonEncode({
+          'course_id': courseId,
+          'title': title,
+          'description': description,
+          'content_type': contentType,
+          'content_url': contentUrl,
+          'content_text': contentText,
+          'duration_minutes': durationMinutes,
+          'order_index': orderIndex,
+          'is_free': isFree,
+        }));
+    return res.statusCode == 201;
+  }
+
+  // Quizzes API methods
+  Future<List<dynamic>> getQuizzes({int? courseId}) async {
+    final uri = Uri.parse('$baseUrl/api/quizzes/').replace(queryParameters: {
+      if (courseId != null) 'course_id': courseId.toString(),
+    });
+    final res = await http.get(uri);
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  Future<Map<String, dynamic>?> getQuiz(int quizId) async {
+    final res = await http.get(Uri.parse('$baseUrl/api/quizzes/$quizId'));
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  Future<List<dynamic>> getQuizQuestions(int quizId) async {
+    final res = await http.get(Uri.parse('$baseUrl/api/quizzes/$quizId/questions'));
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  Future<Map<String, dynamic>?> submitQuizAttempt(int quizId, Map<String, dynamic> answers) async {
+    if (_token == null) return null;
+    final res = await http.post(Uri.parse('$baseUrl/api/quizzes/$quizId/attempt'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+        body: jsonEncode({'answers': answers}));
+    if (res.statusCode == 201) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  Future<List<dynamic>> getQuizAttempts(int quizId) async {
+    if (_token == null) return [];
+    final res = await http.get(Uri.parse('$baseUrl/api/quizzes/$quizId/attempts'),
+        headers: {'Authorization': 'Bearer $_token'});
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  // Progress API methods
+  Future<Map<String, dynamic>?> getCourseProgress(int courseId) async {
+    if (_token == null) return null;
+    final res = await http.get(Uri.parse('$baseUrl/api/progress/courses/$courseId'),
+        headers: {'Authorization': 'Bearer $_token'});
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  Future<bool> updateLessonProgress(int courseId, int lessonId, double progressPercentage,
+      {bool completed = false, int timeSpentMinutes = 0}) async {
+    if (_token == null) return false;
+    final res = await http.post(Uri.parse('$baseUrl/api/progress/courses/$courseId/lessons/$lessonId'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+        body: jsonEncode({
+          'progress_percentage': progressPercentage,
+          'completed': completed,
+          'time_spent_minutes': timeSpentMinutes,
+        }));
+    return res.statusCode == 200;
+  }
+
+  Future<Map<String, dynamic>?> getUserPreferences() async {
+    if (_token == null) return null;
+    final res = await http.get(Uri.parse('$baseUrl/api/progress/preferences'),
+        headers: {'Authorization': 'Bearer $_token'});
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  Future<bool> updateUserPreferences({
+    List<String>? preferredCategories,
+    String? skillLevel,
+    List<String>? learningGoals,
+    int? dailyStudyTime,
+    bool? notificationsEnabled,
+  }) async {
+    if (_token == null) return false;
+    final updateData = {
+      if (preferredCategories != null) 'preferred_categories': jsonEncode(preferredCategories),
+      if (skillLevel != null) 'skill_level': skillLevel,
+      if (learningGoals != null) 'learning_goals': jsonEncode(learningGoals),
+      if (dailyStudyTime != null) 'daily_study_time': dailyStudyTime,
+      if (notificationsEnabled != null) 'notifications_enabled': notificationsEnabled,
+    };
+
+    final res = await http.put(Uri.parse('$baseUrl/api/progress/preferences'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+        body: jsonEncode(updateData));
+    return res.statusCode == 200;
+  }
 }

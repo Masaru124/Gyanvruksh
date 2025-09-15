@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gyanvruksh/services/api.dart';
 import 'package:gyanvruksh/screens/courses_screen.dart';
 import 'package:gyanvruksh/screens/messages_screen.dart';
@@ -11,9 +10,7 @@ import 'package:gyanvruksh/widgets/particle_background.dart';
 import 'package:gyanvruksh/widgets/floating_elements.dart';
 import 'package:gyanvruksh/widgets/animated_wave_background.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
-import 'package:gyanvruksh/widgets/glowing_button.dart';
 import 'package:gyanvruksh/widgets/micro_interactions.dart';
-import 'package:gyanvruksh/widgets/animated_text_widget.dart';
 import 'package:gyanvruksh/theme/futuristic_theme.dart';
 
 class TeacherDashboard extends StatefulWidget {

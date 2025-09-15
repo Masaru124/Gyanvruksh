@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
-import '../widgets/loading_states.dart';
 
 class ErrorHandler {
   // Handle API errors

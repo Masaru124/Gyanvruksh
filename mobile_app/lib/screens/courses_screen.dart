@@ -10,7 +10,6 @@ import 'package:gyanvruksh/widgets/backgrounds/cinematic_background.dart';
 import 'package:gyanvruksh/widgets/particle_background.dart';
 import 'package:gyanvruksh/widgets/floating_elements.dart';
 import 'package:gyanvruksh/widgets/animated_wave_background.dart';
-import 'package:gyanvruksh/widgets/glowing_button.dart';
 import 'package:gyanvruksh/widgets/micro_interactions.dart';
 import 'package:gyanvruksh/widgets/animated_text_widget.dart';
 import 'package:gyanvruksh/theme/futuristic_theme.dart';

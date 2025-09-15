@@ -6,7 +6,6 @@ import 'package:gyanvruksh/widgets/glowing_button.dart';
 import 'package:gyanvruksh/widgets/particle_background.dart';
 import 'package:gyanvruksh/widgets/floating_elements.dart';
 import 'package:gyanvruksh/widgets/animated_wave_background.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

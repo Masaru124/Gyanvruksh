@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart' hide ShimmerEffect;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gyanvruksh/widgets/enhanced_futuristic_card.dart';
-import 'package:gyanvruksh/widgets/animated_text_widget.dart';
-import 'package:gyanvruksh/widgets/particle_effect.dart';
 import 'package:gyanvruksh/widgets/theme_switch_widget.dart';
 import 'package:gyanvruksh/widgets/backgrounds/cinematic_background.dart';
 import 'package:gyanvruksh/widgets/particle_background.dart';

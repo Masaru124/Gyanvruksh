@@ -10,8 +10,6 @@ import 'package:gyanvruksh/utils/responsive_utils.dart';
 import 'package:gyanvruksh/screens/login.dart';
 import 'package:gyanvruksh/screens/onboarding_screen.dart';
 import 'package:gyanvruksh/screens/dashboard.dart';
-import 'package:gyanvruksh/screens/navigation.dart';
-import 'package:gyanvruksh/screens/register.dart';
 import 'package:gyanvruksh/screens/role_selection.dart';
 import 'package:gyanvruksh/screens/admin_dashboard.dart';
 import 'package:gyanvruksh/screens/student_dashboard.dart';
@@ -21,12 +19,10 @@ import 'package:gyanvruksh/screens/profile_screen.dart';
 import 'package:gyanvruksh/screens/chatroom_screen.dart';
 import 'package:gyanvruksh/screens/leaderboard_screen.dart';
 import 'package:gyanvruksh/screens/messages_screen.dart';
-import 'package:gyanvruksh/screens/video_player_screen.dart';
 import 'package:gyanvruksh/screens/create_course.dart';
 import 'package:gyanvruksh/screens/manage_courses.dart';
 import 'package:gyanvruksh/screens/manage_users.dart';
 import 'package:gyanvruksh/screens/create_admin.dart';
-import 'package:gyanvruksh/screens/sub_role_selection.dart';
 
 void main() {
   // Ensure Flutter is initialized
