@@ -6,13 +6,20 @@ import 'package:gyanvruksh/widgets/theme_switch_widget.dart';
 import 'package:gyanvruksh/widgets/backgrounds/cinematic_background.dart';
 import 'package:gyanvruksh/widgets/particle_background.dart';
 import 'package:gyanvruksh/widgets/floating_elements.dart';
-import 'package:gyanvruksh/widgets/glowing_button.dart';
 import 'package:gyanvruksh/widgets/animated_wave_background.dart';
+import 'package:gyanvruksh/widgets/glowing_button.dart';
+import 'package:gyanvruksh/screens/student_features.dart';
+import 'package:gyanvruksh/screens/progress_dashboard_screen.dart';
 import 'package:gyanvruksh/widgets/micro_interactions.dart';
 import 'package:gyanvruksh/blocs/theme_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gyanvruksh/utils/responsive_utils.dart';
 import 'package:gyanvruksh/theme/futuristic_theme.dart';
+import 'package:gyanvruksh/screens/student_dashboard.dart';
+import 'package:gyanvruksh/screens/teacher_dashboard.dart';
+import 'package:gyanvruksh/screens/admin_dashboard.dart';
+import 'package:gyanvruksh/services/api.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -25,6 +32,9 @@ class _DashboardScreenState extends State<DashboardScreen>
     with TickerProviderStateMixin {
   late AnimationController _backgroundController;
   late Animation<Color?> _backgroundAnimation;
+  String _userRole = 'student';
+  String _userName = 'Student';
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -38,6 +48,26 @@ class _DashboardScreenState extends State<DashboardScreen>
       begin: const Color(0xFF667EEA),
       end: const Color(0xFF764BA2),
     ).animate(_backgroundController);
+    
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userRole = prefs.getString('user_role') ?? 'student';
+      final userName = prefs.getString('user_name') ?? 'User';
+      
+      setState(() {
+        _userRole = userRole;
+        _userName = userName;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -64,7 +94,8 @@ class _DashboardScreenState extends State<DashboardScreen>
         child: EnhancedFuturisticCard(
           width: double.infinity,
           height: 140,
-          onTap: null, // Remove onTap since we handle it in MicroInteractionWrapper
+          onTap:
+              null, // Remove onTap since we handle it in MicroInteractionWrapper
           enableGlow: true,
           enableHover: true,
           glowColor: color,
@@ -156,272 +187,24 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final size = MediaQuery.of(context).size;
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
-    // Enhanced color palette with neon accents
-    final liveClassesColor = FuturisticColors.neonBlue;
-    final assignmentsColor = FuturisticColors.neonPurple;
-    final clubsColor = FuturisticColors.neonGreen;
-    final progressTrackerColor = FuturisticColors.neonPink;
-
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Cinematic Background
-          CinematicBackground(isDark: false),
-
-          // Enhanced Particle Background
-          ParticleBackground(
-            particleCount: 40,
-            maxParticleSize: 6.0,
-            particleColor: FuturisticColors.primary,
-          ),
-
-          // Floating Elements
-          FloatingElements(
-            elementCount: 12,
-            maxElementSize: 80,
-            icons: const [
-              Icons.school,
-              Icons.book,
-              Icons.lightbulb,
-              Icons.psychology,
-              Icons.computer,
-              Icons.science,
-              Icons.calculate,
-              Icons.language,
-              Icons.assignment,
-              Icons.group,
-              Icons.show_chart,
-              Icons.live_tv,
-            ],
-          ),
-
-          // Animated Wave Background
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: AnimatedWaveBackground(
-              color: FuturisticColors.primary.withOpacity(0.3),
-              height: 150,
-              speed: 0.8,
-              waveHeight: 15,
-            ),
-          ),
-
-          SafeArea(
-            child: Column(
-              children: [
-                // Enhanced Header Section
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                  child: Row(
-                    children: [
-                      // Enhanced futuristic icon container
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [
-                              FuturisticColors.primary,
-                              FuturisticColors.secondary,
-                              FuturisticColors.accent,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: FuturisticColors.primary.withOpacity(0.4),
-                              blurRadius: 20,
-                              spreadRadius: 3,
-                            ),
-                            BoxShadow(
-                              color: FuturisticColors.neonBlue.withOpacity(0.3),
-                              blurRadius: 15,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          FontAwesomeIcons.graduationCap,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      )
-                          .animate()
-                          .scale(
-                            begin: const Offset(0.8, 0.8),
-                            end: const Offset(1.0, 1.0),
-                            duration: 500.ms,
-                          )
-                          .rotate(begin: -0.2, end: 0, duration: 600.ms),
-
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Welcome Back!',
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                color: colorScheme.onSurface,
-                                fontWeight: FontWeight.bold,
-                                shadows: [
-                                  Shadow(
-                                    color: FuturisticColors.primary.withOpacity(0.5),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Continue your learning journey',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: colorScheme.onSurface.withOpacity(0.8),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Enhanced Theme switch
-                      BlocBuilder<ThemeBloc, ThemeState>(
-                        builder: (context, state) {
-                          return ThemeSwitchWidget(
-                            isDark: state.isDark,
-                            onChanged: (isDark) {
-                              context.read<ThemeBloc>().add(ToggleTheme());
-                            },
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                )
-                    .animate()
-                    .fadeIn(duration: 600.ms)
-                    .slideY(begin: -0.2, end: 0, duration: 500.ms),
-
-                // Enhanced Dashboard Grid
-                Expanded(
-                  child: ResponsiveBuilder(
-                    builder: (context, isMobile, isTablet, isDesktop) {
-                      final crossAxisCount = isDesktop ? 4 : (isTablet ? 3 : 2);
-                      final spacing = isMobile ? 16.0 : 20.0;
-
-                      return Padding(
-                        padding: EdgeInsets.all(spacing),
-                        child: GridView.count(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: spacing,
-                          mainAxisSpacing: spacing,
-                          children: [
-                            _buildDashboardCard(
-                              title: 'Live Classes',
-                              icon: Icons.live_tv,
-                              color: liveClassesColor,
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text('Live Classes coming soon!'),
-                                    backgroundColor: liveClassesColor,
-                                  ),
-                                );
-                              },
-                              index: 0,
-                            ),
-                            _buildDashboardCard(
-                              title: 'Assignments',
-                              icon: Icons.assignment,
-                              color: assignmentsColor,
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text('Assignments coming soon!'),
-                                    backgroundColor: assignmentsColor,
-                                  ),
-                                );
-                              },
-                              index: 1,
-                            ),
-                            _buildDashboardCard(
-                              title: 'Study Clubs',
-                              icon: Icons.group,
-                              color: clubsColor,
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text('Study Clubs coming soon!'),
-                                    backgroundColor: clubsColor,
-                                  ),
-                                );
-                              },
-                              index: 2,
-                            ),
-                            _buildDashboardCard(
-                              title: 'Progress',
-                              icon: Icons.show_chart,
-                              color: progressTrackerColor,
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text('Progress Tracker coming soon!'),
-                                    backgroundColor: progressTrackerColor,
-                                  ),
-                                );
-                              },
-                              index: 3,
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                // Quick Actions Bar with Glowing Buttons
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildGlowingQuickActionButton(
-                        icon: Icons.notifications,
-                        label: 'Alerts',
-                        color: FuturisticColors.neonBlue,
-                        onTap: () {},
-                      ),
-                      _buildGlowingQuickActionButton(
-                        icon: Icons.calendar_today,
-                        label: 'Schedule',
-                        color: FuturisticColors.neonPurple,
-                        onTap: () {},
-                      ),
-                      _buildGlowingQuickActionButton(
-                        icon: Icons.message,
-                        label: 'Messages',
-                        color: FuturisticColors.neonGreen,
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
-                )
-                    .animate()
-                    .fadeIn(duration: 600.ms, delay: 800.ms)
-                    .slideY(begin: 0.2, end: 0, duration: 500.ms),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    // Route to appropriate dashboard based on user role
+    switch (_userRole.toLowerCase()) {
+      case 'teacher':
+        return const TeacherDashboard();
+      case 'admin':
+        return const AdminDashboard();
+      case 'student':
+      default:
+        return const StudentDashboard();
+    }
   }
 
   Widget _buildQuickActionButton({
@@ -473,9 +256,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
         ],
       ),
-    )
-        .animate()
-        .scale(
+    ).animate().scale(
           begin: const Offset(0.8, 0.8),
           end: const Offset(1.0, 1.0),
           duration: 300.ms,

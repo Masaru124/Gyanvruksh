@@ -7,6 +7,8 @@ from app.models.user import User
 from app.models.enrollment import Enrollment
 from app.models.course_video import CourseVideo
 from app.models.course_note import CourseNote
+from app.models.lesson import Lesson
+from app.models.chat_message import ChatMessage
 from app.schemas.course import CourseCreate, CourseOut, EnrollmentCreate, EnrollmentOut, CourseDetailOut
 from app.services.deps import get_current_user
 from typing import List
@@ -16,13 +18,27 @@ router = APIRouter(prefix="/api/courses", tags=["courses"])
 
 @router.post("/", response_model=CourseOut, status_code=201)
 def create_course(payload: CourseCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    if not user.is_teacher and user.role != "admin":
-        raise HTTPException(status_code=403, detail="Only teachers and admins can create courses")
+    # Allow teachers, service_providers with teacher sub_role, and admins to create courses
+    if not (user.sub_role == "teacher" or user.role == "admin"):
+        raise HTTPException(status_code=403, detail="Only approved teachers and admins can create courses")
+    
+    # Check if teacher is approved (active)
+    if user.sub_role == "teacher" and not user.is_active:
+        raise HTTPException(status_code=403, detail="Teacher account pending approval")
 
     # Admin-created courses should have teacher_id = None so teachers can choose to teach them
+    # Teacher-created courses are automatically assigned to them
     teacher_id = None if user.role == "admin" else user.id
 
-    c = Course(title=payload.title, description=payload.description, teacher_id=teacher_id, total_hours=payload.total_hours)
+    c = Course(
+        title=payload.title, 
+        description=payload.description, 
+        teacher_id=teacher_id, 
+        total_hours=payload.total_hours,
+        difficulty=getattr(payload, 'difficulty', 'beginner'),
+        category_id=getattr(payload, 'category_id', None),
+        is_published=False  # New courses start as unpublished
+    )
     db.add(c)
     db.commit()
     db.refresh(c)
@@ -34,8 +50,12 @@ def list_courses(db: Session = Depends(get_db)):
 
 @router.get("/mine", response_model=List[CourseOut])
 def my_courses(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    if user.is_teacher:
+    if user.sub_role == "teacher":
         return db.query(Course).filter(Course.teacher_id == user.id).all()
+    elif user.sub_role == "student":
+        # Return enrolled courses for students
+        enrolled_courses = db.query(Course).join(Enrollment).filter(Enrollment.student_id == user.id).all()
+        return enrolled_courses
     return db.query(Course).order_by(Course.id.desc()).all()
 
 @router.get("/available", response_model=List[CourseOut])
@@ -57,13 +77,20 @@ def teacher_stats(db: Session = Depends(get_db), user: User = Depends(get_curren
     # Get teacher's courses
     teacher_courses = db.query(Course).filter(Course.teacher_id == user.id).all()
 
-    # Mock stats - in real implementation, these would come from enrollment/attendance tables
+    # Calculate total students enrolled across all courses
+    total_students = db.query(Enrollment).join(Course).filter(Course.teacher_id == user.id).count()
+
+    # TODO: Calculate average attendance, engagement rate, completed assignments from relevant tables
+    average_attendance = 0
+    engagement_rate = 0
+    completed_assignments = 0
+
     stats = {
         "totalCourses": len(teacher_courses),
-        "totalStudents": 45,  # Mock data
-        "averageAttendance": 92,  # Mock data
-        "engagementRate": 87,  # Mock data
-        "completedAssignments": 156,  # Mock data
+        "totalStudents": total_students,
+        "averageAttendance": average_attendance,
+        "engagementRate": engagement_rate,
+        "completedAssignments": completed_assignments,
     }
 
     return stats
@@ -74,12 +101,54 @@ def upcoming_classes(db: Session = Depends(get_db), user: User = Depends(get_cur
     if not user.is_teacher and user.role != "service_provider":
         raise HTTPException(status_code=403, detail="Only teachers can view upcoming classes")
 
-    # Mock upcoming classes - in real implementation, this would come from a schedule/classes table
-    upcoming = [
-        {"subject": "Mathematics", "time": "9:00 AM", "class": "Grade 10A", "date": (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")},
-        {"subject": "Physics", "time": "11:00 AM", "class": "Grade 11B", "date": (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")},
-        {"subject": "English", "time": "2:00 PM", "class": "Grade 9C", "date": (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")},
-    ]
+    # Get teacher's courses
+    teacher_courses = db.query(Course).filter(Course.teacher_id == user.id).all()
+    
+    if not teacher_courses:
+        return []
+
+    # Fetch upcoming lessons for teacher's courses within next 7 days
+    from datetime import datetime, timedelta
+    now = datetime.utcnow()
+    week_later = now + timedelta(days=7)
+
+    lessons = db.query(Lesson).join(Course).filter(
+        Course.teacher_id == user.id,
+        Lesson.scheduled_at >= now,
+        Lesson.scheduled_at <= week_later
+    ).order_by(Lesson.scheduled_at).all()
+
+    upcoming = []
+    for lesson in lessons:
+        course = db.query(Course).filter(Course.id == lesson.course_id).first()
+        upcoming.append({
+            "lesson_id": lesson.id,
+            "course_id": lesson.course_id,
+            "course_title": course.title if course else "Unknown Course",
+            "lesson_title": lesson.title,
+            "description": lesson.description,
+            "scheduled_at": lesson.scheduled_at.isoformat() if lesson.scheduled_at else None,
+            "duration_minutes": lesson.duration_minutes,
+            "content_type": lesson.content_type,
+        })
+
+    # If no scheduled lessons, create some sample upcoming classes for demo
+    if not upcoming:
+        # Create sample lessons for the teacher's courses
+        sample_classes = []
+        for i, course in enumerate(teacher_courses[:3]):  # Limit to 3 courses
+            future_time = now + timedelta(hours=24 + (i * 24))  # Next 3 days
+            sample_classes.append({
+                "lesson_id": None,
+                "course_id": course.id,
+                "course_title": course.title,
+                "lesson_title": f"Upcoming Class - {course.title}",
+                "description": f"Scheduled class for {course.title}",
+                "scheduled_at": future_time.isoformat(),
+                "duration_minutes": 60,
+                "content_type": "live_class",
+            })
+        return sample_classes
 
     return upcoming
 
@@ -89,12 +158,27 @@ def student_queries(db: Session = Depends(get_db), user: User = Depends(get_curr
     if not user.is_teacher and user.role != "service_provider":
         raise HTTPException(status_code=403, detail="Only teachers can view student queries")
 
-    # Mock student queries - in real implementation, this would come from a queries/messages table
-    queries = [
-        {"student": "Alice Johnson", "query": "Need help with quadratic equations", "time": "2 hours ago", "id": 1},
-        {"student": "Bob Smith", "query": "Clarification on Newton's laws", "time": "4 hours ago", "id": 2},
-        {"student": "Carol Davis", "query": "Assignment deadline extension", "time": "1 day ago", "id": 3},
-    ]
+    # Example implementation: Fetch recent chat messages from students in teacher's courses
+    from sqlalchemy import or_
+    # Get course IDs taught by teacher
+    course_ids = [c.id for c in db.query(Course).filter(Course.teacher_id == user.id).all()]
+
+    # Get student IDs enrolled in those courses
+    student_ids = [e.student_id for e in db.query(Enrollment).filter(Enrollment.course_id.in_(course_ids)).all()]
+
+    # Fetch recent chat messages from those students (limit 20)
+    messages = db.query(ChatMessage).filter(ChatMessage.user_id.in_(student_ids)).order_by(ChatMessage.timestamp.desc()).limit(20).all()
+
+    queries = []
+    for msg in messages:
+        student = db.query(User).filter(User.id == msg.user_id).first()
+        queries.append({
+            "message_id": msg.id,
+            "student_id": msg.user_id,
+            "student_name": student.full_name if student else None,
+            "message": msg.message,
+            "timestamp": msg.timestamp.isoformat()
+        })
 
     return queries
 

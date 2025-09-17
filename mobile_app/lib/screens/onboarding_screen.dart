@@ -6,6 +6,8 @@ import 'package:gyanvruksh/widgets/glowing_button.dart';
 import 'package:gyanvruksh/widgets/particle_background.dart';
 import 'package:gyanvruksh/widgets/floating_elements.dart';
 import 'package:gyanvruksh/widgets/animated_wave_background.dart';
+import 'package:gyanvruksh/viewmodels/personalization_viewmodel.dart';
+import 'package:provider/provider.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -115,15 +117,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         curve: Curves.easeInOut,
       );
     } else {
-      _completeOnboarding();
+      _savePreferencesAndComplete();
     }
   }
 
   void _skipOnboarding() {
-    _completeOnboarding();
+    _savePreferencesAndComplete();
   }
 
-  Future<void> _completeOnboarding() async {
+  Future<void> _savePreferencesAndComplete() async {
+    final personalizationVM = context.read<PersonalizationViewModel>();
+    await personalizationVM.saveUserPreferences();
     // TODO: Implement persistent storage for onboarding completion
     // For now, just navigate to login screen
     if (mounted) {
@@ -134,6 +138,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final personalizationVM = context.watch<PersonalizationViewModel>();
 
     return Scaffold(
       body: Stack(
@@ -186,7 +191,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     onPageChanged: _onPageChanged,
                     itemCount: _pages.length,
                     itemBuilder: (context, index) {
-                      return _buildPage(_pages[index]);
+                      return _buildPage(_pages[index], personalizationVM);
                     },
                   ),
                 ),
@@ -204,103 +209,234 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  Widget _buildPage(OnboardingPageData pageData) {
+  Widget _buildPage(OnboardingPageData pageData, PersonalizationViewModel personalizationVM) {
     final size = MediaQuery.of(context).size;
+
+    Widget content;
+
+    switch (_currentPage) {
+      case 0:
+        content = _buildWelcomePage(pageData);
+        break;
+      case 1:
+        content = _buildInterestsPage(personalizationVM);
+        break;
+      case 2:
+        content = _buildSkillLevelsPage(personalizationVM);
+        break;
+      case 3:
+        content = _buildLearningGoalsPage(personalizationVM);
+        break;
+      default:
+        content = _buildWelcomePage(pageData);
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Icon
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  pageData.color.withOpacity(0.3),
-                  pageData.color.withOpacity(0.1),
-                ],
-              ),
-              border: Border.all(
-                color: pageData.color.withOpacity(0.3),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: pageData.color.withOpacity(0.3),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
+      child: content,
+    );
+  }
+
+  Widget _buildWelcomePage(OnboardingPageData pageData) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Icon
+        Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                pageData.color.withOpacity(0.3),
+                pageData.color.withOpacity(0.1),
               ],
             ),
-            child: Icon(
-              pageData.icon,
-              size: 60,
-              color: pageData.color,
+            border: Border.all(
+              color: pageData.color.withOpacity(0.3),
+              width: 2,
             ),
-          )
-              .animate()
-              .scale(duration: 600.ms, curve: Curves.elasticOut)
-              .fadeIn(duration: 400.ms),
-
-          const SizedBox(height: 40),
-
-          // Title
-          AnimatedBuilder(
-            animation: _fadeAnimation,
-            builder: (context, child) {
-              return Opacity(
-                opacity: _fadeAnimation.value,
-                child: Text(
-                  pageData.title,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: pageData.color,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 28,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              );
-            },
+            boxShadow: [
+              BoxShadow(
+                color: pageData.color.withOpacity(0.3),
+                blurRadius: 20,
+                spreadRadius: 5,
+              ),
+            ],
           ),
+          child: Icon(
+            pageData.icon,
+            size: 60,
+            color: pageData.color,
+          ),
+        )
+            .animate()
+            .scale(duration: 600.ms, curve: Curves.elasticOut)
+            .fadeIn(duration: 400.ms),
 
-          const SizedBox(height: 16),
+        const SizedBox(height: 40),
 
-          // Subtitle
-          Text(
-            pageData.subtitle,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: pageData.color.withOpacity(0.8),
-              fontSize: 18,
-            ),
-            textAlign: TextAlign.center,
-          )
-              .animate()
-              .fadeIn(delay: 200.ms, duration: 400.ms)
-              .slideY(begin: 0.2, end: 0),
+        // Title
+        Text(
+          pageData.title,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            color: pageData.color,
+            fontWeight: FontWeight.bold,
+            fontSize: 28,
+          ),
+          textAlign: TextAlign.center,
+        ),
 
-          const SizedBox(height: 24),
+        const SizedBox(height: 16),
 
-          // Description
-          Text(
-            pageData.description,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
-              height: 1.6,
-              fontSize: 16,
-            ),
-            textAlign: TextAlign.center,
-          )
-              .animate()
-              .fadeIn(delay: 400.ms, duration: 400.ms)
-              .slideY(begin: 0.2, end: 0),
-        ],
-      ),
+        // Subtitle
+        Text(
+          pageData.subtitle,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: pageData.color.withOpacity(0.8),
+            fontSize: 18,
+          ),
+          textAlign: TextAlign.center,
+        ),
+
+        const SizedBox(height: 24),
+
+        // Description
+        Text(
+          pageData.description,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+            height: 1.6,
+            fontSize: 16,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInterestsPage(PersonalizationViewModel personalizationVM) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          'Select Your Interests',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: FuturisticColors.neonPurple,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: personalizationVM.availableInterests.map((interest) {
+            final isSelected = personalizationVM.selectedInterests.contains(interest);
+            return ChoiceChip(
+              label: Text(interest),
+              selected: isSelected,
+              onSelected: (_) {
+                personalizationVM.toggleInterest(interest);
+              },
+              selectedColor: FuturisticColors.neonPurple,
+              backgroundColor: Colors.grey.shade800,
+              labelStyle: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey.shade300,
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSkillLevelsPage(PersonalizationViewModel personalizationVM) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          'Set Your Skill Levels',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: FuturisticColors.neonGreen,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Column(
+          children: personalizationVM.availableInterests.map((category) {
+            final selectedLevel = personalizationVM.skillLevels[category] ?? 'Beginner';
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      category,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: DropdownButton<String>(
+                      value: selectedLevel,
+                      items: personalizationVM.availableSkillLevels.map((level) {
+                        return DropdownMenuItem(
+                          value: level,
+                          child: Text(level),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          personalizationVM.setSkillLevel(category, value);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLearningGoalsPage(PersonalizationViewModel personalizationVM) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          'Choose Your Learning Goals',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: FuturisticColors.neonGreen,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: personalizationVM.availableGoals.map((goal) {
+            final isSelected = personalizationVM.learningGoals.contains(goal);
+            return ChoiceChip(
+              label: Text(goal),
+              selected: isSelected,
+              onSelected: (_) {
+                personalizationVM.toggleGoal(goal);
+              },
+              selectedColor: FuturisticColors.neonGreen,
+              backgroundColor: Colors.grey.shade800,
+              labelStyle: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey.shade300,
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 

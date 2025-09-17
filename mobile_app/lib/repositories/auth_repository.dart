@@ -4,8 +4,12 @@ import 'base_repository.dart';
 class AuthRepository extends BaseRepository {
   final ApiService _apiService = ApiService();
 
-  Future<bool> login(String email, String password) async {
-    return await handleApiCall(() => _apiService.login(email, password));
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    try {
+      return await _apiService.login(email, password);
+    } catch (e) {
+      return {'success': false, 'error': 'Login failed: ${e.toString()}'};
+    }
   }
 
   Future<bool> register({

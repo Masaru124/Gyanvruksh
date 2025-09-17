@@ -49,8 +49,8 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
   Future<void> _assignTeacher(int courseId, int teacherId) async {
     setState(() => loading = true);
     try {
-      final success = await ApiService().assignTeacherToCourse(courseId, teacherId);
-      if (success) {
+      final result = await ApiService().assignTeacherToCourse(courseId, teacherId);
+      if (result.isNotEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(_mainContext).showSnackBar(
             const SnackBar(content: Text('Teacher assigned successfully')),

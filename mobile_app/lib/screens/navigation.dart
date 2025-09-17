@@ -12,6 +12,7 @@ import 'package:gyanvruksh/screens/courses_screen.dart';
 import 'package:gyanvruksh/screens/leaderboard_screen.dart';
 import 'package:gyanvruksh/screens/profile_screen.dart';
 import 'package:gyanvruksh/screens/chatroom_screen.dart';
+import 'package:gyanvruksh/screens/skill_tree_screen.dart';
 import 'package:gyanvruksh/blocs/theme_bloc.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
 import 'package:gyanvruksh/widgets/particle_background.dart';
@@ -56,13 +57,14 @@ class _NavigationScreenState extends State<NavigationScreen>
     _studentPages = <Widget>[
       const DashboardScreen(),
       const CoursesScreen(),
+      const SkillTreeScreen(),
       const ChatroomScreen(),
       const LeaderboardScreen(),
       const ProfileScreen(),
     ];
 
     _adminPages = <Widget>[
-      const AdminDashboardScreen(),
+      const AdminDashboard(),
       const CreateCourseScreen(),
       const ManageCoursesScreen(),
       const ManageUsersScreen(),
@@ -80,6 +82,12 @@ class _NavigationScreenState extends State<NavigationScreen>
         activeIcon: FontAwesomeIcons.bookOpen,
         label: 'Courses',
         color: const Color(0xFFA58DF5),
+      ),
+      _NavigationItem(
+        icon: FontAwesomeIcons.sitemap,
+        activeIcon: FontAwesomeIcons.sitemap,
+        label: 'Skills',
+        color: const Color(0xFF4CAF50),
       ),
       _NavigationItem(
         icon: FontAwesomeIcons.comments,

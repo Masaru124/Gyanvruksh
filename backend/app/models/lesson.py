@@ -16,4 +16,5 @@ class Lesson(Base):
     duration_minutes: Mapped[int] = mapped_column(Integer, default=0)
     order_index: Mapped[int] = mapped_column(Integer, default=0)  # Order in course
     is_free: Mapped[bool] = mapped_column(Boolean, default=False)  # Preview lesson
+    scheduled_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)  # When lesson is scheduled
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

@@ -22,6 +22,7 @@ class FuturisticColors {
   static const Color backgroundLight = Color(0xFF1E1B4B); // Light dark blue
   static const Color surface = Color(0xFF1A1A2E); // Surface dark
   static const Color surfaceLight = Color(0xFF16213E); // Light surface
+  static const Color surfaceContainerHighest = Color(0xFF2A2A3E); // Container highest
   static const Color cardBackground = Color(0xFF1A1A2E); // Card background
 
   // Text colors
@@ -40,6 +41,10 @@ class FuturisticColors {
   static const Color neonPurple = Color(0xFF8B5CF6);
   static const Color neonGreen = Color(0xFF10B981);
   static const Color neonPink = Color(0xFFE879F9);
+  static const Color neonOrange = Color(0xFFF59E0B);
+  static const Color neonCyan = Color(0xFF06B6D4);
+  static const Color neonRed = Color(0xFFEF4444);
+  static const Color neonGold = Color(0xFFF59E0B);
 
   // Gradient definitions
   static const LinearGradient primaryGradient = LinearGradient(

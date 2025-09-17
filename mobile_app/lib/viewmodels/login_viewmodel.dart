@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/repositories/auth_repository.dart';
 import 'package:gyanvruksh/utils/error_handler.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final ApiService apiService = ApiService();
+  final AuthRepository _authRepository = AuthRepository();
 
   bool isLoading = false;
   String? error;
@@ -42,6 +42,10 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Map<String, dynamic>? getCurrentUser() {
+    return _authRepository.getCurrentUser();
+  }
+
   Future<bool> login() async {
     final emailError = validateEmail(emailController.text);
     final passwordError = validatePassword(passwordController.text);
@@ -57,12 +61,14 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final success = await apiService.login(emailController.text.trim(), passwordController.text.trim());
+      final result = await _authRepository.login(emailController.text.trim(), passwordController.text.trim());
+      final success = result['success'] as bool;
+
       if (success) {
         notifyListeners();
         return true;
       } else {
-        error = 'Login failed. Please check your credentials.';
+        error = result['error'] as String? ?? 'Login failed. Please check your credentials.';
         notifyListeners();
         return false;
       }

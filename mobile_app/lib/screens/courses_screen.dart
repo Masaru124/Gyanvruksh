@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:gyanvruksh/services/api.dart';
 import 'package:gyanvruksh/screens/video_player_screen.dart';
+import 'package:gyanvruksh/screens/lesson_screen.dart';
+import 'package:gyanvruksh/viewmodels/lesson_viewmodel.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
 import 'package:gyanvruksh/widgets/custom_animated_button.dart';
 import 'package:gyanvruksh/widgets/neumorphism_container.dart';
@@ -13,7 +16,6 @@ import 'package:gyanvruksh/widgets/animated_wave_background.dart';
 import 'package:gyanvruksh/widgets/micro_interactions.dart';
 import 'package:gyanvruksh/widgets/animated_text_widget.dart';
 import 'package:gyanvruksh/theme/futuristic_theme.dart';
-
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -45,10 +47,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
         error = null;
       });
 
-      // Use getEnrolledCourses instead of myCourses to get enrolled courses
+      // Use getEnrolledCourses to get enrolled courses - returns List<dynamic>
       final courses = await ApiService().getEnrolledCourses();
       setState(() {
-        myCourses = courses;
+        myCourses = courses; // courses is already List<dynamic>
         isLoading = false;
       });
     } catch (e) {
@@ -70,11 +72,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
       final courses = await ApiService().listCourses();
       // Debug log to check the response
       print('Available courses response: $courses');
-      final List<Map<String, dynamic>> courseList = courses.map((c) {
-        if (c is Map<String, dynamic>) return c;
-        if (c is Map) return Map<String, dynamic>.from(c);
-        return <String, dynamic>{};
-      }).cast<Map<String, dynamic>>().toList();
+      final List<Map<String, dynamic>> courseList = courses
+          .map((c) {
+            if (c is Map<String, dynamic>) return c;
+            if (c is Map) return Map<String, dynamic>.from(c);
+            return <String, dynamic>{};
+          })
+          .cast<Map<String, dynamic>>()
+          .toList();
       setState(() {
         availableCourses = courseList;
         isLoadingAvailable = false;
@@ -116,12 +121,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CourseDetailsScreen(course: course),
+        builder: (context) => ChangeNotifierProvider<LessonViewModel>(
+          create: (_) => LessonViewModel(),
+          child: CourseDetailsScreen(course: course),
+        ),
       ),
     );
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -170,124 +176,135 @@ class _CoursesScreenState extends State<CoursesScreen> {
             SafeArea(
               child: Column(
                 children: [
-                  // Modern Header with Glassmorphism
-                  GlassmorphismCard(
-                    margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    padding: const EdgeInsets.all(16),
-                    blurStrength: 15,
-                    opacity: 0.1,
-                    borderRadius: BorderRadius.circular(20),
-                    child: Row(
+                  SingleChildScrollView(
+                    child: Column(
                       children: [
-                        MicroInteractionWrapper(
-                          child: NeumorphismContainer(
-                            padding: const EdgeInsets.all(12),
-                            borderRadius: BorderRadius.circular(16),
-                            child: Icon(
-                              FontAwesomeIcons.graduationCap,
-                              color: colorScheme.primary,
-                              size: 24,
-                            ),
+                        // Modern Header with Glassmorphism
+                        GlassmorphismCard(
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 16),
+                          padding: const EdgeInsets.all(16),
+                          blurStrength: 15,
+                          opacity: 0.1,
+                          borderRadius: BorderRadius.circular(20),
+                          child: Row(
+                            children: [
+                              MicroInteractionWrapper(
+                                child: NeumorphismContainer(
+                                  padding: const EdgeInsets.all(12),
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Icon(
+                                    FontAwesomeIcons.graduationCap,
+                                    color: colorScheme.primary,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: AnimatedTextWidget(
+                                  text: 'My Learning Journey',
+                                  style:
+                                      theme.textTheme.headlineSmall?.copyWith(
+                                    color: colorScheme.onSurface,
+                                    fontWeight: FontWeight.bold,
+                                    shadows: [
+                                      Shadow(
+                                        color: FuturisticColors.primary
+                                            .withOpacity(0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  animationType: AnimationType.fade,
+                                  duration: const Duration(milliseconds: 800),
+                                ),
+                              ),
+                              MicroInteractionWrapper(
+                                child: IconButton(
+                                  onPressed: () {
+                                    _loadCourses();
+                                    _loadAvailableCourses();
+                                  },
+                                  icon: Icon(
+                                    Icons.refresh,
+                                    color: colorScheme.primary,
+                                  ),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor:
+                                        colorScheme.surface.withOpacity(0.8),
+                                    padding: const EdgeInsets.all(12),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: AnimatedTextWidget(
-                            text: 'My Learning Journey',
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              color: colorScheme.onSurface,
-                              fontWeight: FontWeight.bold,
-                              shadows: [
-                                Shadow(
-                                  color: FuturisticColors.primary.withOpacity(0.3),
+                        )
+                            .animate()
+                            .fadeIn(duration: 600.ms)
+                            .slideY(begin: -0.2, end: 0, duration: 500.ms),
+
+                        // Modern Tab Bar with Glassmorphism
+                        GlassmorphismCard(
+                          margin: const EdgeInsets.symmetric(horizontal: 24),
+                          padding: const EdgeInsets.all(4),
+                          blurStrength: 12,
+                          opacity: 0.15,
+                          borderRadius: BorderRadius.circular(20),
+                          child: TabBar(
+                            indicator: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  FuturisticColors.primary,
+                                  FuturisticColors.secondary,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      FuturisticColors.primary.withOpacity(0.3),
                                   blurRadius: 8,
-                                  offset: const Offset(0, 2),
+                                  spreadRadius: 2,
                                 ),
                               ],
                             ),
-                            animationType: AnimationType.fade,
-                            duration: const Duration(milliseconds: 800),
-                          ),
-                        ),
-                        MicroInteractionWrapper(
-                          child: IconButton(
-                            onPressed: () {
-                              _loadCourses();
-                              _loadAvailableCourses();
-                            },
-                            icon: Icon(
-                              Icons.refresh,
-                              color: colorScheme.primary,
-                            ),
-                            style: IconButton.styleFrom(
-                              backgroundColor: colorScheme.surface.withOpacity(0.8),
-                              padding: const EdgeInsets.all(12),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                  .animate()
-                  .fadeIn(duration: 600.ms)
-                  .slideY(begin: -0.2, end: 0, duration: 500.ms),
-
-                  // Modern Tab Bar with Glassmorphism
-                  GlassmorphismCard(
-                    margin: const EdgeInsets.symmetric(horizontal: 24),
-                    padding: const EdgeInsets.all(4),
-                    blurStrength: 12,
-                    opacity: 0.15,
-                    borderRadius: BorderRadius.circular(20),
-                    child: TabBar(
-                      indicator: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            FuturisticColors.primary,
-                            FuturisticColors.secondary,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: FuturisticColors.primary.withOpacity(0.3),
-                            blurRadius: 8,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      labelColor: colorScheme.onPrimary,
-                      unselectedLabelColor: colorScheme.onSurface.withOpacity(0.8),
-                      tabs: const [
-                        Tab(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.book),
-                              SizedBox(width: 8),
-                              Text('My Courses'),
+                            labelColor: colorScheme.onPrimary,
+                            unselectedLabelColor:
+                                colorScheme.onSurface.withOpacity(0.8),
+                            tabs: const [
+                              Tab(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.book),
+                                    SizedBox(width: 8),
+                                    Text('My Courses'),
+                                  ],
+                                ),
+                              ),
+                              Tab(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.explore),
+                                    SizedBox(width: 8),
+                                    Text('Discover'),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
-                        ),
-                        Tab(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.explore),
-                              SizedBox(width: 8),
-                              Text('Discover'),
-                            ],
-                          ),
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 600.ms, delay: 200.ms)
+                            .slideY(begin: -0.1, end: 0, duration: 400.ms),
                       ],
                     ),
-                  )
-                  .animate()
-                  .fadeIn(duration: 600.ms, delay: 200.ms)
-                  .slideY(begin: -0.1, end: 0, duration: 400.ms),
-
+                  ),
                   // Tab Content
                   Expanded(
                     child: TabBarView(
@@ -531,7 +548,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
     );
   }
 
-  Widget _buildCourseCard(dynamic course, int index, bool isEnrolled, ThemeData theme, ColorScheme colorScheme) {
+  Widget _buildCourseCard(dynamic course, int index, bool isEnrolled,
+      ThemeData theme, ColorScheme colorScheme) {
     return GlassmorphismCard(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
@@ -550,7 +568,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   padding: const EdgeInsets.all(12),
                   borderRadius: BorderRadius.circular(12),
                   child: Icon(
-                    isEnrolled ? FontAwesomeIcons.bookOpen : FontAwesomeIcons.plus,
+                    isEnrolled
+                        ? FontAwesomeIcons.bookOpen
+                        : FontAwesomeIcons.plus,
                     color: isEnrolled ? colorScheme.primary : Colors.green,
                     size: 20,
                   ),
@@ -582,7 +602,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 ),
                 if (!isEnrolled)
                   CustomAnimatedButton(
-                    onPressed: isEnrolling ? () {} : () => _enrollInCourse(course['id'], course['title']),
+                    onPressed: isEnrolling
+                        ? () {}
+                        : () => _enrollInCourse(course['id'], course['title']),
                     width: 80,
                     height: 36,
                     backgroundColor: Colors.green,
@@ -636,7 +658,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
     )
         .animate()
         .fadeIn(duration: 600.ms, delay: Duration(milliseconds: index * 100))
-        .slideY(begin: 0.2, end: 0, duration: 500.ms, delay: Duration(milliseconds: index * 100));
+        .slideY(
+            begin: 0.2,
+            end: 0,
+            duration: 500.ms,
+            delay: Duration(milliseconds: index * 100));
   }
 }
 
@@ -650,217 +676,533 @@ class CourseDetailsScreen extends StatefulWidget {
 }
 
 class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
+  List<dynamic> lessons = [];
+  List<dynamic> quizzes = [];
+  bool isLoadingLessons = true;
+  bool isLoadingQuizzes = true;
+  String? lessonsError;
+  String? quizzesError;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadLessons();
+      _loadQuizzes();
+    });
+  }
+
+  Future<void> _loadLessons() async {
+    try {
+      setState(() {
+        isLoadingLessons = true;
+        lessonsError = null;
+      });
+      final lessonVM = context.read<LessonViewModel>();
+      await lessonVM.loadLessons(courseId: widget.course['id']);
+      setState(() {
+        lessons = lessonVM.lessons;
+        isLoadingLessons = false;
+      });
+    } catch (e) {
+      setState(() {
+        lessonsError = e.toString();
+        isLoadingLessons = false;
+      });
+    }
+  }
+
+  Future<void> _loadQuizzes() async {
+    try {
+      setState(() {
+        isLoadingQuizzes = true;
+        quizzesError = null;
+      });
+      // For now, we'll use a placeholder since quiz loading isn't implemented in the viewmodel
+      // TODO: Implement quiz loading in viewmodel
+      setState(() {
+        quizzes = [];
+        isLoadingQuizzes = false;
+      });
+    } catch (e) {
+      setState(() {
+        quizzesError = e.toString();
+        isLoadingQuizzes = false;
+      });
+    }
+  }
+
+  void _navigateToLesson(int lessonId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LessonScreen(lessonId: lessonId),
+      ),
+    );
+  }
+
   void _navigateToVideoPlayer(int courseId, String courseTitle) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => VideoPlayerScreen(courseId: courseId, courseTitle: courseTitle),
+        builder: (context) =>
+            VideoPlayerScreen(courseId: courseId, courseTitle: courseTitle),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.course['title'] ?? 'Course Details'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Course header
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+      body: Stack(
+        children: [
+          // Cinematic Background
+          CinematicBackground(isDark: false),
+
+          // Enhanced Particle Background
+          ParticleBackground(
+            particleCount: 25,
+            maxParticleSize: 3.0,
+            particleColor: FuturisticColors.primary,
+          ),
+
+          SafeArea(
+            child: Column(
+              children: [
+                // Header
+                GlassmorphismCard(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
+                  blurStrength: 15,
+                  opacity: 0.1,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Colors.white.withOpacity(0.2),
-                        child: const Icon(
-                          Icons.book,
-                          color: Colors.white,
-                          size: 30,
-                        ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(Icons.arrow_back,
+                            color: colorScheme.onSurface),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: Text(
-                          widget.course['title'] ?? 'Untitled Course',
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.course['title'] ?? 'Course Details',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                color: colorScheme.onSurface,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              widget.course['description'] ?? 'No description',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                ),
+
+                // Content Tabs
+                Expanded(
+                  child: DefaultTabController(
+                    length: 3,
+                    child: Column(
+                      children: [
+                        TabBar(
+                          tabs: const [
+                            Tab(text: 'Lessons'),
+                            Tab(text: 'Quizzes'),
+                            Tab(text: 'Info'),
+                          ],
+                          labelColor: colorScheme.primary,
+                          unselectedLabelColor: colorScheme.onSurfaceVariant,
+                        ),
+                        Expanded(
+                          child: TabBarView(
+                            children: [
+                              _buildLessonsTab(theme, colorScheme),
+                              _buildQuizzesTab(theme, colorScheme),
+                              _buildInfoTab(theme, colorScheme),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLessonsTab(ThemeData theme, ColorScheme colorScheme) {
+    if (isLoadingLessons) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (lessonsError != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error, color: colorScheme.error),
+            const SizedBox(height: 16),
+            Text('Error loading lessons', style: theme.textTheme.bodyLarge),
+            Text(lessonsError!, style: theme.textTheme.bodySmall),
+            const SizedBox(height: 16),
+            CustomAnimatedButton(
+              onPressed: _loadLessons,
+              text: 'Retry',
+              backgroundColor: colorScheme.primary,
+              textColor: colorScheme.onPrimary,
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (lessons.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.book,
+                size: 64, color: colorScheme.primary.withOpacity(0.5)),
+            const SizedBox(height: 16),
+            Text('No lessons available', style: theme.textTheme.headlineSmall),
+            const SizedBox(height: 8),
+            Text('Lessons will be added by the instructor',
+                style: theme.textTheme.bodyMedium),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: lessons.length,
+      itemBuilder: (context, index) {
+        final lesson = lessons[index];
+        return GlassmorphismCard(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          blurStrength: 10,
+          opacity: 0.1,
+          borderRadius: BorderRadius.circular(16),
+          child: ListTile(
+            leading: NeumorphismContainer(
+              padding: const EdgeInsets.all(12),
+              borderRadius: BorderRadius.circular(12),
+              child: Icon(
+                _getContentTypeIcon(lesson['content_type']),
+                color: colorScheme.primary,
+              ),
+            ),
+            title: Text(
+              lesson['title'] ?? 'Untitled Lesson',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              '${lesson['duration_minutes'] ?? 0} minutes • ${lesson['content_type'] ?? 'Unknown'}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            trailing: Icon(Icons.play_arrow, color: colorScheme.primary),
+            onTap: () => _navigateToLesson(lesson['id']),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildQuizzesTab(ThemeData theme, ColorScheme colorScheme) {
+    if (isLoadingQuizzes) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (quizzesError != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error, color: colorScheme.error),
+            const SizedBox(height: 16),
+            Text('Error loading quizzes', style: theme.textTheme.bodyLarge),
+            Text(quizzesError!, style: theme.textTheme.bodySmall),
+            const SizedBox(height: 16),
+            CustomAnimatedButton(
+              onPressed: _loadQuizzes,
+              text: 'Retry',
+              backgroundColor: colorScheme.primary,
+              textColor: colorScheme.onPrimary,
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (quizzes.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.quiz,
+                size: 64, color: colorScheme.primary.withOpacity(0.5)),
+            const SizedBox(height: 16),
+            Text('No quizzes available', style: theme.textTheme.headlineSmall),
+            const SizedBox(height: 8),
+            Text('Quizzes will be added by the instructor',
+                style: theme.textTheme.bodyMedium),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: quizzes.length,
+      itemBuilder: (context, index) {
+        final quiz = quizzes[index];
+        return GlassmorphismCard(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          blurStrength: 10,
+          opacity: 0.1,
+          borderRadius: BorderRadius.circular(16),
+          child: ListTile(
+            leading: NeumorphismContainer(
+              padding: const EdgeInsets.all(12),
+              borderRadius: BorderRadius.circular(12),
+              child: Icon(
+                Icons.quiz,
+                color: colorScheme.primary,
+              ),
+            ),
+            title: Text(
+              quiz['title'] ?? 'Untitled Quiz',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              '${quiz['questions_count'] ?? 0} questions',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            trailing: Icon(Icons.arrow_forward, color: colorScheme.primary),
+            onTap: () {
+              // TODO: Navigate to quiz screen
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('Quiz functionality coming soon!')),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildInfoTab(ThemeData theme, ColorScheme colorScheme) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Course header
+          GlassmorphismCard(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(20),
+            blurStrength: 10,
+            opacity: 0.1,
+            borderRadius: BorderRadius.circular(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.course['title'] ?? 'Untitled Course',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  widget.course['description'] ?? 'No description available',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface.withOpacity(0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Course details
+          GlassmorphismCard(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(20),
+            blurStrength: 10,
+            opacity: 0.1,
+            borderRadius: BorderRadius.circular(20),
+            child: Column(
+              children: [
+                _buildDetailRow(
+                    'Subject',
+                    widget.course['subject'] ?? 'Not specified',
+                    theme,
+                    colorScheme),
+                const Divider(),
+                _buildDetailRow(
+                    'Grade Level',
+                    widget.course['grade_level'] ?? 'All levels',
+                    theme,
+                    colorScheme),
+                const Divider(),
+                _buildDetailRow(
+                    'Duration',
+                    widget.course['duration'] ?? 'Not specified',
+                    theme,
+                    colorScheme),
+                const Divider(),
+                _buildDetailRow(
+                    'Total Hours',
+                    widget.course['total_hours']?.toString() ?? 'Not specified',
+                    theme,
+                    colorScheme),
+              ],
+            ),
+          ),
+
+          // Prerequisites
+          if (widget.course['prerequisites'] != null &&
+              widget.course['prerequisites'].isNotEmpty)
+            GlassmorphismCard(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(20),
+              blurStrength: 10,
+              opacity: 0.1,
+              borderRadius: BorderRadius.circular(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    widget.course['description'] ?? 'No description available',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
+                    'Prerequisites',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    widget.course['prerequisites'],
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface.withOpacity(0.8),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
 
-            // Course details
-            const Text(
-              'Course Information',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2E3A59),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Course details cards
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _buildDetailRow('Course ID', widget.course['id']?.toString() ?? 'N/A'),
-                    const Divider(),
-                    _buildDetailRow('Subject', widget.course['subject'] ?? 'Not specified'),
-                    const Divider(),
-                    _buildDetailRow('Grade Level', widget.course['grade_level'] ?? 'Not specified'),
-                    const Divider(),
-                    _buildDetailRow('Duration', widget.course['duration'] ?? 'Not specified'),
-                    const Divider(),
-                    _buildDetailRow('Credits', widget.course['credits']?.toString() ?? 'Not specified'),
-                  ],
-                ),
+          // Learning objectives
+          if (widget.course['objectives'] != null &&
+              widget.course['objectives'].isNotEmpty)
+            GlassmorphismCard(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(20),
+              blurStrength: 10,
+              opacity: 0.1,
+              borderRadius: BorderRadius.circular(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Learning Objectives',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    widget.course['objectives'],
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface.withOpacity(0.8),
+                    ),
+                  ),
+                ],
               ),
             ),
 
-            const SizedBox(height: 24),
-
-            // Additional information
-            if (widget.course['prerequisites'] != null && widget.course['prerequisites'].isNotEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Prerequisites',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2E3A59),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.course['prerequisites'],
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            const SizedBox(height: 24),
-
-            // Watch Videos Button
-            Center(
-              child: ElevatedButton.icon(
-                onPressed: () => _navigateToVideoPlayer(widget.course['id'], widget.course['title']),
-                icon: const Icon(Icons.play_circle_fill, size: 28),
-                label: const Text(
-                  'Watch Course Videos',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
+          // Watch Videos Button
+          Center(
+            child: CustomAnimatedButton(
+              onPressed: () => _navigateToVideoPlayer(
+                  widget.course['id'], widget.course['title']),
+              text: 'Watch Course Videos',
+              backgroundColor: colorScheme.primary,
+              textColor: colorScheme.onPrimary,
+              width: 200,
             ),
-
-            const SizedBox(height: 24),
-
-            // Learning objectives
-            if (widget.course['objectives'] != null && widget.course['objectives'].isNotEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Learning Objectives',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2E3A59),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.course['objectives'],
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(
+      String label, String value, ThemeData theme, ColorScheme colorScheme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 16,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF2E3A59),
           ),
         ),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 16,
-            color: Colors.black87,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurface,
           ),
         ),
       ],
     );
+  }
+
+  IconData _getContentTypeIcon(String? contentType) {
+    switch (contentType) {
+      case 'video':
+        return Icons.play_circle;
+      case 'audio':
+        return Icons.audiotrack;
+      case 'text':
+        return Icons.article;
+      case 'interactive':
+        return Icons.touch_app;
+      default:
+        return Icons.book;
+    }
   }
 }

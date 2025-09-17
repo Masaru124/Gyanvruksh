@@ -1,6 +1,6 @@
 {
-    "name": "Gyanvruksh",
-    "short_name": "Gyanvruksh",
+    "name": "gyanvruksh",
+    "short_name": "gyanvruksh",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

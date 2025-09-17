@@ -63,11 +63,19 @@ def create_categories_table():
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(100) UNIQUE NOT NULL,
                 description TEXT,
+                type VARCHAR(50),
                 icon VARCHAR(10),
+                color VARCHAR(7),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """))
         print("✅ Created categories table")
+
+        # Add missing columns if table already exists
+        db.execute(text("ALTER TABLE categories ADD COLUMN IF NOT EXISTS type VARCHAR(50)"))
+        db.execute(text("ALTER TABLE categories ADD COLUMN IF NOT EXISTS icon VARCHAR(10)"))
+        db.execute(text("ALTER TABLE categories ADD COLUMN IF NOT EXISTS color VARCHAR(7)"))
+        print("✅ Added missing columns to categories table")
 
         db.commit()
 
@@ -116,8 +124,11 @@ def create_quizzes_table():
         db.execute(text("""
             CREATE TABLE IF NOT EXISTS quizzes (
                 id SERIAL PRIMARY KEY,
+                lesson_id INTEGER REFERENCES lessons(id),
                 course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
                 title VARCHAR(255) NOT NULL,
+                description TEXT,
+                time_limit_minutes INTEGER,
                 passing_score INTEGER DEFAULT 70,
                 is_active BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -129,6 +140,62 @@ def create_quizzes_table():
 
     except Exception as e:
         print(f"❌ Failed to create quizzes table: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+def create_questions_table():
+    """Create questions table if it doesn't exist"""
+    db = SessionLocal()
+
+    try:
+        # Create questions table
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS questions (
+                id SERIAL PRIMARY KEY,
+                quiz_id INTEGER REFERENCES quizzes(id) ON DELETE CASCADE,
+                question_text TEXT NOT NULL,
+                question_type VARCHAR(50) DEFAULT 'multiple_choice',
+                options TEXT,
+                correct_answer TEXT NOT NULL,
+                points INTEGER DEFAULT 1,
+                order_index INTEGER DEFAULT 0
+            )
+        """))
+        print("✅ Created questions table")
+
+        db.commit()
+
+    except Exception as e:
+        print(f"❌ Failed to create questions table: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+def create_quiz_attempts_table():
+    """Create quiz_attempts table if it doesn't exist"""
+    db = SessionLocal()
+
+    try:
+        # Create quiz_attempts table
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS quiz_attempts (
+                id SERIAL PRIMARY KEY,
+                quiz_id INTEGER REFERENCES quizzes(id) ON DELETE CASCADE,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                score INTEGER DEFAULT 0,
+                total_questions INTEGER NOT NULL,
+                correct_answers INTEGER DEFAULT 0,
+                time_taken_minutes INTEGER,
+                completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        print("✅ Created quiz_attempts table")
+
+        db.commit()
+
+    except Exception as e:
+        print(f"❌ Failed to create quiz_attempts table: {e}")
         db.rollback()
     finally:
         db.close()
@@ -354,6 +421,178 @@ def create_downloads_table():
     finally:
         db.close()
 
+def create_assignments_table():
+    """Create assignments table if it doesn't exist"""
+    db = SessionLocal()
+
+    try:
+        # Create assignments table
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS assignments (
+                id SERIAL PRIMARY KEY,
+                course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
+                lesson_id INTEGER REFERENCES lessons(id),
+                teacher_id INTEGER REFERENCES users(id),
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                assignment_type VARCHAR(50) DEFAULT 'homework',
+                due_date TIMESTAMP,
+                max_score INTEGER DEFAULT 100,
+                instructions TEXT,
+                attachments TEXT,
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        print("✅ Created assignments table")
+
+        db.commit()
+
+    except Exception as e:
+        print(f"❌ Failed to create assignments table: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+def create_assignment_submissions_table():
+    """Create assignment_submissions table if it doesn't exist"""
+    db = SessionLocal()
+
+    try:
+        # Create assignment_submissions table
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS assignment_submissions (
+                id SERIAL PRIMARY KEY,
+                assignment_id INTEGER REFERENCES assignments(id) ON DELETE CASCADE,
+                student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                submission_text TEXT,
+                attachments TEXT,
+                score INTEGER,
+                feedback TEXT,
+                submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                graded_at TIMESTAMP,
+                status VARCHAR(50) DEFAULT 'pending'
+            )
+        """))
+        print("✅ Created assignment_submissions table")
+
+        db.commit()
+
+    except Exception as e:
+        print(f"❌ Failed to create assignment_submissions table: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+def create_clubs_table():
+    """Create clubs table if it doesn't exist"""
+    db = SessionLocal()
+
+    try:
+        # Create clubs table
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS clubs (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                category VARCHAR(50),
+                admin_id INTEGER REFERENCES users(id),
+                max_members INTEGER DEFAULT 50,
+                is_private BOOLEAN DEFAULT FALSE,
+                club_image_url VARCHAR(500),
+                meeting_schedule TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        print("✅ Created clubs table")
+
+        db.commit()
+
+    except Exception as e:
+        print(f"❌ Failed to create clubs table: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+def create_club_members_table():
+    """Create club_members table if it doesn't exist"""
+    db = SessionLocal()
+
+    try:
+        # Create club_members table
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS club_members (
+                id SERIAL PRIMARY KEY,
+                club_id INTEGER REFERENCES clubs(id) ON DELETE CASCADE,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                role VARCHAR(50) DEFAULT 'member',
+                joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        print("✅ Created club_members table")
+
+        db.commit()
+
+    except Exception as e:
+        print(f"❌ Failed to create club_members table: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+def create_notifications_table():
+    """Create notifications table if it doesn't exist"""
+    db = SessionLocal()
+
+    try:
+        # Create notifications table
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS notifications (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                title VARCHAR(255) NOT NULL,
+                message TEXT,
+                notification_type VARCHAR(50),
+                is_read BOOLEAN DEFAULT FALSE,
+                related_id INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        print("✅ Created notifications table")
+
+        db.commit()
+
+    except Exception as e:
+        print(f"❌ Failed to create notifications table: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+def create_analytics_table():
+    """Create analytics table if it doesn't exist"""
+    db = SessionLocal()
+
+    try:
+        # Create analytics table
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS analytics (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                event_type VARCHAR(100),
+                event_data TEXT,
+                session_id VARCHAR(255),
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        print("✅ Created analytics table")
+
+        db.commit()
+
+    except Exception as e:
+        print(f"❌ Failed to create analytics table: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
 def main():
     print("🔄 Running database migrations...")
 
@@ -361,6 +600,8 @@ def main():
     create_categories_table()
     create_lessons_table()
     create_quizzes_table()
+    create_questions_table()
+    create_quiz_attempts_table()
     create_user_progress_table()
     create_user_preferences_table()
     create_badges_table()
@@ -369,6 +610,12 @@ def main():
     create_daily_challenges_table()
     create_user_challenges_table()
     create_downloads_table()
+    create_assignments_table()
+    create_assignment_submissions_table()
+    create_clubs_table()
+    create_club_members_table()
+    create_notifications_table()
+    create_analytics_table()
 
     # Migrate existing courses table
     migrate_courses_table()

@@ -1,10 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, courses, gyanvruksh, chat
-from app.api.categories import router as categories_router
+from .api import auth, courses, lessons, progress, chat, admin, attendance, student, teacher, gyanvruksh
 from app.api.lessons import router as lessons_router
 from app.api.quizzes import router as quizzes_router
 from app.api.progress import router as progress_router
+from app.api.assignments import router as assignments_router
+from app.api.notifications import router as notifications_router
+from app.api.categories import router as categories_router
+from app.api.analytics import router as analytics_router
+from app.api.dashboard import router as dashboard_router
 from contextlib import asynccontextmanager
 import asyncio
 import httpx
@@ -17,6 +21,10 @@ from app.models.quiz import Quiz
 from app.models.progress import UserProgress, UserPreferences
 from app.models.gamification import Badge, Streak, DailyChallenge
 from app.models.download import Download
+from app.models.assignment import Assignment, Grade
+from app.models.notification import Notification
+from app.models.analytics import Analytics, ParentDashboard
+from app.models.attendance import Attendance, AttendanceSession
 
 APP_URL = "https://gyanvruksh.onrender.com"
 PING_INTERVAL = 5 * 60  # 5 minutes
@@ -59,6 +67,14 @@ app.include_router(categories_router)
 app.include_router(lessons_router)
 app.include_router(quizzes_router)
 app.include_router(progress_router)
+app.include_router(assignments_router)
+app.include_router(notifications_router)
+app.include_router(analytics_router)
+app.include_router(dashboard_router)
+app.include_router(admin.router)
+app.include_router(attendance.router)
+app.include_router(student.router)
+app.include_router(teacher.router)
 
 @app.get("/healthz")
 def health():
