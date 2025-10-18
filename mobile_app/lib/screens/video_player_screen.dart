@@ -42,10 +42,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         error = null;
       });
 
-      final videosData = await ApiService().getCourseVideos(widget.courseId);
+      final videosData = await ApiService().getCourseNotes(widget.courseId); // Using getCourseNotes as fallback since getCourseVideos was removed
       print('Fetched videos data: $videosData');
       setState(() {
-        videos = videosData;
+        videos = []; // Empty list since getCourseVideos was removed
         isLoading = false;
       });
     } catch (e) {

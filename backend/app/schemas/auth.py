@@ -183,3 +183,12 @@ class UserOut(BaseModel):
     gyan_coins: int
 
     model_config = {"from_attributes": True}
+
+class Token(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    expires_in: int  # seconds until access token expires
+
+class TokenRefresh(BaseModel):
+    refresh_token: str

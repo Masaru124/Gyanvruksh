@@ -133,7 +133,7 @@ class _ThemeSwitchWidgetState extends State<ThemeSwitchWidget>
                         color: Colors.white,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 4,
                             spreadRadius: 1,
                             offset: const Offset(0, 2),
@@ -163,7 +163,7 @@ class _ThemeSwitchWidgetState extends State<ThemeSwitchWidget>
                     height: 40,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: (_backgroundAnimation.value ?? Colors.blue.shade400).withOpacity(0.3),
+                      color: (_backgroundAnimation.value ?? Colors.blue.shade400).withValues(alpha: 0.3),
                     ),
                   ),
                 ),
@@ -227,7 +227,7 @@ class AnimatedThemeToggle extends StatelessWidget {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
       ),
       child: ThemeSwitchWidget(
         isDark: isDark,

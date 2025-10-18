@@ -166,22 +166,22 @@ class _HolographicButtonState extends State<HolographicButton>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          primaryColor.withOpacity(0.8),
-                          secondaryColor.withOpacity(0.6),
+                          primaryColor.withValues(alpha: 0.8),
+                          secondaryColor.withValues(alpha: 0.6),
                         ],
                       ),
                       border: Border.all(
-                        color: primaryColor.withOpacity(0.8),
+                        color: primaryColor.withValues(alpha: 0.8),
                         width: 2,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: primaryColor.withOpacity(0.4),
+                          color: primaryColor.withValues(alpha: 0.4),
                           blurRadius: 15 + (_pressAnimation.value * 5),
                           spreadRadius: 2 + (_pressAnimation.value * 2),
                         ),
                         BoxShadow(
-                          color: secondaryColor.withOpacity(0.2),
+                          color: secondaryColor.withValues(alpha: 0.2),
                           blurRadius: 25,
                           spreadRadius: 1,
                         ),
@@ -197,8 +197,8 @@ class _HolographicButtonState extends State<HolographicButton>
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                Colors.white.withOpacity(0.1),
-                                Colors.white.withOpacity(0.05),
+                                Colors.white.withValues(alpha: 0.1),
+                                Colors.white.withValues(alpha: 0.05),
                               ],
                             ),
                           ),
@@ -209,7 +209,7 @@ class _HolographicButtonState extends State<HolographicButton>
                                     height: 24,
                                     child: CircularProgressIndicator(
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white.withOpacity(0.8),
+                                        Colors.white.withValues(alpha: 0.8),
                                       ),
                                       strokeWidth: 2,
                                     ),
@@ -220,7 +220,7 @@ class _HolographicButtonState extends State<HolographicButton>
                                       if (widget.icon != null) ...[
                                         Icon(
                                           widget.icon,
-                                          color: Colors.white.withOpacity(0.9),
+                                          color: Colors.white.withValues(alpha: 0.9),
                                           size: 20,
                                         ),
                                         const SizedBox(width: 8),
@@ -229,7 +229,7 @@ class _HolographicButtonState extends State<HolographicButton>
                                         widget.text,
                                         style: widget.textStyle ??
                                             FuturisticFonts.labelLarge.copyWith(
-                                              color: Colors.white.withOpacity(0.9),
+                                              color: Colors.white.withValues(alpha: 0.9),
                                               fontWeight: FontWeight.w600,
                                             ),
                                       ),
@@ -248,7 +248,7 @@ class _HolographicButtonState extends State<HolographicButton>
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(widget.borderRadius),
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                       ),
                     ),
                   ),
@@ -284,10 +284,10 @@ class HolographicPainter extends CustomPainter {
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [
-        primaryColor.withOpacity(0.3),
-        secondaryColor.withOpacity(0.3),
-        primaryColor.withOpacity(0.1),
-        secondaryColor.withOpacity(0.2),
+        primaryColor.withValues(alpha: 0.3),
+        secondaryColor.withValues(alpha: 0.3),
+        primaryColor.withValues(alpha: 0.1),
+        secondaryColor.withValues(alpha: 0.2),
       ],
       stops: [
         0.0,
@@ -305,7 +305,7 @@ class HolographicPainter extends CustomPainter {
 
     // Add shimmer effect
     final shimmerPaint = Paint()
-      ..color = Colors.white.withOpacity(0.3)
+      ..color = Colors.white.withValues(alpha: 0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 

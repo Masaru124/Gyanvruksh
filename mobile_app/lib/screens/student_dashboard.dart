@@ -55,7 +55,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
       userName = prefs.getString('user_name') ?? 'Student';
       
       final results = await Future.wait([
-        ApiService().getStudentDashboard(),
+        ApiService().getStudentStats(),
         ApiService().getTodaySchedule(),
         ApiService().listCourses(),
         ApiService().getStudentAssignments(),
@@ -194,7 +194,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
           // Animated Wave Background
           AnimatedWaveBackground(
-            color: FuturisticColors.neonBlue.withOpacity(0.04),
+            color: FuturisticColors.neonBlue.withValues(alpha: 0.04),
             height: MediaQuery.of(context).size.height,
           ),
 
@@ -287,7 +287,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     Text(
                       'Ready to continue your learning journey?',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 14,
                       ),
                     ),
@@ -304,7 +304,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     size: 20,
                   ),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.red.withOpacity(0.2),
+                    backgroundColor: Colors.red.withValues(alpha: 0.2),
                     padding: const EdgeInsets.all(12),
                   ),
                   tooltip: 'Logout',
@@ -339,7 +339,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               Text(
                 DateFormat('MMM dd').format(DateTime.now()),
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 14,
                 ),
               ),
@@ -361,7 +361,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border(
                   left: BorderSide(
@@ -392,7 +392,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                         Text(
                           item['time'] ?? '',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                             fontSize: 12,
                           ),
                         ),
@@ -402,7 +402,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _getScheduleColor(item['type']).withOpacity(0.2),
+                      color: _getScheduleColor(item['type']).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -463,7 +463,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -492,7 +492,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -593,7 +593,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -602,7 +602,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: FuturisticColors.primary.withOpacity(0.2),
+                      color: FuturisticColors.primary.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -627,7 +627,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                         Text(
                           'Progress: ${course['progress'] ?? 0}%',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                             fontSize: 12,
                           ),
                         ),
@@ -765,7 +765,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -774,7 +774,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: _getActivityColor(activity['type']).withOpacity(0.2),
+                      color: _getActivityColor(activity['type']).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Icon(
@@ -799,7 +799,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                         Text(
                           activity['description'] ?? 'No description',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                             fontSize: 12,
                           ),
                         ),
@@ -809,7 +809,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   Text(
                     activity['time'] ?? '',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 10,
                     ),
                   ),
@@ -846,7 +846,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color, size: 20),
@@ -878,16 +878,16 @@ class _StudentDashboardState extends State<StudentDashboard> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                color: color.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: color, size: 20),
@@ -955,7 +955,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: isActive ? FuturisticColors.neonGreen : Colors.white.withOpacity(0.2),
+                  color: isActive ? FuturisticColors.neonGreen : Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Center(

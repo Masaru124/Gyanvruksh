@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models.user import User
-from app.models.course import Course
-from app.models.enrollment import Enrollment
-from app.models.lesson import Lesson
-from app.models.progress import UserProgress
-from app.services.deps import get_current_user
+from ..database import get_db
+from ..models.user import User
+from ..models.course import Course
+from ..models.enrollment import Enrollment
+from ..models.lesson import Lesson
+from ..models.progress import UserProgress
+from ..services.deps import get_current_user
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
 
@@ -201,3 +201,53 @@ def get_notifications(db: Session = Depends(get_db), user: User = Depends(get_cu
                 })
     
     return notifications[:10]  # Limit to 10 notifications
+
+@router.get("/recommendations")
+def get_dashboard_recommendations(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Get personalized recommendations for the dashboard"""
+    if user.role != "service_seeker" or user.sub_role != "student":
+        raise HTTPException(status_code=403, detail="Only students can get recommendations")
+
+    # Use the AI recommendations system we implemented
+    from ..api.gyanvruksh import _get_hybrid_recommendations
+
+    recommendations = _get_hybrid_recommendations(user.id, db)
+
+    # Format for dashboard display
+    dashboard_recommendations = []
+    for rec in recommendations[:5]:  # Limit to 5 for dashboard
+        course = db.query(Course).filter(Course.id == rec["course_id"]).first()
+        if course:
+            dashboard_recommendations.append({
+                "course_id": rec["course_id"],
+                "title": rec["title"],
+                "description": rec["description"],
+                "difficulty": rec["difficulty"],
+                "recommendation_score": rec["recommendation_score"],
+                "reason": rec["reason"],
+                "thumbnail_url": course.thumbnail_url,
+                "total_hours": course.total_hours
+            })
+
+    return dashboard_recommendations
+
+@router.get("/notifications")
+def get_dashboard_notifications(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Get recent notifications for the dashboard"""
+    # Get recent notifications for the user
+    notifications = db.query(Notification).filter(
+        Notification.user_id == user.id
+    ).order_by(Notification.created_at.desc()).limit(5).all()
+
+    dashboard_notifications = []
+    for notification in notifications:
+        dashboard_notifications.append({
+            "id": notification.id,
+            "title": notification.title,
+            "message": notification.message,
+            "type": notification.notification_type,
+            "is_read": notification.is_read,
+            "created_at": notification.created_at.isoformat()
+        })
+
+    return dashboard_notifications

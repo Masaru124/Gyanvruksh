@@ -1,30 +1,33 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import HTTPException
 from .api import auth, courses, lessons, progress, chat, admin, attendance, student, teacher, gyanvruksh
-from app.api.lessons import router as lessons_router
-from app.api.quizzes import router as quizzes_router
-from app.api.progress import router as progress_router
-from app.api.assignments import router as assignments_router
-from app.api.notifications import router as notifications_router
-from app.api.categories import router as categories_router
-from app.api.analytics import router as analytics_router
-from app.api.dashboard import router as dashboard_router
+from .api.lessons import router as lessons_router
+from .api.quizzes import router as quizzes_router
+from .api.progress import router as progress_router
+from .api.assignments import router as assignments_router
+from .api.notifications import router as notifications_router
+from .api.categories import router as categories_router
+from .api.analytics import router as analytics_router
+from .api.dashboard import router as dashboard_router
+from .api.gamification import router as gamification_router
+from .utils.errors import custom_http_exception_handler
 from contextlib import asynccontextmanager
 import asyncio
 import httpx
-from app.database import Base, engine
+from .database import Base, engine
 # Import models to ensure they are registered
-from app.models import user, course, enrollment, chat_message, course_video, course_note
-from app.models.category import Category
-from app.models.lesson import Lesson
-from app.models.quiz import Quiz
-from app.models.progress import UserProgress, UserPreferences
-from app.models.gamification import Badge, Streak, DailyChallenge
-from app.models.download import Download
-from app.models.assignment import Assignment, Grade
-from app.models.notification import Notification
-from app.models.analytics import Analytics, ParentDashboard
-from app.models.attendance import Attendance, AttendanceSession
+from .models import user, course, enrollment, chat_message, course_video, course_note
+from .models.category import Category
+from .models.lesson import Lesson
+from .models.quiz import Quiz
+from .models.progress import UserProgress, UserPreferences
+from .models.gamification import Badge, Streak, DailyChallenge, UserBadge, UserChallenge
+from .models.download import Download
+from .models.assignment import Assignment, Grade, AssignmentSubmission
+from .models.notification import Notification
+from .models.analytics import Analytics, ParentDashboard
+from .models.attendance import Attendance, AttendanceSession
 
 APP_URL = "https://gyanvruksh.onrender.com"
 PING_INTERVAL = 5 * 60  # 5 minutes
@@ -51,6 +54,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Gyanvruksh API", version="0.1.0", lifespan=lifespan)
 
+# Add custom exception handler
+app.add_exception_handler(HTTPException, custom_http_exception_handler)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -71,6 +77,7 @@ app.include_router(assignments_router)
 app.include_router(notifications_router)
 app.include_router(analytics_router)
 app.include_router(dashboard_router)
+app.include_router(gamification_router)
 app.include_router(admin.router)
 app.include_router(attendance.router)
 app.include_router(student.router)

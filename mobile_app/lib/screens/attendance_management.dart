@@ -35,16 +35,20 @@ class _AttendanceManagementScreenState extends State<AttendanceManagementScreen>
     });
 
     try {
-      final sessions = await ApiService().getCourseAttendanceSessions(widget.courseId);
-      final lessons = await ApiService().getLessons(courseId: widget.courseId);
+      final results = await Future.wait([
+        ApiService().getCourseAttendanceSessions(widget.courseId).catchError((_) => []),
+        ApiService().getLessons(courseId: widget.courseId).catchError((_) => []),
+      ]);
       
       setState(() {
-        _sessions = sessions;
-        _lessons = lessons;
+        _sessions = results[0];
+        _lessons = results[1];
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
+        _sessions = [];
+        _lessons = [];
         _error = 'Failed to load attendance data: $e';
         _isLoading = false;
       });
@@ -54,9 +58,9 @@ class _AttendanceManagementScreenState extends State<AttendanceManagementScreen>
   Future<void> _createAttendanceSession(int lessonId) async {
     try {
       await ApiService().createAttendanceSession(
-        lessonId,
-        widget.courseId,
-        DateTime.now(),
+        courseId: widget.courseId,
+        sessionName: 'Session ${DateTime.now().day}/${DateTime.now().month}',
+        sessionDate: DateTime.now(),
       );
       
       _loadData(); // Refresh data
@@ -458,11 +462,14 @@ class _AttendanceDetailsScreenState extends State<AttendanceDetailsScreen> {
         'notes': student['notes'] ?? '',
       }).toList();
 
-      await ApiService().markAttendance(
-        widget.lessonId,
-        widget.attendanceData['course_id'] ?? 0,
-        attendanceList,
-      );
+      // Mark attendance for each student individually
+      for (final student in attendanceList) {
+        await ApiService().markAttendance(
+          sessionId: student['session_id'] ?? 1,
+          studentId: student['student_id'],
+          isPresent: student['is_present'],
+        );
+      }
 
       setState(() {
         _isEditing = false;

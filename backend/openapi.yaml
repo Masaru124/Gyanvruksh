@@ -1,0 +1,4334 @@
+components:
+  schemas:
+    AnalyticsRead:
+      properties:
+        analytics_type:
+          title: Analytics Type
+          type: string
+        category:
+          title: Category
+          type: string
+        id:
+          title: Id
+          type: integer
+        metric_name:
+          title: Metric Name
+          type: string
+        metric_value:
+          title: Metric Value
+          type: number
+        period:
+          default: daily
+          title: Period
+          type: string
+        recorded_at:
+          format: date-time
+          title: Recorded At
+          type: string
+        user_id:
+          title: User Id
+          type: integer
+      required:
+      - analytics_type
+      - category
+      - metric_name
+      - metric_value
+      - id
+      - user_id
+      - recorded_at
+      title: AnalyticsRead
+      type: object
+    AssignmentCreate:
+      properties:
+        attachment_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Attachment Url
+        course_id:
+          title: Course Id
+          type: integer
+        description:
+          title: Description
+          type: string
+        due_date:
+          format: date-time
+          title: Due Date
+          type: string
+        instructions:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Instructions
+        lesson_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Lesson Id
+        max_score:
+          default: 100
+          title: Max Score
+          type: integer
+        title:
+          title: Title
+          type: string
+      required:
+      - title
+      - description
+      - course_id
+      - due_date
+      title: AssignmentCreate
+      type: object
+    AssignmentRead:
+      properties:
+        attachment_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Attachment Url
+        course_id:
+          title: Course Id
+          type: integer
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        description:
+          title: Description
+          type: string
+        due_date:
+          format: date-time
+          title: Due Date
+          type: string
+        id:
+          title: Id
+          type: integer
+        instructions:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Instructions
+        is_active:
+          title: Is Active
+          type: boolean
+        lesson_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Lesson Id
+        max_score:
+          default: 100
+          title: Max Score
+          type: integer
+        teacher_id:
+          title: Teacher Id
+          type: integer
+        title:
+          title: Title
+          type: string
+      required:
+      - title
+      - description
+      - course_id
+      - due_date
+      - id
+      - teacher_id
+      - is_active
+      - created_at
+      title: AssignmentRead
+      type: object
+    AttendanceMarkRequest:
+      properties:
+        course_id:
+          title: Course Id
+          type: integer
+        lesson_id:
+          title: Lesson Id
+          type: integer
+        student_attendances:
+          items:
+            type: object
+          title: Student Attendances
+          type: array
+      required:
+      - lesson_id
+      - course_id
+      - student_attendances
+      title: AttendanceMarkRequest
+      type: object
+    AttendanceSessionCreate:
+      properties:
+        course_id:
+          title: Course Id
+          type: integer
+        lesson_id:
+          title: Lesson Id
+          type: integer
+        session_date:
+          format: date-time
+          title: Session Date
+          type: string
+      required:
+      - lesson_id
+      - course_id
+      - session_date
+      title: AttendanceSessionCreate
+      type: object
+    Category:
+      properties:
+        color:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Color
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        icon:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Icon
+        id:
+          title: Id
+          type: integer
+        name:
+          title: Name
+          type: string
+      required:
+      - name
+      - id
+      - created_at
+      title: Category
+      type: object
+    CategoryCreate:
+      properties:
+        color:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Color
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        icon:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Icon
+        name:
+          title: Name
+          type: string
+      required:
+      - name
+      title: CategoryCreate
+      type: object
+    CategoryUpdate:
+      properties:
+        color:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Color
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        icon:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Icon
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+      title: CategoryUpdate
+      type: object
+    CourseAssignmentRequest:
+      properties:
+        course_id:
+          title: Course Id
+          type: integer
+        teacher_id:
+          title: Teacher Id
+          type: integer
+      required:
+      - course_id
+      - teacher_id
+      title: CourseAssignmentRequest
+      type: object
+    CourseCreate:
+      properties:
+        category_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Category Id
+        description:
+          title: Description
+          type: string
+        difficulty:
+          default: beginner
+          title: Difficulty
+          type: string
+        is_published:
+          default: false
+          title: Is Published
+          type: boolean
+        thumbnail_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Thumbnail Url
+        title:
+          title: Title
+          type: string
+        total_hours:
+          default: 0
+          title: Total Hours
+          type: integer
+      required:
+      - title
+      - description
+      title: CourseCreate
+      type: object
+    CourseDetailOut:
+      properties:
+        category_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Category Id
+        category_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Category Name
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        description:
+          title: Description
+          type: string
+        difficulty:
+          title: Difficulty
+          type: string
+        enrolled_students_count:
+          title: Enrolled Students Count
+          type: integer
+        id:
+          title: Id
+          type: integer
+        is_published:
+          title: Is Published
+          type: boolean
+        rating:
+          title: Rating
+          type: number
+        teacher_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Teacher Id
+        teacher_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Teacher Name
+        thumbnail_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Thumbnail Url
+        title:
+          title: Title
+          type: string
+        total_hours:
+          title: Total Hours
+          type: integer
+      required:
+      - id
+      - title
+      - description
+      - teacher_id
+      - teacher_name
+      - category_id
+      - category_name
+      - enrolled_students_count
+      - total_hours
+      - difficulty
+      - thumbnail_url
+      - rating
+      - is_published
+      - created_at
+      title: CourseDetailOut
+      type: object
+    CourseOut:
+      properties:
+        category_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Category Id
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        description:
+          title: Description
+          type: string
+        difficulty:
+          title: Difficulty
+          type: string
+        enrollment_count:
+          title: Enrollment Count
+          type: integer
+        id:
+          title: Id
+          type: integer
+        is_published:
+          title: Is Published
+          type: boolean
+        rating:
+          title: Rating
+          type: number
+        teacher_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Teacher Id
+        thumbnail_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Thumbnail Url
+        title:
+          title: Title
+          type: string
+        total_hours:
+          title: Total Hours
+          type: integer
+      required:
+      - id
+      - title
+      - description
+      - teacher_id
+      - category_id
+      - total_hours
+      - difficulty
+      - thumbnail_url
+      - rating
+      - enrollment_count
+      - is_published
+      - created_at
+      title: CourseOut
+      type: object
+    CourseStatusUpdate:
+      properties:
+        course_id:
+          title: Course Id
+          type: integer
+        is_published:
+          title: Is Published
+          type: boolean
+      required:
+      - course_id
+      - is_published
+      title: CourseStatusUpdate
+      type: object
+    EnrollmentCreate:
+      properties:
+        course_id:
+          title: Course Id
+          type: integer
+      required:
+      - course_id
+      title: EnrollmentCreate
+      type: object
+    EnrollmentOut:
+      properties:
+        course_id:
+          title: Course Id
+          type: integer
+        enrolled_at:
+          format: date-time
+          title: Enrolled At
+          type: string
+        hours_completed:
+          title: Hours Completed
+          type: integer
+        id:
+          title: Id
+          type: integer
+        student_id:
+          title: Student Id
+          type: integer
+      required:
+      - id
+      - student_id
+      - course_id
+      - hours_completed
+      - enrolled_at
+      title: EnrollmentOut
+      type: object
+    GradeCreate:
+      properties:
+        assignment_id:
+          title: Assignment Id
+          type: integer
+        feedback:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Feedback
+        score:
+          title: Score
+          type: integer
+        student_id:
+          title: Student Id
+          type: integer
+      required:
+      - assignment_id
+      - student_id
+      - score
+      title: GradeCreate
+      type: object
+    GradeRead:
+      properties:
+        assignment_id:
+          title: Assignment Id
+          type: integer
+        feedback:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Feedback
+        graded_at:
+          format: date-time
+          title: Graded At
+          type: string
+        graded_by:
+          title: Graded By
+          type: integer
+        id:
+          title: Id
+          type: integer
+        score:
+          title: Score
+          type: integer
+        student_id:
+          title: Student Id
+          type: integer
+      required:
+      - assignment_id
+      - student_id
+      - score
+      - id
+      - graded_by
+      - graded_at
+      title: GradeRead
+      type: object
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          title: Detail
+          type: array
+      title: HTTPValidationError
+      type: object
+    LessonCreate:
+      properties:
+        content_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Content Text
+        content_type:
+          title: Content Type
+          type: string
+        content_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Content Url
+        course_id:
+          title: Course Id
+          type: integer
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        duration_minutes:
+          default: 0
+          title: Duration Minutes
+          type: integer
+        is_free:
+          default: false
+          title: Is Free
+          type: boolean
+        order_index:
+          default: 0
+          title: Order Index
+          type: integer
+        title:
+          title: Title
+          type: string
+      required:
+      - title
+      - content_type
+      - course_id
+      title: LessonCreate
+      type: object
+    LessonOut:
+      properties:
+        content_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Content Text
+        content_type:
+          title: Content Type
+          type: string
+        content_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Content Url
+        course_id:
+          title: Course Id
+          type: integer
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        duration_minutes:
+          default: 0
+          title: Duration Minutes
+          type: integer
+        id:
+          title: Id
+          type: integer
+        is_free:
+          default: false
+          title: Is Free
+          type: boolean
+        order_index:
+          default: 0
+          title: Order Index
+          type: integer
+        title:
+          title: Title
+          type: string
+      required:
+      - title
+      - content_type
+      - id
+      - course_id
+      - created_at
+      title: LessonOut
+      type: object
+    LessonUpdate:
+      properties:
+        content_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Content Text
+        content_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Content Type
+        content_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Content Url
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        duration_minutes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Duration Minutes
+        is_free:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Free
+        order_index:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Order Index
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+      title: LessonUpdate
+      type: object
+    NotificationRead:
+      properties:
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        id:
+          title: Id
+          type: integer
+        is_read:
+          title: Is Read
+          type: boolean
+        message:
+          title: Message
+          type: string
+        notification_type:
+          title: Notification Type
+          type: string
+        title:
+          title: Title
+          type: string
+        user_id:
+          title: User Id
+          type: integer
+      required:
+      - title
+      - message
+      - notification_type
+      - id
+      - user_id
+      - is_read
+      - created_at
+      title: NotificationRead
+      type: object
+    ParentDashboardRead:
+      properties:
+        child_id:
+          title: Child Id
+          type: integer
+        generated_at:
+          format: date-time
+          title: Generated At
+          type: string
+        id:
+          title: Id
+          type: integer
+        parent_id:
+          title: Parent Id
+          type: integer
+        report_data:
+          title: Report Data
+          type: string
+      required:
+      - id
+      - parent_id
+      - child_id
+      - report_data
+      - generated_at
+      title: ParentDashboardRead
+      type: object
+    QuestionCreate:
+      properties:
+        correct_answer:
+          title: Correct Answer
+          type: string
+        options:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Options
+        order_index:
+          default: 0
+          title: Order Index
+          type: integer
+        points:
+          default: 1
+          title: Points
+          type: integer
+        question_text:
+          title: Question Text
+          type: string
+        question_type:
+          title: Question Type
+          type: string
+      required:
+      - question_text
+      - question_type
+      - correct_answer
+      title: QuestionCreate
+      type: object
+    QuestionOut:
+      properties:
+        correct_answer:
+          title: Correct Answer
+          type: string
+        id:
+          title: Id
+          type: integer
+        options:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Options
+        order_index:
+          default: 0
+          title: Order Index
+          type: integer
+        points:
+          default: 1
+          title: Points
+          type: integer
+        question_text:
+          title: Question Text
+          type: string
+        question_type:
+          title: Question Type
+          type: string
+        quiz_id:
+          title: Quiz Id
+          type: integer
+      required:
+      - question_text
+      - question_type
+      - correct_answer
+      - id
+      - quiz_id
+      title: QuestionOut
+      type: object
+    QuizAttemptCreate:
+      properties:
+        answers:
+          title: Answers
+          type: object
+        quiz_id:
+          title: Quiz Id
+          type: integer
+      required:
+      - quiz_id
+      - answers
+      title: QuizAttemptCreate
+      type: object
+    QuizAttemptOut:
+      properties:
+        completed_at:
+          format: date-time
+          title: Completed At
+          type: string
+        correct_answers:
+          title: Correct Answers
+          type: integer
+        id:
+          title: Id
+          type: integer
+        quiz_id:
+          title: Quiz Id
+          type: integer
+        score:
+          title: Score
+          type: integer
+        time_taken_minutes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Time Taken Minutes
+        total_questions:
+          title: Total Questions
+          type: integer
+        user_id:
+          title: User Id
+          type: integer
+      required:
+      - id
+      - quiz_id
+      - user_id
+      - score
+      - total_questions
+      - correct_answers
+      - time_taken_minutes
+      - completed_at
+      title: QuizAttemptOut
+      type: object
+    QuizCreate:
+      properties:
+        course_id:
+          title: Course Id
+          type: integer
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        lesson_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Lesson Id
+        passing_score:
+          default: 70
+          title: Passing Score
+          type: integer
+        questions:
+          items:
+            $ref: '#/components/schemas/QuestionCreate'
+          title: Questions
+          type: array
+        time_limit_minutes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Time Limit Minutes
+        title:
+          title: Title
+          type: string
+      required:
+      - title
+      - course_id
+      - questions
+      title: QuizCreate
+      type: object
+    QuizOut:
+      properties:
+        course_id:
+          title: Course Id
+          type: integer
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        id:
+          title: Id
+          type: integer
+        is_active:
+          title: Is Active
+          type: boolean
+        lesson_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Lesson Id
+        passing_score:
+          default: 70
+          title: Passing Score
+          type: integer
+        time_limit_minutes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Time Limit Minutes
+        title:
+          title: Title
+          type: string
+      required:
+      - title
+      - id
+      - course_id
+      - lesson_id
+      - is_active
+      - created_at
+      title: QuizOut
+      type: object
+    QuizUpdate:
+      properties:
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        is_active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Active
+        passing_score:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Passing Score
+        time_limit_minutes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Time Limit Minutes
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+      title: QuizUpdate
+      type: object
+    StudyPlanRequest:
+      properties:
+        course_id:
+          title: Course Id
+          type: integer
+        daily_study_hours:
+          title: Daily Study Hours
+          type: integer
+        target_completion_date:
+          format: date-time
+          title: Target Completion Date
+          type: string
+      required:
+      - course_id
+      - target_completion_date
+      - daily_study_hours
+      title: StudyPlanRequest
+      type: object
+    TeacherApprovalRequest:
+      properties:
+        approved:
+          title: Approved
+          type: boolean
+        teacher_id:
+          title: Teacher Id
+          type: integer
+      required:
+      - teacher_id
+      - approved
+      title: TeacherApprovalRequest
+      type: object
+    Token:
+      properties:
+        access_token:
+          title: Access Token
+          type: string
+        token_type:
+          default: bearer
+          title: Token Type
+          type: string
+      required:
+      - access_token
+      title: Token
+      type: object
+    UserCreate:
+      properties:
+        aadhar_card:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Aadhar Card
+        account_details:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Account Details
+        address:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Address
+        age:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Age
+        company_details:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Company Details
+        company_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Company Id
+        dob:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Dob
+        educational_qualification:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Educational Qualification
+        email:
+          format: email
+          title: Email
+          type: string
+        emergency_contact:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Emergency Contact
+        full_name:
+          title: Full Name
+          type: string
+        gender:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Gender
+        is_teacher:
+          default: false
+          title: Is Teacher
+          type: boolean
+        marital_status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Marital Status
+        parents_contact_details:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Parents Contact Details
+        parents_email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Parents Email
+        password:
+          title: Password
+          type: string
+        phone_number:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone Number
+        preferred_language:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Preferred Language
+        role:
+          title: Role
+          type: string
+        seller_record:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Seller Record
+        seller_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Seller Type
+        sub_role:
+          title: Sub Role
+          type: string
+        year_of_experience:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Year Of Experience
+      required:
+      - email
+      - password
+      - full_name
+      - role
+      - sub_role
+      title: UserCreate
+      type: object
+    UserLogin:
+      properties:
+        email:
+          format: email
+          title: Email
+          type: string
+        password:
+          title: Password
+          type: string
+      required:
+      - email
+      - password
+      title: UserLogin
+      type: object
+    UserOut:
+      properties:
+        aadhar_card:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Aadhar Card
+        account_details:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Account Details
+        address:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Address
+        age:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Age
+        company_details:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Company Details
+        company_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Company Id
+        dob:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Dob
+        educational_qualification:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Educational Qualification
+        email:
+          format: email
+          title: Email
+          type: string
+        emergency_contact:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Emergency Contact
+        full_name:
+          title: Full Name
+          type: string
+        gender:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Gender
+        gyan_coins:
+          title: Gyan Coins
+          type: integer
+        id:
+          title: Id
+          type: integer
+        is_teacher:
+          title: Is Teacher
+          type: boolean
+        marital_status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Marital Status
+        parents_contact_details:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Parents Contact Details
+        parents_email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Parents Email
+        phone_number:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone Number
+        preferred_language:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Preferred Language
+        role:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Role
+        seller_record:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Seller Record
+        seller_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Seller Type
+        sub_role:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Sub Role
+        year_of_experience:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Year Of Experience
+      required:
+      - id
+      - email
+      - full_name
+      - age
+      - gender
+      - role
+      - sub_role
+      - educational_qualification
+      - preferred_language
+      - phone_number
+      - address
+      - emergency_contact
+      - aadhar_card
+      - account_details
+      - dob
+      - marital_status
+      - year_of_experience
+      - parents_contact_details
+      - parents_email
+      - seller_type
+      - company_id
+      - seller_record
+      - company_details
+      - is_teacher
+      - gyan_coins
+      title: UserOut
+      type: object
+    UserPreferencesOut:
+      properties:
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        daily_study_time:
+          default: 30
+          title: Daily Study Time
+          type: integer
+        id:
+          title: Id
+          type: integer
+        learning_goals:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Learning Goals
+        notifications_enabled:
+          default: true
+          title: Notifications Enabled
+          type: boolean
+        preferred_categories:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Preferred Categories
+        skill_level:
+          default: beginner
+          title: Skill Level
+          type: string
+        user_id:
+          title: User Id
+          type: integer
+      required:
+      - id
+      - user_id
+      - created_at
+      title: UserPreferencesOut
+      type: object
+    UserPreferencesUpdate:
+      properties:
+        daily_study_time:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Daily Study Time
+        learning_goals:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Learning Goals
+        notifications_enabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Notifications Enabled
+        preferred_categories:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Preferred Categories
+        skill_level:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Skill Level
+      title: UserPreferencesUpdate
+      type: object
+    UserProgress:
+      properties:
+        completed:
+          default: false
+          title: Completed
+          type: boolean
+        course_id:
+          title: Course Id
+          type: integer
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        id:
+          title: Id
+          type: integer
+        last_accessed:
+          format: date-time
+          title: Last Accessed
+          type: string
+        lesson_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Lesson Id
+        progress_percentage:
+          default: 0.0
+          title: Progress Percentage
+          type: number
+        time_spent_minutes:
+          default: 0
+          title: Time Spent Minutes
+          type: integer
+        user_id:
+          title: User Id
+          type: integer
+      required:
+      - id
+      - user_id
+      - course_id
+      - lesson_id
+      - last_accessed
+      - created_at
+      title: UserProgress
+      type: object
+    UserProgressUpdate:
+      properties:
+        completed:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Completed
+        progress_percentage:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Progress Percentage
+        time_spent_minutes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Time Spent Minutes
+      title: UserProgressUpdate
+      type: object
+    UserRoleUpdate:
+      properties:
+        role:
+          title: Role
+          type: string
+        sub_role:
+          title: Sub Role
+          type: string
+        user_id:
+          title: User Id
+          type: integer
+      required:
+      - user_id
+      - role
+      - sub_role
+      title: UserRoleUpdate
+      type: object
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          title: Location
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+      type: object
+  securitySchemes:
+    OAuth2PasswordBearer:
+      flows:
+        password:
+          scopes: {}
+          tokenUrl: /api/auth/login
+      type: oauth2
+info:
+  title: Gyanvruksh API
+  version: 0.1.0
+openapi: 3.1.0
+paths:
+  /api/admin/analytics/overview:
+    get:
+      description: Get platform analytics overview
+      operationId: get_analytics_overview_api_admin_analytics_overview_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Analytics Overview
+      tags:
+      - admin
+  /api/admin/courses/assign-teacher:
+    post:
+      description: Assign a teacher to a course
+      operationId: assign_teacher_to_course_api_admin_courses_assign_teacher_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseAssignmentRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Assign Teacher To Course
+      tags:
+      - admin
+  /api/admin/courses/bulk-publish:
+    post:
+      description: Bulk publish/unpublish courses
+      operationId: bulk_publish_courses_api_admin_courses_bulk_publish_post
+      parameters:
+      - in: query
+        name: publish
+        required: false
+        schema:
+          default: true
+          title: Publish
+          type: boolean
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                type: integer
+              title: Course Ids
+              type: array
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Bulk Publish Courses
+      tags:
+      - admin
+  /api/admin/courses/unassigned:
+    get:
+      description: Get all courses without assigned teachers
+      operationId: get_unassigned_courses_api_admin_courses_unassigned_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Unassigned Courses
+      tags:
+      - admin
+  /api/admin/courses/update-status:
+    post:
+      description: Publish or unpublish a course
+      operationId: update_course_status_api_admin_courses_update_status_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseStatusUpdate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Update Course Status
+      tags:
+      - admin
+  /api/admin/dashboard/stats:
+    get:
+      description: Get comprehensive admin dashboard statistics
+      operationId: get_admin_dashboard_stats_api_admin_dashboard_stats_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Admin Dashboard Stats
+      tags:
+      - admin
+  /api/admin/system/health:
+    get:
+      description: Get system health metrics
+      operationId: get_system_health_api_admin_system_health_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get System Health
+      tags:
+      - admin
+  /api/admin/teachers/approve:
+    post:
+      description: Approve or reject teacher application
+      operationId: approve_teacher_api_admin_teachers_approve_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherApprovalRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Approve Teacher
+      tags:
+      - admin
+  /api/admin/teachers/pending:
+    get:
+      description: Get all pending teacher approvals
+      operationId: get_pending_teachers_api_admin_teachers_pending_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Pending Teachers
+      tags:
+      - admin
+  /api/admin/users:
+    get:
+      description: Get all users with optional filtering
+      operationId: get_all_users_api_admin_users_get
+      parameters:
+      - in: query
+        name: skip
+        required: false
+        schema:
+          default: 0
+          title: Skip
+          type: integer
+      - in: query
+        name: limit
+        required: false
+        schema:
+          default: 100
+          title: Limit
+          type: integer
+      - in: query
+        name: role
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Role
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get All Users
+      tags:
+      - admin
+  /api/admin/users/bulk-action:
+    post:
+      description: Perform bulk actions on multiple users
+      operationId: bulk_user_action_api_admin_users_bulk_action_post
+      parameters:
+      - in: query
+        name: action
+        required: true
+        schema:
+          title: Action
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                type: integer
+              title: User Ids
+              type: array
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Bulk User Action
+      tags:
+      - admin
+  /api/admin/users/{user_id}:
+    delete:
+      description: Delete a user (soft delete by deactivating)
+      operationId: delete_user_api_admin_users__user_id__delete
+      parameters:
+      - in: path
+        name: user_id
+        required: true
+        schema:
+          title: User Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Delete User
+      tags:
+      - admin
+  /api/admin/users/{user_id}/role:
+    put:
+      description: Update user role and sub_role
+      operationId: update_user_role_api_admin_users__user_id__role_put
+      parameters:
+      - in: path
+        name: user_id
+        required: true
+        schema:
+          title: User Id
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRoleUpdate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Update User Role
+      tags:
+      - admin
+  /api/analytics/parent/{child_id}:
+    get:
+      operationId: get_parent_dashboard_api_analytics_parent__child_id__get
+      parameters:
+      - in: path
+        name: child_id
+        required: true
+        schema:
+          title: Child Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ParentDashboardRead'
+                title: Response Get Parent Dashboard Api Analytics Parent  Child Id  Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Parent Dashboard
+      tags:
+      - analytics
+  /api/analytics/record:
+    post:
+      operationId: record_analytics_api_analytics_record_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              title: Analytics Data
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Record Analytics
+      tags:
+      - analytics
+  /api/analytics/user:
+    get:
+      operationId: get_user_analytics_api_analytics_user_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/AnalyticsRead'
+                title: Response Get User Analytics Api Analytics User Get
+                type: array
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get User Analytics
+      tags:
+      - analytics
+  /api/assignments/:
+    get:
+      operationId: list_assignments_api_assignments__get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/AssignmentRead'
+                title: Response List Assignments Api Assignments  Get
+                type: array
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: List Assignments
+      tags:
+      - assignments
+    post:
+      operationId: create_assignment_api_assignments__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentCreate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentRead'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Create Assignment
+      tags:
+      - assignments
+  /api/assignments/{assignment_id}/grade:
+    post:
+      operationId: grade_assignment_api_assignments__assignment_id__grade_post
+      parameters:
+      - in: path
+        name: assignment_id
+        required: true
+        schema:
+          title: Assignment Id
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeCreate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeRead'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Grade Assignment
+      tags:
+      - assignments
+  /api/assignments/{assignment_id}/grades:
+    get:
+      operationId: get_grades_api_assignments__assignment_id__grades_get
+      parameters:
+      - in: path
+        name: assignment_id
+        required: true
+        schema:
+          title: Assignment Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/GradeRead'
+                title: Response Get Grades Api Assignments  Assignment Id  Grades
+                  Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Grades
+      tags:
+      - assignments
+  /api/attendance/analytics/course/{course_id}:
+    get:
+      description: Get attendance analytics for a course
+      operationId: get_course_attendance_analytics_api_attendance_analytics_course__course_id__get
+      parameters:
+      - in: path
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Course Attendance Analytics
+      tags:
+      - attendance
+  /api/attendance/course/{course_id}/sessions:
+    get:
+      description: Get all attendance sessions for a course
+      operationId: get_course_attendance_sessions_api_attendance_course__course_id__sessions_get
+      parameters:
+      - in: path
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Course Attendance Sessions
+      tags:
+      - attendance
+  /api/attendance/lesson/{lesson_id}/details:
+    get:
+      description: Get detailed attendance for a specific lesson
+      operationId: get_lesson_attendance_details_api_attendance_lesson__lesson_id__details_get
+      parameters:
+      - in: path
+        name: lesson_id
+        required: true
+        schema:
+          title: Lesson Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Lesson Attendance Details
+      tags:
+      - attendance
+  /api/attendance/mark:
+    post:
+      description: Mark attendance for students in a lesson
+      operationId: mark_attendance_api_attendance_mark_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceMarkRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Mark Attendance
+      tags:
+      - attendance
+  /api/attendance/sessions/create:
+    post:
+      description: Create a new attendance session for a lesson
+      operationId: create_attendance_session_api_attendance_sessions_create_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceSessionCreate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Create Attendance Session
+      tags:
+      - attendance
+  /api/attendance/student/{student_id}/history:
+    get:
+      description: Get attendance history for a student
+      operationId: get_student_attendance_history_api_attendance_student__student_id__history_get
+      parameters:
+      - in: path
+        name: student_id
+        required: true
+        schema:
+          title: Student Id
+          type: integer
+      - in: query
+        name: course_id
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Course Id
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Student Attendance History
+      tags:
+      - attendance
+  /api/auth/admin/create-admin:
+    post:
+      operationId: create_admin_api_auth_admin_create_admin_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Create Admin
+      tags:
+      - auth
+  /api/auth/admin/users:
+    get:
+      operationId: list_users_api_auth_admin_users_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UserOut'
+                title: Response List Users Api Auth Admin Users Get
+                type: array
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: List Users
+      tags:
+      - auth
+  /api/auth/admin/users/{user_id}:
+    delete:
+      operationId: delete_user_api_auth_admin_users__user_id__delete
+      parameters:
+      - in: path
+        name: user_id
+        required: true
+        schema:
+          title: User Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Delete User
+      tags:
+      - auth
+    put:
+      operationId: update_user_api_auth_admin_users__user_id__put
+      parameters:
+      - in: path
+        name: user_id
+        required: true
+        schema:
+          title: User Id
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Update User
+      tags:
+      - auth
+  /api/auth/login:
+    post:
+      operationId: login_api_auth_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Login
+      tags:
+      - auth
+  /api/auth/logout:
+    post:
+      operationId: logout_api_auth_logout_post
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Logout
+      tags:
+      - auth
+  /api/auth/me:
+    get:
+      operationId: me_api_auth_me_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Me
+      tags:
+      - auth
+    put:
+      description: Update current user's profile
+      operationId: update_profile_api_auth_me_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Update Profile
+      tags:
+      - auth
+  /api/auth/register:
+    post:
+      operationId: register_api_auth_register_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Register
+      tags:
+      - auth
+  /api/categories/:
+    get:
+      description: Get all categories
+      operationId: get_categories_api_categories__get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Category'
+                title: Response Get Categories Api Categories  Get
+                type: array
+          description: Successful Response
+      summary: Get Categories
+      tags:
+      - categories
+    post:
+      description: Create a new category (Admin only)
+      operationId: create_category_api_categories__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCreate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Create Category
+      tags:
+      - categories
+  /api/categories/{category_id}:
+    delete:
+      description: Delete a category (Admin only)
+      operationId: delete_category_api_categories__category_id__delete
+      parameters:
+      - in: path
+        name: category_id
+        required: true
+        schema:
+          title: Category Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Delete Category
+      tags:
+      - categories
+    get:
+      description: Get a specific category by ID
+      operationId: get_category_api_categories__category_id__get
+      parameters:
+      - in: path
+        name: category_id
+        required: true
+        schema:
+          title: Category Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Category
+      tags:
+      - categories
+    put:
+      description: Update a category (Admin only)
+      operationId: update_category_api_categories__category_id__put
+      parameters:
+      - in: path
+        name: category_id
+        required: true
+        schema:
+          title: Category Id
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryUpdate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Update Category
+      tags:
+      - categories
+  /api/chat/messages:
+    get:
+      description: Get recent chat messages (last 50)
+      operationId: get_chat_messages_api_chat_messages_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  type: object
+                title: Response Get Chat Messages Api Chat Messages Get
+                type: array
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Chat Messages
+      tags:
+      - chat
+  /api/courses/:
+    get:
+      operationId: list_courses_api_courses__get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/CourseOut'
+                title: Response List Courses Api Courses  Get
+                type: array
+          description: Successful Response
+      summary: List Courses
+      tags:
+      - courses
+    post:
+      operationId: create_course_api_courses__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseCreate'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Create Course
+      tags:
+      - courses
+  /api/courses/admin/course-notes:
+    get:
+      description: 'Admin: List all course notes'
+      operationId: admin_list_course_notes_api_courses_admin_course_notes_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Admin List Course Notes
+      tags:
+      - courses
+  /api/courses/admin/course-notes/{note_id}:
+    delete:
+      description: 'Admin: Delete a course note'
+      operationId: admin_delete_course_note_api_courses_admin_course_notes__note_id__delete
+      parameters:
+      - in: path
+        name: note_id
+        required: true
+        schema:
+          title: Note Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Admin Delete Course Note
+      tags:
+      - courses
+  /api/courses/admin/course-videos:
+    get:
+      description: 'Admin: List all course videos'
+      operationId: admin_list_course_videos_api_courses_admin_course_videos_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Admin List Course Videos
+      tags:
+      - courses
+  /api/courses/admin/course-videos/{video_id}:
+    delete:
+      description: 'Admin: Delete a course video'
+      operationId: admin_delete_course_video_api_courses_admin_course_videos__video_id__delete
+      parameters:
+      - in: path
+        name: video_id
+        required: true
+        schema:
+          title: Video Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Admin Delete Course Video
+      tags:
+      - courses
+  /api/courses/admin/courses:
+    get:
+      description: 'Admin: List all courses with details'
+      operationId: admin_list_courses_api_courses_admin_courses_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Admin List Courses
+      tags:
+      - courses
+  /api/courses/admin/courses/{course_id}:
+    delete:
+      description: 'Admin: Delete a course'
+      operationId: admin_delete_course_api_courses_admin_courses__course_id__delete
+      parameters:
+      - in: path
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Admin Delete Course
+      tags:
+      - courses
+  /api/courses/admin/{course_id}/assign-teacher:
+    post:
+      description: Admin assigns a teacher to a course
+      operationId: assign_teacher_to_course_api_courses_admin__course_id__assign_teacher_post
+      parameters:
+      - in: path
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      - in: query
+        name: teacher_id
+        required: true
+        schema:
+          title: Teacher Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Assign Teacher To Course
+      tags:
+      - courses
+  /api/courses/admin/{course_id}/upload-note:
+    post:
+      description: Admin uploads a note to a course
+      operationId: upload_course_note_api_courses_admin__course_id__upload_note_post
+      parameters:
+      - in: path
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      - in: query
+        name: title
+        required: true
+        schema:
+          title: Title
+          type: string
+      - in: query
+        name: content
+        required: true
+        schema:
+          title: Content
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Upload Course Note
+      tags:
+      - courses
+  /api/courses/admin/{course_id}/upload-video:
+    post:
+      description: Admin uploads a video to a course
+      operationId: upload_course_video_api_courses_admin__course_id__upload_video_post
+      parameters:
+      - in: path
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      - in: query
+        name: title
+        required: true
+        schema:
+          title: Title
+          type: string
+      - in: query
+        name: url
+        required: true
+        schema:
+          title: Url
+          type: string
+      - in: query
+        name: description
+        required: false
+        schema:
+          title: Description
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Upload Course Video
+      tags:
+      - courses
+  /api/courses/available:
+    get:
+      description: Get courses available for teachers to select (not assigned to any
+        teacher)
+      operationId: available_courses_api_courses_available_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/CourseOut'
+                title: Response Available Courses Api Courses Available Get
+                type: array
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Available Courses
+      tags:
+      - courses
+  /api/courses/available-for-enrollment:
+    get:
+      description: Get courses available for students and teachers to enroll (have
+        assigned teachers)
+      operationId: get_available_courses_for_enrollment_api_courses_available_for_enrollment_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/CourseOut'
+                title: Response Get Available Courses For Enrollment Api Courses Available
+                  For Enrollment Get
+                type: array
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Available Courses For Enrollment
+      tags:
+      - courses
+  /api/courses/enroll:
+    post:
+      description: Allow students to enroll in courses
+      operationId: enroll_student_api_courses_enroll_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrollmentCreate'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Enroll Student
+      tags:
+      - courses
+  /api/courses/enroll/{course_id}:
+    delete:
+      description: Allow students to unenroll from courses
+      operationId: unenroll_student_api_courses_enroll__course_id__delete
+      parameters:
+      - in: path
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Unenroll Student
+      tags:
+      - courses
+  /api/courses/enrolled:
+    get:
+      description: Get courses the student is enrolled in
+      operationId: get_enrolled_courses_api_courses_enrolled_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/CourseOut'
+                title: Response Get Enrolled Courses Api Courses Enrolled Get
+                type: array
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Enrolled Courses
+      tags:
+      - courses
+  /api/courses/enrollment/{enrollment_id}/hours:
+    put:
+      description: Update hours completed for a student's enrollment and award gyan
+        coins
+      operationId: update_hours_completed_api_courses_enrollment__enrollment_id__hours_put
+      parameters:
+      - in: path
+        name: enrollment_id
+        required: true
+        schema:
+          title: Enrollment Id
+          type: integer
+      - in: query
+        name: hours
+        required: true
+        schema:
+          title: Hours
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Update Hours Completed
+      tags:
+      - courses
+  /api/courses/mine:
+    get:
+      operationId: my_courses_api_courses_mine_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/CourseOut'
+                title: Response My Courses Api Courses Mine Get
+                type: array
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: My Courses
+      tags:
+      - courses
+  /api/courses/teacher/stats:
+    get:
+      description: Get performance stats for teacher dashboard
+      operationId: teacher_stats_api_courses_teacher_stats_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Teacher Stats
+      tags:
+      - courses
+  /api/courses/teacher/student-queries:
+    get:
+      description: Get recent student queries for teacher
+      operationId: student_queries_api_courses_teacher_student_queries_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Student Queries
+      tags:
+      - courses
+  /api/courses/teacher/upcoming-classes:
+    get:
+      description: Get upcoming classes for teacher
+      operationId: upcoming_classes_api_courses_teacher_upcoming_classes_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Upcoming Classes
+      tags:
+      - courses
+  /api/courses/{course_id}/details:
+    get:
+      description: Get detailed course information including teacher and enrollment
+        count
+      operationId: get_course_details_api_courses__course_id__details_get
+      parameters:
+      - in: path
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseDetailOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Course Details
+      tags:
+      - courses
+  /api/courses/{course_id}/notes:
+    get:
+      description: Get all notes for a course
+      operationId: get_course_notes_api_courses__course_id__notes_get
+      parameters:
+      - in: path
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Course Notes
+      tags:
+      - courses
+  /api/courses/{course_id}/videos:
+    get:
+      description: Get all videos for a course
+      operationId: get_course_videos_api_courses__course_id__videos_get
+      parameters:
+      - in: path
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Course Videos
+      tags:
+      - courses
+  /api/dashboard/notifications:
+    get:
+      description: Get user notifications
+      operationId: get_notifications_api_dashboard_notifications_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Notifications
+      tags:
+      - dashboard
+  /api/dashboard/recommendations:
+    get:
+      description: Get personalized course recommendations
+      operationId: get_recommendations_api_dashboard_recommendations_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Recommendations
+      tags:
+      - dashboard
+  /api/dashboard/student/recent-courses:
+    get:
+      description: Get recently accessed courses for student
+      operationId: get_recent_courses_api_dashboard_student_recent_courses_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Recent Courses
+      tags:
+      - dashboard
+  /api/dashboard/student/stats:
+    get:
+      description: Get dashboard statistics for students
+      operationId: get_student_dashboard_stats_api_dashboard_student_stats_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Student Dashboard Stats
+      tags:
+      - dashboard
+  /api/dashboard/teacher/dashboard-stats:
+    get:
+      description: Get comprehensive dashboard statistics for teachers
+      operationId: get_teacher_dashboard_stats_api_dashboard_teacher_dashboard_stats_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Teacher Dashboard Stats
+      tags:
+      - dashboard
+  /api/gyanvruksh/leaderboard:
+    get:
+      description: Returns top students ordered by gyan_coins descending.
+      operationId: get_leaderboard_api_gyanvruksh_leaderboard_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  type: object
+                title: Response Get Leaderboard Api Gyanvruksh Leaderboard Get
+                type: array
+          description: Successful Response
+      summary: Get Leaderboard
+      tags:
+      - gyanvruksh
+  /api/gyanvruksh/profile:
+    get:
+      description: Returns current user profile including gyan_coins.
+      operationId: get_profile_api_gyanvruksh_profile_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Profile
+      tags:
+      - gyanvruksh
+  /api/lessons/:
+    get:
+      description: Get all lessons, optionally filtered by course_id
+      operationId: get_lessons_api_lessons__get
+      parameters:
+      - in: query
+        name: course_id
+        required: false
+        schema:
+          title: Course Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/LessonOut'
+                title: Response Get Lessons Api Lessons  Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Lessons
+      tags:
+      - lessons
+    post:
+      description: Create a new lesson (Teacher/Admin only)
+      operationId: create_lesson_api_lessons__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LessonCreate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LessonOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Create Lesson
+      tags:
+      - lessons
+  /api/lessons/{lesson_id}:
+    delete:
+      description: Delete a lesson (Teacher/Admin only)
+      operationId: delete_lesson_api_lessons__lesson_id__delete
+      parameters:
+      - in: path
+        name: lesson_id
+        required: true
+        schema:
+          title: Lesson Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Delete Lesson
+      tags:
+      - lessons
+    get:
+      description: Get a specific lesson by ID
+      operationId: get_lesson_api_lessons__lesson_id__get
+      parameters:
+      - in: path
+        name: lesson_id
+        required: true
+        schema:
+          title: Lesson Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LessonOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Lesson
+      tags:
+      - lessons
+    put:
+      description: Update a lesson (Teacher/Admin only)
+      operationId: update_lesson_api_lessons__lesson_id__put
+      parameters:
+      - in: path
+        name: lesson_id
+        required: true
+        schema:
+          title: Lesson Id
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LessonUpdate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LessonOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Update Lesson
+      tags:
+      - lessons
+  /api/notifications/:
+    get:
+      operationId: get_notifications_api_notifications__get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/NotificationRead'
+                title: Response Get Notifications Api Notifications  Get
+                type: array
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Notifications
+      tags:
+      - notifications
+  /api/notifications/{notification_id}/read:
+    post:
+      operationId: mark_as_read_api_notifications__notification_id__read_post
+      parameters:
+      - in: path
+        name: notification_id
+        required: true
+        schema:
+          title: Notification Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Mark As Read
+      tags:
+      - notifications
+  /api/progress/courses/{course_id}:
+    get:
+      description: Get user's progress for a specific course
+      operationId: get_course_progress_api_progress_courses__course_id__get
+      parameters:
+      - in: path
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProgress'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Course Progress
+      tags:
+      - progress
+  /api/progress/courses/{course_id}/lessons/{lesson_id}:
+    post:
+      description: Update or create progress for a specific lesson
+      operationId: update_lesson_progress_api_progress_courses__course_id__lessons__lesson_id__post
+      parameters:
+      - in: path
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      - in: path
+        name: lesson_id
+        required: true
+        schema:
+          title: Lesson Id
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProgressUpdate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProgress'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Update Lesson Progress
+      tags:
+      - progress
+  /api/progress/detailed:
+    get:
+      description: Get detailed progress information including analytics
+      operationId: get_detailed_progress_api_progress_detailed_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Detailed Progress
+      tags:
+      - progress
+  /api/progress/gamification:
+    get:
+      description: Get gamification data including streaks, points, badges
+      operationId: get_gamification_data_api_progress_gamification_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Gamification Data
+      tags:
+      - progress
+  /api/progress/overall:
+    get:
+      description: Get overall user progress across all courses
+      operationId: get_overall_progress_api_progress_overall_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Overall Progress
+      tags:
+      - progress
+  /api/progress/preferences:
+    get:
+      description: Get user's learning preferences
+      operationId: get_user_preferences_api_progress_preferences_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferencesOut'
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get User Preferences
+      tags:
+      - progress
+    put:
+      description: Update user's learning preferences
+      operationId: update_user_preferences_api_progress_preferences_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPreferencesUpdate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferencesOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Update User Preferences
+      tags:
+      - progress
+  /api/progress/skills:
+    get:
+      description: Get progress grouped by skills/categories
+      operationId: get_skill_progress_api_progress_skills_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Skill Progress
+      tags:
+      - progress
+  /api/progress/streak:
+    post:
+      description: Update user's learning streak
+      operationId: update_streak_api_progress_streak_post
+      parameters:
+      - in: query
+        name: learning_activity
+        required: true
+        schema:
+          title: Learning Activity
+          type: boolean
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Update Streak
+      tags:
+      - progress
+  /api/quizzes/:
+    get:
+      description: Get all quizzes, optionally filtered by course_id
+      operationId: get_quizzes_api_quizzes__get
+      parameters:
+      - in: query
+        name: course_id
+        required: false
+        schema:
+          title: Course Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/QuizOut'
+                title: Response Get Quizzes Api Quizzes  Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Quizzes
+      tags:
+      - quizzes
+    post:
+      description: Create a new quiz with questions (Teacher/Admin only)
+      operationId: create_quiz_api_quizzes__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuizCreate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Create Quiz
+      tags:
+      - quizzes
+  /api/quizzes/{quiz_id}:
+    get:
+      description: Get a specific quiz by ID
+      operationId: get_quiz_api_quizzes__quiz_id__get
+      parameters:
+      - in: path
+        name: quiz_id
+        required: true
+        schema:
+          title: Quiz Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Quiz
+      tags:
+      - quizzes
+    put:
+      description: Update a quiz (Teacher/Admin only)
+      operationId: update_quiz_api_quizzes__quiz_id__put
+      parameters:
+      - in: path
+        name: quiz_id
+        required: true
+        schema:
+          title: Quiz Id
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuizUpdate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Update Quiz
+      tags:
+      - quizzes
+  /api/quizzes/{quiz_id}/attempt:
+    post:
+      description: Submit a quiz attempt and calculate score
+      operationId: submit_quiz_attempt_api_quizzes__quiz_id__attempt_post
+      parameters:
+      - in: path
+        name: quiz_id
+        required: true
+        schema:
+          title: Quiz Id
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuizAttemptCreate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizAttemptOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Submit Quiz Attempt
+      tags:
+      - quizzes
+  /api/quizzes/{quiz_id}/attempts:
+    get:
+      description: Get user's attempts for a quiz
+      operationId: get_quiz_attempts_api_quizzes__quiz_id__attempts_get
+      parameters:
+      - in: path
+        name: quiz_id
+        required: true
+        schema:
+          title: Quiz Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/QuizAttemptOut'
+                title: Response Get Quiz Attempts Api Quizzes  Quiz Id  Attempts Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Quiz Attempts
+      tags:
+      - quizzes
+  /api/quizzes/{quiz_id}/questions:
+    get:
+      description: Get all questions for a quiz
+      operationId: get_quiz_questions_api_quizzes__quiz_id__questions_get
+      parameters:
+      - in: path
+        name: quiz_id
+        required: true
+        schema:
+          title: Quiz Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/QuestionOut'
+                title: Response Get Quiz Questions Api Quizzes  Quiz Id  Questions
+                  Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Quiz Questions
+      tags:
+      - quizzes
+  /api/student/achievements:
+    get:
+      description: Get student achievements and badges
+      operationId: get_student_achievements_api_student_achievements_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Student Achievements
+      tags:
+      - student
+  /api/student/courses/recommended:
+    get:
+      description: Get personalized course recommendations for student
+      operationId: get_recommended_courses_api_student_courses_recommended_get
+      parameters:
+      - in: query
+        name: limit
+        required: false
+        schema:
+          default: 10
+          title: Limit
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Recommended Courses
+      tags:
+      - student
+  /api/student/courses/{course_id}/enroll:
+    post:
+      description: Enroll student in a course
+      operationId: enroll_in_course_api_student_courses__course_id__enroll_post
+      parameters:
+      - in: path
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Enroll In Course
+      tags:
+      - student
+  /api/student/dashboard/stats:
+    get:
+      description: Get comprehensive student dashboard statistics
+      operationId: get_student_dashboard_stats_api_student_dashboard_stats_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Student Dashboard Stats
+      tags:
+      - student
+  /api/student/doubts:
+    get:
+      description: Get student's doubts and questions
+      operationId: get_student_doubts_api_student_doubts_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Student Doubts
+      tags:
+      - student
+    post:
+      description: Ask a new doubt/question
+      operationId: ask_doubt_api_student_doubts_post
+      parameters:
+      - in: query
+        name: question
+        required: true
+        schema:
+          title: Question
+          type: string
+      - in: query
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Ask Doubt
+      tags:
+      - student
+  /api/student/learning-path:
+    get:
+      description: Get personalized learning path for student
+      operationId: get_learning_path_api_student_learning_path_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Learning Path
+      tags:
+      - student
+  /api/student/progress-report:
+    get:
+      description: Get detailed progress report for student
+      operationId: get_progress_report_api_student_progress_report_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Progress Report
+      tags:
+      - student
+  /api/student/study-groups:
+    get:
+      description: Get available study groups for student
+      operationId: get_study_groups_api_student_study_groups_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Study Groups
+      tags:
+      - student
+  /api/student/study-groups/{group_id}/join:
+    post:
+      description: Join a study group
+      operationId: join_study_group_api_student_study_groups__group_id__join_post
+      parameters:
+      - in: path
+        name: group_id
+        required: true
+        schema:
+          title: Group Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Join Study Group
+      tags:
+      - student
+  /api/student/study-plan/generate:
+    post:
+      description: Generate a personalized study plan for a course
+      operationId: generate_study_plan_api_student_study_plan_generate_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudyPlanRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Generate Study Plan
+      tags:
+      - student
+  /api/student/upcoming-deadlines:
+    get:
+      description: Get upcoming assignment deadlines and scheduled lessons
+      operationId: get_upcoming_deadlines_api_student_upcoming_deadlines_get
+      parameters:
+      - in: query
+        name: days_ahead
+        required: false
+        schema:
+          default: 7
+          title: Days Ahead
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Upcoming Deadlines
+      tags:
+      - student
+  /api/teacher/analytics/performance:
+    get:
+      description: Get detailed performance analytics for teacher
+      operationId: get_teacher_performance_analytics_api_teacher_analytics_performance_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Teacher Performance Analytics
+      tags:
+      - teacher
+  /api/teacher/communication/announcement:
+    post:
+      description: Create an announcement for a course
+      operationId: create_announcement_api_teacher_communication_announcement_post
+      parameters:
+      - in: query
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      - in: query
+        name: title
+        required: true
+        schema:
+          title: Title
+          type: string
+      - in: query
+        name: message
+        required: true
+        schema:
+          title: Message
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Create Announcement
+      tags:
+      - teacher
+  /api/teacher/communication/messages:
+    get:
+      description: Get messages and communications for teacher
+      operationId: get_teacher_messages_api_teacher_communication_messages_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Teacher Messages
+      tags:
+      - teacher
+  /api/teacher/content/library:
+    get:
+      description: Get teacher's content library and resources
+      operationId: get_content_library_api_teacher_content_library_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Content Library
+      tags:
+      - teacher
+  /api/teacher/content/upload:
+    post:
+      description: Upload new content to teacher's library
+      operationId: upload_content_api_teacher_content_upload_post
+      parameters:
+      - in: query
+        name: title
+        required: true
+        schema:
+          title: Title
+          type: string
+      - in: query
+        name: content_type
+        required: true
+        schema:
+          title: Content Type
+          type: string
+      - in: query
+        name: description
+        required: true
+        schema:
+          title: Description
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Upload Content
+      tags:
+      - teacher
+  /api/teacher/dashboard/stats:
+    get:
+      description: Get teacher dashboard statistics
+      operationId: get_teacher_dashboard_stats_api_teacher_dashboard_stats_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Teacher Dashboard Stats
+      tags:
+      - teacher
+  /api/teacher/grading/assignment:
+    post:
+      description: Grade a student assignment
+      operationId: grade_assignment_api_teacher_grading_assignment_post
+      parameters:
+      - in: query
+        name: student_id
+        required: true
+        schema:
+          title: Student Id
+          type: integer
+      - in: query
+        name: course_id
+        required: true
+        schema:
+          title: Course Id
+          type: integer
+      - in: query
+        name: assignment_id
+        required: true
+        schema:
+          title: Assignment Id
+          type: integer
+      - in: query
+        name: grade
+        required: true
+        schema:
+          title: Grade
+          type: number
+      - in: query
+        name: feedback
+        required: true
+        schema:
+          title: Feedback
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Grade Assignment
+      tags:
+      - teacher
+  /api/teacher/students/management:
+    get:
+      description: Get student management data for teacher's courses
+      operationId: get_student_management_data_api_teacher_students_management_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Get Student Management Data
+      tags:
+      - teacher
+  /healthz:
+    get:
+      operationId: health_healthz_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: Health

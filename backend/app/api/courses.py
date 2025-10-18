@@ -258,6 +258,40 @@ def get_available_courses_for_enrollment(db: Session = Depends(get_db), user: Us
     ).all()
     return available_courses
 
+@router.get("/recommended", response_model=List[CourseOut])
+def get_recommended_courses(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Get personalized course recommendations for the current user"""
+    if user.role != "service_seeker" or user.sub_role != "student":
+        raise HTTPException(status_code=403, detail="Only students can get course recommendations")
+
+    # Get user's enrolled courses to understand preferences
+    enrolled_courses = db.query(Course).join(Enrollment).filter(
+        Enrollment.student_id == user.id
+    ).all()
+
+    # Get categories from enrolled courses
+    enrolled_categories = [course.category_id for course in enrolled_courses if course.category_id]
+
+    # Recommend courses from similar categories that student hasn't enrolled in
+    enrolled_course_ids = [course.id for course in enrolled_courses]
+
+    recommended_courses = db.query(Course).filter(
+        Course.is_published == True,
+        Course.id.notin_(enrolled_course_ids)
+    )
+
+    if enrolled_categories:
+        recommended_courses = recommended_courses.filter(
+            Course.category_id.in_(enrolled_categories)
+        )
+
+    recommended_courses = recommended_courses.order_by(
+        Course.rating.desc(),
+        Course.enrollment_count.desc()
+    ).limit(10).all()
+
+    return recommended_courses
+
 @router.get("/{course_id}/details", response_model=CourseDetailOut)
 def get_course_details(course_id: int, db: Session = Depends(get_db)):
     """Get detailed course information including teacher and enrollment count"""

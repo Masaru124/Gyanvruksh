@@ -6,7 +6,7 @@ class LoadingStates {
   // Full screen loading overlay
   static Widget fullScreenLoading(BuildContext context, {String? message}) {
     return Container(
-      color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -52,7 +52,7 @@ class LoadingStates {
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: isLoading
-              ? FuturisticColors.neonBlue.withOpacity(0.3)
+              ? FuturisticColors.neonBlue.withValues(alpha: 0.3)
               : FuturisticColors.neonBlue,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
@@ -84,14 +84,14 @@ class LoadingStates {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: FuturisticColors.neonBlue.withOpacity(0.1),
+        color: FuturisticColors.neonBlue.withValues(alpha: 0.1),
         borderRadius: borderRadius ?? BorderRadius.circular(8),
       ),
     )
         .animate(onPlay: (controller) => controller.repeat())
         .shimmer(
           duration: 1500.ms,
-          color: FuturisticColors.neonBlue.withOpacity(0.2),
+          color: FuturisticColors.neonBlue.withValues(alpha: 0.2),
         );
   }
 
@@ -130,7 +130,7 @@ class LoadingStates {
               message,
               style: TextStyle(
                 fontSize: 16,
-                color: FuturisticColors.neonBlue.withOpacity(0.7),
+                color: FuturisticColors.neonBlue.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -173,7 +173,7 @@ class LoadingStates {
             Icon(
               icon ?? Icons.inbox,
               size: 64,
-              color: FuturisticColors.neonBlue.withOpacity(0.5),
+              color: FuturisticColors.neonBlue.withValues(alpha: 0.5),
             )
                 .animate()
                 .scale(duration: 300.ms, curve: Curves.elasticOut),
@@ -192,7 +192,7 @@ class LoadingStates {
               message,
               style: TextStyle(
                 fontSize: 16,
-                color: FuturisticColors.neonBlue.withOpacity(0.7),
+                color: FuturisticColors.neonBlue.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -260,7 +260,7 @@ class _FuturisticLoadingIndicatorState extends State<_FuturisticLoadingIndicator
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: color.withOpacity(0.2),
+                  color: color.withValues(alpha: 0.2),
                   width: 3,
                 ),
               ),
@@ -292,10 +292,10 @@ class _FuturisticLoadingIndicatorState extends State<_FuturisticLoadingIndicator
               height: 20,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: color.withOpacity(0.3),
+                color: color.withValues(alpha: 0.3),
                 boxShadow: [
                   BoxShadow(
-                    color: color.withOpacity(0.5),
+                    color: color.withValues(alpha: 0.5),
                     blurRadius: 10,
                     spreadRadius: 2,
                   ),

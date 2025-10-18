@@ -6,6 +6,9 @@ class NotificationBase(BaseModel):
     message: str
     notification_type: str
 
+class NotificationCreate(NotificationBase):
+    user_id: int
+
 class NotificationRead(NotificationBase):
     id: int
     user_id: int

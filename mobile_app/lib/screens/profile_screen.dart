@@ -76,9 +76,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _saveProfile() async {
     try {
       final success = await ApiService().updateProfile(
-        fullName: fullNameCtrl.text.isNotEmpty ? fullNameCtrl.text : null,
-        phoneNumber: phoneCtrl.text.isNotEmpty ? phoneCtrl.text : null,
-        address: addressCtrl.text.isNotEmpty ? addressCtrl.text : null,
+        name: fullNameCtrl.text.isNotEmpty ? fullNameCtrl.text : null,
+        phone: phoneCtrl.text.isNotEmpty ? phoneCtrl.text : null,
+        bio: addressCtrl.text.isNotEmpty ? addressCtrl.text : null,
       );
 
       if (success) {

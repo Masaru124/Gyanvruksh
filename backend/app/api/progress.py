@@ -115,21 +115,35 @@ def update_user_preferences(preferences: UserPreferencesUpdate, db: Session = De
 
 def _update_course_progress(db: Session, user_id: int, course_id: int):
     """
-    Calculate and update overall course progress
+    Calculate and update overall course progress based on lesson completion
     """
-    lesson_progresses = db.query(UserProgress).filter(
-        UserProgress.user_id == user_id,
-        UserProgress.course_id == course_id,
-        UserProgress.lesson_id.isnot(None)
-    ).all()
-
-    if not lesson_progresses:
+    # Get all lessons for the course
+    lessons = db.query(Lesson).filter(Lesson.course_id == course_id).all()
+    if not lessons:
         return
 
-    total_lessons = db.query(Lesson).filter(Lesson.course_id == course_id).count()
-    completed_lessons = sum(1 for p in lesson_progresses if p.completed)
-    avg_progress = sum(p.progress_percentage for p in lesson_progresses) / len(lesson_progresses)
+    total_lessons = len(lessons)
+    completed_lessons = 0
+    total_progress = 0
 
+    # Calculate progress from individual lesson progress records
+    for lesson in lessons:
+        lesson_progress = db.query(UserProgress).filter(
+            UserProgress.user_id == user_id,
+            UserProgress.course_id == course_id,
+            UserProgress.lesson_id == lesson.id
+        ).first()
+
+        if lesson_progress:
+            if lesson_progress.completed:
+                completed_lessons += 1
+            total_progress += lesson_progress.progress_percentage
+
+    # Calculate average progress across all lessons
+    avg_progress = total_progress / total_lessons if total_lessons > 0 else 0
+    course_completed = completed_lessons == total_lessons
+
+    # Update or create course-level progress
     course_progress = db.query(UserProgress).filter(
         UserProgress.user_id == user_id,
         UserProgress.course_id == course_id,
@@ -138,17 +152,32 @@ def _update_course_progress(db: Session, user_id: int, course_id: int):
 
     if course_progress:
         course_progress.progress_percentage = avg_progress
-        course_progress.completed = completed_lessons == total_lessons
+        course_progress.completed = course_completed
+        course_progress.last_accessed = datetime.utcnow()
     else:
         course_progress = UserProgress(
             user_id=user_id,
             course_id=course_id,
+            lesson_id=None,  # Course-level progress
             progress_percentage=avg_progress,
-            completed=completed_lessons == total_lessons
+            completed=course_completed,
+            last_accessed=datetime.utcnow()
         )
         db.add(course_progress)
 
     db.commit()
+
+    # Also update enrollment progress for consistency
+    enrollment = db.query(Enrollment).filter(
+        Enrollment.student_id == user_id,
+        Enrollment.course_id == course_id
+    ).first()
+
+    if enrollment:
+        enrollment.progress = avg_progress
+        if course_completed:
+            enrollment.completed_at = datetime.utcnow()
+        db.commit()
 
 @router.get("/overall")
 def get_overall_progress(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

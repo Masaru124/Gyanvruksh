@@ -31,63 +31,44 @@ class _ProgressTrackerScreenState extends State<ProgressTrackerScreen> {
     setState(() => isLoading = true);
     
     try {
-      final results = await Future.wait([
-        ApiService().get('/api/student/progress').catchError((_) => {}),
-        ApiService().get('/api/student/course-progress').catchError((_) => []),
-      ]);
-      
+      final report = await ApiService().getStudentProgressReport();
+
+      // Map backend report to current UI structures
+      final summary = report['summary'] as Map<String, dynamic>? ?? {};
+      final courseList = report['course_progress'] as List<dynamic>? ?? [];
+
+      overallProgress = {
+        'totalCourses': summary['total_courses'] ?? 0,
+        'completedCourses': summary['completed_courses'] ?? 0,
+        'totalHours': report['total_study_hours'] ?? 0,
+        'completedHours': (report['total_study_hours'] ?? 0) * 0.6, // estimate if not provided
+        'averageScore': (summary['overall_progress'] ?? 0).round(),
+        'streak': report['study_streak'] ?? 0,
+      };
+
+      courseProgress = courseList.map((c) {
+        final m = c as Map<String, dynamic>;
+        return {
+          'name': m['course_title'] ?? 'Course',
+          'progress': (m['progress'] ?? 0).round(),
+          'totalLessons': 0,
+          'completedLessons': 0,
+          'score': ((m['progress'] ?? 0) as num).round(),
+        };
+      }).toList();
+
+      // Skills not yet provided by backend; keep empty for now
+      skillProgress = [];
+
       setState(() {
-        overallProgress = results[0] as Map<String, dynamic>;
-        courseProgress = results[1] as List<dynamic>;
         isLoading = false;
-        
-        // Fallback data
-        if (overallProgress.isEmpty) {
-          overallProgress = {
-            'totalCourses': 5,
-            'completedCourses': 2,
-            'totalHours': 120,
-            'completedHours': 75,
-            'averageScore': 85,
-            'streak': 7,
-          };
-        }
-        
-        if (courseProgress.isEmpty) {
-          courseProgress = [
-            {'name': 'Advanced Mathematics', 'progress': 85, 'totalLessons': 20, 'completedLessons': 17, 'score': 92},
-            {'name': 'Physics Fundamentals', 'progress': 60, 'totalLessons': 15, 'completedLessons': 9, 'score': 78},
-            {'name': 'Chemistry Basics', 'progress': 40, 'totalLessons': 18, 'completedLessons': 7, 'score': 82},
-            {'name': 'Computer Science', 'progress': 95, 'totalLessons': 12, 'completedLessons': 11, 'score': 96},
-          ];
-        }
-        
-        skillProgress = [
-          {'skill': 'Problem Solving', 'level': 8, 'maxLevel': 10, 'progress': 80},
-          {'skill': 'Critical Thinking', 'level': 7, 'maxLevel': 10, 'progress': 70},
-          {'skill': 'Mathematical Reasoning', 'level': 9, 'maxLevel': 10, 'progress': 90},
-          {'skill': 'Scientific Method', 'level': 6, 'maxLevel': 10, 'progress': 60},
-        ];
       });
     } catch (e) {
       setState(() {
         isLoading = false;
-        overallProgress = {
-          'totalCourses': 5,
-          'completedCourses': 2,
-          'totalHours': 120,
-          'completedHours': 75,
-          'averageScore': 85,
-          'streak': 7,
-        };
-        courseProgress = [
-          {'name': 'Advanced Mathematics', 'progress': 85, 'totalLessons': 20, 'completedLessons': 17, 'score': 92},
-          {'name': 'Physics Fundamentals', 'progress': 60, 'totalLessons': 15, 'completedLessons': 9, 'score': 78},
-        ];
-        skillProgress = [
-          {'skill': 'Problem Solving', 'level': 8, 'maxLevel': 10, 'progress': 80},
-          {'skill': 'Critical Thinking', 'level': 7, 'maxLevel': 10, 'progress': 70},
-        ];
+        overallProgress = {};
+        courseProgress = [];
+        skillProgress = [];
       });
     }
   }

@@ -94,18 +94,18 @@ class _FuturisticChartState extends State<FuturisticChart>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            backgroundColor.withOpacity(0.9),
-            backgroundColor.withOpacity(0.7),
+            backgroundColor.withValues(alpha: 0.9),
+            backgroundColor.withValues(alpha: 0.7),
           ],
         ),
         border: Border.all(
-          color: primaryColor.withOpacity(0.3),
+          color: primaryColor.withValues(alpha: 0.3),
           width: 1,
         ),
         boxShadow: widget.enableGlow
             ? [
                 BoxShadow(
-                  color: primaryColor.withOpacity(0.2),
+                  color: primaryColor.withValues(alpha: 0.2),
                   blurRadius: 20,
                   spreadRadius: 5,
                 ),
@@ -223,7 +223,7 @@ class FuturisticChartPainter extends CustomPainter {
   void _drawGrid(Canvas canvas, Size size, double left, double top,
       double width, double height) {
     final gridPaint = Paint()
-      ..color = FuturisticColors.textSecondary.withOpacity(0.1)
+      ..color = FuturisticColors.textSecondary.withValues(alpha: 0.1)
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
@@ -251,7 +251,7 @@ class FuturisticChartPainter extends CustomPainter {
   void _drawAxes(Canvas canvas, Size size, double left, double top,
       double width, double height) {
     final axisPaint = Paint()
-      ..color = FuturisticColors.textSecondary.withOpacity(0.3)
+      ..color = FuturisticColors.textSecondary.withValues(alpha: 0.3)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
@@ -310,7 +310,7 @@ class FuturisticChartPainter extends CustomPainter {
 
         if (enableGlow) {
           final glowPaint = Paint()
-            ..color = primaryColor.withOpacity(0.3)
+            ..color = primaryColor.withValues(alpha: 0.3)
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
 
           canvas.drawCircle(Offset(x, y), 6, glowPaint);
@@ -328,8 +328,8 @@ class FuturisticChartPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          primaryColor.withOpacity(0.3 * animationValue),
-          primaryColor.withOpacity(0.1 * animationValue),
+          primaryColor.withValues(alpha: 0.3 * animationValue),
+          primaryColor.withValues(alpha: 0.1 * animationValue),
         ],
       ).createShader(Rect.fromLTWH(left, top, width, height));
 
@@ -347,7 +347,7 @@ class FuturisticChartPainter extends CustomPainter {
     // Draw glow effect on line
     if (enableGlow) {
       final glowLinePaint = Paint()
-        ..color = primaryColor.withOpacity(0.5)
+        ..color = primaryColor.withValues(alpha: 0.5)
         ..strokeWidth = 6
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round

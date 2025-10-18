@@ -134,7 +134,7 @@ class _CinematicBackgroundState extends State<CinematicBackground>
               colors: [
                 _primaryColorAnimation.value ?? widget.primaryColors[0],
                 _secondaryColorAnimation.value ?? widget.primaryColors[1],
-                widget.primaryColors[2].withOpacity(0.8),
+                widget.primaryColors[2].withValues(alpha: 0.8),
               ],
               stops: const [0.0, 0.5, 1.0],
             ),
@@ -163,10 +163,10 @@ class _CinematicBackgroundState extends State<CinematicBackground>
                     height: particle.size,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: particle.color.withOpacity(particle.opacity),
+                      color: particle.color.withValues(alpha: particle.opacity),
                       boxShadow: [
                         BoxShadow(
-                          color: particle.color.withOpacity(0.3),
+                          color: particle.color.withValues(alpha: 0.3),
                           blurRadius: particle.size, // Reduced blur radius
                           spreadRadius: particle.size * 0.3, // Reduced spread radius
                         ),
@@ -189,10 +189,10 @@ class _CinematicBackgroundState extends State<CinematicBackground>
                     height: particle.size,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: particle.color.withOpacity(particle.opacity),
+                      color: particle.color.withValues(alpha: particle.opacity),
                       boxShadow: [
                         BoxShadow(
-                          color: particle.color.withOpacity(0.3),
+                          color: particle.color.withValues(alpha: 0.3),
                           blurRadius: particle.size * 2,
                           spreadRadius: particle.size * 0.5,
                         ),
@@ -211,8 +211,8 @@ class _CinematicBackgroundState extends State<CinematicBackground>
                     colors: [
                       Colors.transparent,
                       widget.isDark
-                          ? Colors.black.withOpacity(0.1)
-                          : Colors.white.withOpacity(0.05),
+                          ? Colors.black.withValues(alpha: 0.1)
+                          : Colors.white.withValues(alpha: 0.05),
                     ],
                   ),
                 ),
@@ -275,7 +275,7 @@ class WavePainter extends CustomPainter {
         path.lineTo(x, y);
       }
 
-      paint.color = colors[i % colors.length].withOpacity(0.3 - i * 0.1);
+      paint.color = colors[i % colors.length].withValues(alpha: 0.3 - i * 0.1);
       canvas.drawPath(path, paint);
     }
   }

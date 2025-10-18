@@ -3,6 +3,7 @@ import 'dart:convert';
 
 class AuthStorage {
   static const String _tokenKey = 'auth_token';
+  static const String _refreshTokenKey = 'refresh_token';
   static const String _userKey = 'user_data';
   static const String _loginTimeKey = 'login_time';
 
@@ -14,10 +15,24 @@ class AuthStorage {
     await prefs.setInt(_loginTimeKey, DateTime.now().millisecondsSinceEpoch);
   }
 
+  // Save both access and refresh tokens
+  static Future<void> saveTokens(String accessToken, String refreshToken) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, accessToken);
+    await prefs.setString(_refreshTokenKey, refreshToken);
+    await prefs.setInt(_loginTimeKey, DateTime.now().millisecondsSinceEpoch);
+  }
+
   // Get stored token
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_tokenKey);
+  }
+
+  // Get stored refresh token
+  static Future<String?> getRefreshToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_refreshTokenKey);
   }
 
   // Get stored user data
@@ -50,6 +65,7 @@ class AuthStorage {
   static Future<void> clearAuthData() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
+    await prefs.remove(_refreshTokenKey);
     await prefs.remove(_userKey);
     await prefs.remove(_loginTimeKey);
   }

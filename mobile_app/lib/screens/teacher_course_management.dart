@@ -3,6 +3,7 @@ import 'package:gyanvruksh/services/api.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
 import 'package:gyanvruksh/screens/attendance_management.dart';
 import 'package:gyanvruksh/screens/create_course.dart';
+import 'package:gyanvruksh/screens/edit_course.dart';
 
 class TeacherCourseManagementScreen extends StatefulWidget {
   const TeacherCourseManagementScreen({super.key});
@@ -29,8 +30,22 @@ class _TeacherCourseManagementScreenState extends State<TeacherCourseManagementS
     });
 
     try {
-      final response = await ApiService().get('/api/courses/mine');
-      final courses = response is List ? response as List<dynamic> : <dynamic>[];
+      final courses = await ApiService().myCourses();
+      
+      // Load enrollment data for each course
+      for (var course in courses) {
+        if (course is Map<String, dynamic> && course['id'] != null) {
+          try {
+            final enrollments = await ApiService().getCourseEnrollments(course['id']);
+            course['enrollment_count'] = enrollments.length;
+            course['enrollments'] = enrollments;
+          } catch (e) {
+            course['enrollment_count'] = 0;
+            course['enrollments'] = [];
+          }
+        }
+      }
+      
       setState(() {
         _myCourses = courses;
         _isLoading = false;
@@ -273,15 +288,9 @@ class _TeacherCourseManagementScreenState extends State<TeacherCourseManagementS
           ),
         ),
         const SizedBox(height: 16),
-        GridView.builder(
+        ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 1,
-            childAspectRatio: 2.5,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-          ),
           itemCount: _myCourses.length,
           itemBuilder: (context, index) {
             final course = _myCourses[index];
@@ -297,12 +306,15 @@ class _TeacherCourseManagementScreenState extends State<TeacherCourseManagementS
     final enrollmentCount = course['enrollment_count'] ?? 0;
     final rating = course['rating'] ?? 0.0;
 
-    return GlassmorphismCard(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: GlassmorphismCard(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
             Row(
               children: [
                 Expanded(
@@ -406,47 +418,23 @@ class _TeacherCourseManagementScreenState extends State<TeacherCourseManagementS
                 ),
               ],
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   void _viewCourseDetails(Map<String, dynamic> course) {
-    // Navigate to course details/management screen
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(course['title'] ?? 'Course Details'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Description: ${course['description'] ?? 'No description'}'),
-            const SizedBox(height: 8),
-            Text('Difficulty: ${course['difficulty'] ?? 'Beginner'}'),
-            const SizedBox(height: 8),
-            Text('Total Hours: ${course['total_hours'] ?? 0}'),
-            const SizedBox(height: 8),
-            Text('Enrollments: ${course['enrollment_count'] ?? 0}'),
-            const SizedBox(height: 8),
-            Text('Status: ${course['is_published'] == true ? 'Published' : 'Draft'}'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Navigate to edit course screen
-            },
-            child: const Text('Edit Course'),
-          ),
-        ],
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditCourseScreen(course: course),
       ),
-    );
+    ).then((updated) {
+      if (updated == true) {
+        _loadMyCourses();
+      }
+    });
   }
 }

@@ -119,7 +119,7 @@ class _EnhancedFuturisticCardState extends State<EnhancedFuturisticCard>
                           boxShadow: [
                             BoxShadow(
                               color: (widget.glowColor ?? FuturisticColors.neonBlue)
-                                  .withOpacity(_glowAnimation.value),
+                                  .withValues(alpha: _glowAnimation.value),
                               blurRadius: 20 + (_hoverAnimation.value * 10),
                               spreadRadius: 5 + (_hoverAnimation.value * 5),
                             ),
@@ -136,19 +136,19 @@ class _EnhancedFuturisticCardState extends State<EnhancedFuturisticCard>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          FuturisticColors.cardBackground.withOpacity(0.9),
-                          FuturisticColors.cardBackground.withOpacity(0.7),
+                          FuturisticColors.cardBackground.withValues(alpha: 0.9),
+                          FuturisticColors.cardBackground.withValues(alpha: 0.7),
                         ],
                       ),
                       border: Border.all(
-                        color: FuturisticColors.neonBlue.withOpacity(
-                          0.3 + (_hoverAnimation.value * 0.4),
+                        color: FuturisticColors.neonBlue.withValues(
+                          alpha: 0.3 + (_hoverAnimation.value * 0.4),
                         ),
                         width: 1 + (_hoverAnimation.value * 0.5),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: Offset(0, 5 + (_hoverAnimation.value * 2)),
                         ),
@@ -165,8 +165,8 @@ class _EnhancedFuturisticCardState extends State<EnhancedFuturisticCard>
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                Colors.white.withOpacity(0.1),
-                                Colors.white.withOpacity(0.05),
+                                Colors.white.withValues(alpha: 0.1),
+                                Colors.white.withValues(alpha: 0.05),
                               ],
                             ),
                           ),
@@ -189,8 +189,8 @@ class _EnhancedFuturisticCardState extends State<EnhancedFuturisticCard>
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              FuturisticColors.neonBlue.withOpacity(0.1),
-                              FuturisticColors.neonPurple.withOpacity(0.1),
+                              FuturisticColors.neonBlue.withValues(alpha: 0.1),
+                              FuturisticColors.neonPurple.withValues(alpha: 0.1),
                             ],
                           ),
                         ),

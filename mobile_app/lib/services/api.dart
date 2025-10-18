@@ -6,7 +6,7 @@ import 'auth_storage.dart';
 class ApiService {
   // Local API URL for development
   static String baseUrl = const String.fromEnvironment('API_BASE_URL',
-      defaultValue: 'http://10.0.2.2:8000');
+      defaultValue: 'https://gyanvruksh.onrender.com');
 
   static String? _token;
   static Map<String, dynamic>? _me;
@@ -128,6 +128,363 @@ class ApiService {
 
   Map<String, dynamic>? me() => _me;
 
+  // Student convenience methods
+  Future<Map<String, dynamic>> getStudentDashboard() async {
+    if (_token == null) return {};
+    final res = await http.get(Uri.parse('$baseUrl/api/student/dashboard/stats'),
+        headers: {'Authorization': 'Bearer $_token'});
+    if (res.statusCode == 200) {
+      final raw = jsonDecode(res.body) as Map<String, dynamic>;
+      // Map backend structure to UI-expected flat keys
+      final enrollments = raw['enrollments'] as Map<String, dynamic>? ?? {};
+      final progress = raw['progress'] as Map<String, dynamic>? ?? {};
+      final attendance = raw['attendance'] as Map<String, dynamic>? ?? {};
+      final assignments = raw['assignments'] as Map<String, dynamic>? ?? {};
+
+      return {
+        'enrolled_courses': enrollments['total'] ?? 0,
+        'completed_courses': progress['completed_courses'] ?? 0,
+        'total_study_hours': raw['total_study_hours'] ?? 0,
+        'current_streak': (raw['gyan_coins'] != null) ? 0 : 0, // placeholder; use getLearningStreak for streak
+        // Optionally include extra sections if UI wants them later
+        'enrollments_section': enrollments,
+        'progress_section': progress,
+        'attendance_section': attendance,
+        'assignments_section': assignments,
+      };
+    }
+    return {};
+  }
+
+  Future<List<dynamic>> getTodaySchedule() async {
+    if (_token == null) return [];
+    final uri = Uri.parse('$baseUrl/api/student/upcoming-deadlines?days_ahead=1');
+    final res = await http.get(uri, headers: {'Authorization': 'Bearer $_token'});
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final deadlines = (data['upcoming_deadlines'] as List<dynamic>? ?? []);
+      // Map to UI-friendly structure: title, time, type
+      return deadlines.map((d) {
+        if (d['type'] == 'assignment') {
+          return {
+            'title': d['title'] ?? 'Assignment',
+            'time': (d['due_date'] ?? '').toString(),
+            'type': 'assignment',
+          };
+        } else {
+          return {
+            'title': d['title'] ?? 'Lesson',
+            'time': (d['scheduled_at'] ?? '').toString(),
+            'type': 'live_class',
+          };
+        }
+      }).toList();
+    }
+    return [];
+  }
+
+  Future<List<dynamic>> getStudentAssignments() async {
+    if (_token == null) return [];
+    final res = await http.get(Uri.parse('$baseUrl/api/assignments/'),
+        headers: {'Authorization': 'Bearer $_token'});
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  Future<Map<String, dynamic>?> createAssignment({
+    required String title,
+    required String description,
+    required int courseId,
+    int? lessonId,
+    required DateTime dueDate,
+    int maxScore = 100,
+    String? instructions,
+    String? attachmentUrl,
+  }) async {
+    if (_token == null) return null;
+    final body = {
+      'title': title,
+      'description': description,
+      'course_id': courseId,
+      if (lessonId != null) 'lesson_id': lessonId,
+      'due_date': dueDate.toIso8601String(),
+      'max_score': maxScore,
+      if (instructions != null && instructions.isNotEmpty) 'instructions': instructions,
+      if (attachmentUrl != null && attachmentUrl.isNotEmpty) 'attachment_url': attachmentUrl,
+    };
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/assignments/'),
+      headers: {'Authorization': 'Bearer $_token', 'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> gradeAssignmentNewInternal({
+    required int assignmentId,
+    required int studentId,
+    required int score,
+    String? feedback,
+  }) async {
+    if (_token == null) return null;
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/assignments/$assignmentId/grade'),
+      headers: {'Authorization': 'Bearer $_token', 'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'assignment_id': assignmentId,
+        'student_id': studentId,
+        'score': score,
+        if (feedback != null && feedback.isNotEmpty) 'feedback': feedback,
+      }),
+    );
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  Future<List<dynamic>> getAssignmentGrades(int assignmentId) async {
+    if (_token == null) return [];
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/assignments/$assignmentId/grades'),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  // Course enrollment (new method)
+  Future<bool> enrollInCourseNew(int courseId) async {
+    if (_token == null) return false;
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/student/enroll'),
+      headers: {'Authorization': 'Bearer $_token', 'Content-Type': 'application/json'},
+      body: jsonEncode({'course_id': courseId}),
+    );
+    return res.statusCode == 200;
+  }
+
+  // Notifications
+  Future<List<dynamic>> getNotifications() async {
+    if (_token == null) return [];
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/notifications'),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  Future<bool> markNotificationRead(int notificationId) async {
+    if (_token == null) return false;
+    final res = await http.patch(
+      Uri.parse('$baseUrl/api/notifications/$notificationId/read'),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    return res.statusCode == 200;
+  }
+
+  // Profile update
+  Future<bool> updateProfile({
+    String? name,
+    String? email,
+    String? phone,
+    String? bio,
+  }) async {
+    if (_token == null) return false;
+    final body = <String, dynamic>{};
+    if (name != null) body['name'] = name;
+    if (email != null) body['email'] = email;
+    if (phone != null) body['phone'] = phone;
+    if (bio != null) body['bio'] = bio;
+    
+    final res = await http.patch(
+      Uri.parse('$baseUrl/api/users/profile'),
+      headers: {'Authorization': 'Bearer $_token', 'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+    return res.statusCode == 200;
+  }
+
+  // Attendance management
+  Future<List<dynamic>> getCourseAttendanceSessions(int courseId) async {
+    if (_token == null) return [];
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/courses/$courseId/attendance/sessions'),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  // Quiz management for teachers
+  Future<List<dynamic>> getTeacherQuizzes() async {
+    if (_token == null) return [];
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/teacher/quizzes'),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  Future<Map<String, dynamic>?> createQuiz({
+    required String title,
+    required String description,
+    required int courseId,
+    required int timeLimit,
+    required List<Map<String, dynamic>> questions,
+  }) async {
+    if (_token == null) return null;
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/quizzes'),
+      headers: {'Authorization': 'Bearer $_token', 'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'title': title,
+        'description': description,
+        'course_id': courseId,
+        'time_limit': timeLimit,
+        'questions': questions,
+      }),
+    );
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  Future<bool> updateQuizStatus(int quizId, bool isPublished) async {
+    if (_token == null) return false;
+    final res = await http.patch(
+      Uri.parse('$baseUrl/api/quizzes/$quizId'),
+      headers: {'Authorization': 'Bearer $_token', 'Content-Type': 'application/json'},
+      body: jsonEncode({'is_published': isPublished}),
+    );
+    return res.statusCode == 200;
+  }
+
+  // Fix enrollment issues
+  Future<bool> enrollInCourseFixed(int courseId) async {
+    if (_token == null) return false;
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/courses/$courseId/enroll'),
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'course_id': courseId}),
+      );
+      return res.statusCode == 200 || res.statusCode == 201;
+    } catch (e) {
+      print('Enrollment error: $e');
+      return false;
+    }
+  }
+
+  // Get course enrollments for teachers
+  Future<List<dynamic>> getCourseEnrollments(int courseId) async {
+    if (_token == null) return [];
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/courses/$courseId/enrollments'),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  // Get all enrollments for a teacher's courses
+  Future<Map<String, dynamic>> getTeacherEnrollmentStats() async {
+    if (_token == null) return {};
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/teacher/enrollment-stats'),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    return {};
+  }
+
+  Future<Map<String, dynamic>?> createAttendanceSession({
+    required int courseId,
+    required String sessionName,
+    required DateTime sessionDate,
+  }) async {
+    if (_token == null) return null;
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/courses/$courseId/attendance/sessions'),
+      headers: {'Authorization': 'Bearer $_token', 'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'session_name': sessionName,
+        'session_date': sessionDate.toIso8601String(),
+      }),
+    );
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  Future<bool> markAttendance({
+    required int sessionId,
+    required int studentId,
+    required bool isPresent,
+  }) async {
+    if (_token == null) return false;
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/attendance/mark'),
+      headers: {'Authorization': 'Bearer $_token', 'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'session_id': sessionId,
+        'student_id': studentId,
+        'is_present': isPresent,
+      }),
+    );
+    return res.statusCode == 200;
+  }
+
+  Future<Map<String, dynamic>> getLearningStreak() async {
+    if (_token == null) return {};
+    final res = await http.get(Uri.parse('$baseUrl/api/student/progress-report'),
+        headers: {'Authorization': 'Bearer $_token'});
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final current = data['study_streak'] ?? 0;
+      // Backend does not provide longest; mirror current as a placeholder
+      return {
+        'current_streak': current,
+        'longest_streak': current,
+      };
+    }
+    return {'current_streak': 0, 'longest_streak': 0};
+  }
+
+  Future<Map<String, dynamic>> getStudentProgressReport() async {
+    if (_token == null) return {};
+    final res = await http.get(Uri.parse('$baseUrl/api/student/progress-report'),
+        headers: {'Authorization': 'Bearer $_token'});
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    return {};
+  }
+
   Future<List<dynamic>> listCourses() async {
     final res = await http.get(Uri.parse('$baseUrl/api/courses/'));
     if (res.statusCode == 200) {
@@ -158,6 +515,39 @@ class ApiService {
 
     final success = res.statusCode == 201;
     return success;
+  }
+
+  Future<bool> createCourseWithDetails({
+    required String title,
+    required String description,
+    int? totalHours,
+    String? difficulty,
+    String? thumbnailUrl,
+    bool? isPublished,
+  }) async {
+    if (_token == null) {
+      return false;
+    }
+
+    final body = <String, dynamic>{
+      'title': title,
+      'description': description,
+      if (totalHours != null) 'total_hours': totalHours,
+      if (difficulty != null && difficulty.isNotEmpty) 'difficulty': difficulty,
+      if (thumbnailUrl != null && thumbnailUrl.isNotEmpty) 'thumbnail_url': thumbnailUrl,
+      if (isPublished != null) 'is_published': isPublished,
+    };
+
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/courses/'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
+      body: jsonEncode(body),
+    );
+
+    return res.statusCode == 201;
   }
 
   Future<bool> createAdmin({
@@ -372,14 +762,6 @@ class ApiService {
     return success;
   }
 
-  Future<List<dynamic>> getCourseVideos(int courseId) async {
-    final res = await http.get(Uri.parse('$baseUrl/api/courses/$courseId/videos'));
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) as List<dynamic>;
-    }
-    return [];
-  }
-
   Future<List<dynamic>> getCourseNotes(int courseId) async {
     final res = await http.get(Uri.parse('$baseUrl/api/courses/$courseId/notes'));
     if (res.statusCode == 200) {
@@ -401,6 +783,37 @@ class ApiService {
     final res = await http.put(Uri.parse('$baseUrl/api/courses/admin/$courseId'),
         headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
         body: jsonEncode({'title': title, 'description': description}));
+    return res.statusCode == 200;
+  }
+
+  Future<bool> updateCourseDetails({
+    required int courseId,
+    String? title,
+    String? description,
+    int? totalHours,
+    String? difficulty,
+    String? thumbnailUrl,
+    bool? isPublished,
+  }) async {
+    if (_token == null) return false;
+    final body = <String, dynamic>{
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (totalHours != null) 'total_hours': totalHours,
+      if (difficulty != null) 'difficulty': difficulty,
+      if (thumbnailUrl != null) 'thumbnail_url': thumbnailUrl,
+      if (isPublished != null) 'is_published': isPublished,
+    };
+    if (body.isEmpty) return true; // nothing to update
+
+    final res = await http.put(
+      Uri.parse('$baseUrl/api/courses/admin/$courseId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
+      body: jsonEncode(body),
+    );
     return res.statusCode == 200;
   }
 
@@ -444,8 +857,8 @@ class ApiService {
     return [];
   }
 
-  // Profile update API method
-  Future<bool> updateProfile({
+  // Profile update API method (legacy)
+  Future<bool> updateProfileLegacy({
     String? fullName,
     int? age,
     String? gender,
@@ -669,16 +1082,6 @@ class ApiService {
   }
 
   // Dashboard API methods
-  Future<Map<String, dynamic>> getStudentDashboardStats() async {
-    if (_token == null) return {};
-    final res = await http.get(Uri.parse('$baseUrl/api/dashboard/student/stats'),
-        headers: {'Authorization': 'Bearer $_token'});
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) as Map<String, dynamic>;
-    }
-    return {};
-  }
-
   Future<List<dynamic>> getRecentCourses() async {
     if (_token == null) return [];
     final res = await http.get(Uri.parse('$baseUrl/api/dashboard/student/recent-courses'),
@@ -709,7 +1112,7 @@ class ApiService {
     return [];
   }
 
-  Future<List<dynamic>> getNotifications() async {
+  Future<List<dynamic>> getNotificationsLegacy() async {
     if (_token == null) return [];
     final res = await http.get(Uri.parse('$baseUrl/api/dashboard/notifications'),
         headers: {'Authorization': 'Bearer $_token'});
@@ -876,56 +1279,7 @@ class ApiService {
     return {};
   }
 
-  // Attendance endpoints
-  Future<Map<String, dynamic>> createAttendanceSession(int lessonId, int courseId, DateTime sessionDate) async {
-    if (_token == null) return {};
-    final res = await http.post(
-      Uri.parse('$baseUrl/api/attendance/sessions/create'),
-      headers: {
-        'Authorization': 'Bearer $_token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'lesson_id': lessonId,
-        'course_id': courseId,
-        'session_date': sessionDate.toIso8601String(),
-      }),
-    );
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) as Map<String, dynamic>;
-    }
-    return {};
-  }
-
-  Future<Map<String, dynamic>> markAttendance(int lessonId, int courseId, List<Map<String, dynamic>> studentAttendances) async {
-    if (_token == null) return {};
-    final res = await http.post(
-      Uri.parse('$baseUrl/api/attendance/mark'),
-      headers: {
-        'Authorization': 'Bearer $_token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'lesson_id': lessonId,
-        'course_id': courseId,
-        'student_attendances': studentAttendances,
-      }),
-    );
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) as Map<String, dynamic>;
-    }
-    return {};
-  }
-
-  Future<List<dynamic>> getCourseAttendanceSessions(int courseId) async {
-    if (_token == null) return [];
-    final res = await http.get(Uri.parse('$baseUrl/api/attendance/course/$courseId/sessions'),
-        headers: {'Authorization': 'Bearer $_token'});
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) as List<dynamic>;
-    }
-    return [];
-  }
+  // Attendance endpoints (legacy - use newer methods above)
 
   Future<Map<String, dynamic>> getLessonAttendanceDetails(int lessonId) async {
     if (_token == null) return {};
@@ -958,17 +1312,6 @@ class ApiService {
       return jsonDecode(res.body) as Map<String, dynamic>;
     }
     return {};
-  }
-
-  // Course lessons endpoint
-  Future<List<dynamic>> getCourseLessons(int courseId) async {
-    if (_token == null) return [];
-    final res = await http.get(Uri.parse('$baseUrl/api/lessons/course/$courseId'),
-        headers: {'Authorization': 'Bearer $_token'});
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) as List<dynamic>;
-    }
-    return [];
   }
 
   // Enhanced admin endpoints
@@ -1279,79 +1622,6 @@ class ApiService {
       return jsonDecode(res.body) as Map<String, dynamic>;
     }
     return {};
-  }
-
-  // Dashboard API methods
-  Future<Map<String, dynamic>> getStudentDashboard() async {
-    if (_token == null) return {};
-    final res = await http.get(
-      Uri.parse('$baseUrl/api/student/dashboard'),
-      headers: {'Authorization': 'Bearer $_token'},
-    );
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) as Map<String, dynamic>;
-    }
-    return {};
-  }
-
-  Future<List<dynamic>> getTodaySchedule() async {
-    if (_token == null) return [];
-    final res = await http.get(
-      Uri.parse('$baseUrl/api/student/schedule/today'),
-      headers: {'Authorization': 'Bearer $_token'},
-    );
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) as List<dynamic>;
-    }
-    return [];
-  }
-
-  Future<List<dynamic>> getStudentAssignments() async {
-    if (_token == null) return [];
-    final res = await http.get(
-      Uri.parse('$baseUrl/api/student/assignments'),
-      headers: {'Authorization': 'Bearer $_token'},
-    );
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) as List<dynamic>;
-    }
-    return [];
-  }
-
-  Future<Map<String, dynamic>> getLearningStreak() async {
-    if (_token == null) return {};
-    final res = await http.get(
-      Uri.parse('$baseUrl/api/student/streak'),
-      headers: {'Authorization': 'Bearer $_token'},
-    );
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) as Map<String, dynamic>;
-    }
-    return {};
-  }
-
-  Future<List<dynamic>> getPendingEvaluations() async {
-    if (_token == null) return [];
-    final res = await http.get(
-      Uri.parse('$baseUrl/api/teacher/evaluations/pending'),
-      headers: {'Authorization': 'Bearer $_token'},
-    );
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) as List<dynamic>;
-    }
-    return [];
-  }
-
-  Future<List<dynamic>> getRecentMessages() async {
-    if (_token == null) return [];
-    final res = await http.get(
-      Uri.parse('$baseUrl/api/messages/recent'),
-      headers: {'Authorization': 'Bearer $_token'},
-    );
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) as List<dynamic>;
-    }
-    return [];
   }
 
   // Generic GET method for flexibility

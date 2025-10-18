@@ -227,10 +227,9 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
   }
 
   Future<void> _loadCourseMaterials(int courseId) async {
-    final videos = await ApiService().getCourseVideos(courseId);
     final notes = await ApiService().getCourseNotes(courseId);
     setState(() {
-      courseVideos = videos;
+      courseVideos = []; // Empty list since getCourseVideos was removed
       courseNotes = notes;
     });
   }

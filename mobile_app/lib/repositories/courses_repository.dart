@@ -56,10 +56,6 @@ class CoursesRepository extends BaseRepository {
     return await handleApiCall(() => _apiService.getCourseDetails(courseId));
   }
 
-  Future<List<dynamic>> getCourseVideos(int courseId) async {
-    return await handleApiCall(() => _apiService.getCourseVideos(courseId));
-  }
-
   Future<List<dynamic>> getCourseNotes(int courseId) async {
     return await handleApiCall(() => _apiService.getCourseNotes(courseId));
   }

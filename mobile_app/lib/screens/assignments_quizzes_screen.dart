@@ -7,6 +7,7 @@ import 'package:gyanvruksh/widgets/backgrounds/cinematic_background.dart';
 import 'package:gyanvruksh/widgets/particle_background.dart';
 import 'package:gyanvruksh/widgets/micro_interactions.dart';
 import 'package:gyanvruksh/theme/futuristic_theme.dart';
+import 'package:gyanvruksh/screens/assignment_detail_screen.dart';
 
 class AssignmentsQuizzesScreen extends StatefulWidget {
   const AssignmentsQuizzesScreen({super.key});
@@ -31,44 +32,48 @@ class _AssignmentsQuizzesScreenState extends State<AssignmentsQuizzesScreen> {
     setState(() => isLoading = true);
     
     try {
+      final api = ApiService();
       final results = await Future.wait([
-        ApiService().get('/api/assignments').catchError((_) => []),
-        ApiService().get('/api/quizzes').catchError((_) => []),
+        api.getStudentAssignments(),
+        api.getQuizzes(),
       ]);
-      
+
+      final rawAssignments = results[0];
+      final rawQuizzes = results[1];
+
+      // Map backend fields to UI-friendly structure
+      assignments = rawAssignments.map((a) {
+        final m = a as Map<String, dynamic>;
+        return {
+          'id': m['id'],
+          'title': m['title'] ?? 'Assignment',
+          'subject': m['course_title'] ?? m['subject'] ?? 'Course',
+          'dueDate': m['due_date'] ?? m['dueDate'] ?? '',
+          // Backend may not provide a status; default to pending
+          'status': (m['status'] ?? 'pending').toString(),
+        };
+      }).toList();
+
+      quizzes = rawQuizzes.map((q) {
+        final m = q as Map<String, dynamic>;
+        return {
+          'id': m['id'],
+          'title': m['title'] ?? 'Quiz',
+          'subject': m['course_title'] ?? m['subject'] ?? 'Course',
+          'questions': m['question_count'] ?? m['questions'] ?? 0,
+          'duration': m['duration_minutes'] ?? m['duration'] ?? 0,
+          'status': (m['status'] ?? 'available').toString(),
+        };
+      }).toList();
+
       setState(() {
-        assignments = results[0] as List<dynamic>;
-        quizzes = results[1] as List<dynamic>;
         isLoading = false;
-        
-        // Fallback data
-        if (assignments.isEmpty) {
-          assignments = [
-            {'id': 1, 'title': 'Mathematics Problem Set 1', 'subject': 'Mathematics', 'dueDate': '2024-01-15', 'status': 'pending'},
-            {'id': 2, 'title': 'Physics Lab Report', 'subject': 'Physics', 'dueDate': '2024-01-20', 'status': 'submitted'},
-            {'id': 3, 'title': 'Chemistry Equations', 'subject': 'Chemistry', 'dueDate': '2024-01-25', 'status': 'overdue'},
-          ];
-        }
-        
-        if (quizzes.isEmpty) {
-          quizzes = [
-            {'id': 1, 'title': 'Algebra Quiz', 'subject': 'Mathematics', 'questions': 15, 'duration': 30, 'status': 'available'},
-            {'id': 2, 'title': 'Mechanics Quiz', 'subject': 'Physics', 'questions': 20, 'duration': 45, 'status': 'completed'},
-            {'id': 3, 'title': 'Organic Chemistry', 'subject': 'Chemistry', 'questions': 25, 'duration': 60, 'status': 'locked'},
-          ];
-        }
       });
     } catch (e) {
       setState(() {
         isLoading = false;
-        assignments = [
-          {'id': 1, 'title': 'Mathematics Problem Set 1', 'subject': 'Mathematics', 'dueDate': '2024-01-15', 'status': 'pending'},
-          {'id': 2, 'title': 'Physics Lab Report', 'subject': 'Physics', 'dueDate': '2024-01-20', 'status': 'submitted'},
-        ];
-        quizzes = [
-          {'id': 1, 'title': 'Algebra Quiz', 'subject': 'Mathematics', 'questions': 15, 'duration': 30, 'status': 'available'},
-          {'id': 2, 'title': 'Mechanics Quiz', 'subject': 'Physics', 'questions': 20, 'duration': 45, 'status': 'completed'},
-        ];
+        assignments = [];
+        quizzes = [];
       });
     }
   }
@@ -196,6 +201,14 @@ class _AssignmentsQuizzesScreenState extends State<AssignmentsQuizzesScreen> {
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           child: MicroInteractionWrapper(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AssignmentDetailScreen(assignment: assignment as Map<String, dynamic>),
+                ),
+              );
+            },
             child: GlassmorphismCard(
               padding: const EdgeInsets.all(20),
               child: Column(

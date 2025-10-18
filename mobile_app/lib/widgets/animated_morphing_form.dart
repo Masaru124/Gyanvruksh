@@ -98,8 +98,8 @@ class _AnimatedMorphingFormState extends State<AnimatedMorphingForm>
               borderRadius: BorderRadius.circular(16),
               gradient: LinearGradient(
                 colors: [
-                  FuturisticColors.surface.withOpacity(0.8),
-                  FuturisticColors.surface.withOpacity(0.6),
+                  FuturisticColors.surface.withValues(alpha: 0.8),
+                  FuturisticColors.surface.withValues(alpha: 0.6),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -107,14 +107,14 @@ class _AnimatedMorphingFormState extends State<AnimatedMorphingForm>
               boxShadow: [
                 BoxShadow(
                   color: _isFocused
-                      ? FuturisticColors.primary.withOpacity(_glowAnimation.value * 0.3)
-                      : FuturisticColors.primary.withOpacity(0.1),
+                      ? FuturisticColors.primary.withValues(alpha: _glowAnimation.value * 0.3)
+                      : FuturisticColors.primary.withValues(alpha: 0.1),
                   blurRadius: 8 + (_glowAnimation.value * 12),
                   spreadRadius: _glowAnimation.value * 2,
                 ),
                 BoxShadow(
                   color: _hasError
-                      ? FuturisticColors.error.withOpacity(0.2)
+                      ? FuturisticColors.error.withValues(alpha: 0.2)
                       : Colors.transparent,
                   blurRadius: 4,
                   spreadRadius: 1,
@@ -122,10 +122,10 @@ class _AnimatedMorphingFormState extends State<AnimatedMorphingForm>
               ],
               border: Border.all(
                 color: _isFocused
-                    ? FuturisticColors.primary.withOpacity(_glowAnimation.value)
+                    ? FuturisticColors.primary.withValues(alpha: _glowAnimation.value)
                     : _hasError
                         ? FuturisticColors.error
-                        : FuturisticColors.textSecondary.withOpacity(0.3),
+                        : FuturisticColors.textSecondary.withValues(alpha: 0.3),
                 width: 1 + (_glowAnimation.value * 2),
               ),
             ),
@@ -172,7 +172,7 @@ class _AnimatedMorphingFormState extends State<AnimatedMorphingForm>
                         : FuturisticColors.textSecondary,
                   ),
                   hintStyle: FuturisticFonts.bodyMedium.copyWith(
-                    color: FuturisticColors.textSecondary.withOpacity(0.6),
+                    color: FuturisticColors.textSecondary.withValues(alpha: 0.6),
                   ),
                 ),
               ),
@@ -184,7 +184,7 @@ class _AnimatedMorphingFormState extends State<AnimatedMorphingForm>
       target: _isFocused ? 1 : 0,
     ).shimmer(
       duration: const Duration(seconds: 2),
-      color: FuturisticColors.primary.withOpacity(0.1),
+      color: FuturisticColors.primary.withValues(alpha: 0.1),
     );
   }
 }

@@ -14,9 +14,14 @@ import 'package:gyanvruksh/widgets/floating_elements.dart';
 import 'package:gyanvruksh/widgets/animated_wave_background.dart';
 import 'package:gyanvruksh/widgets/micro_interactions.dart';
 import 'package:gyanvruksh/widgets/animated_text_widget.dart';
-import 'package:gyanvruksh/theme/futuristic_theme.dart';
 import 'package:gyanvruksh/screens/teacher_course_management.dart';
-import 'package:gyanvruksh/screens/teacher_advanced_features.dart';
+import 'package:gyanvruksh/screens/teacher_assignments_screen.dart';
+import 'package:gyanvruksh/screens/schedule_classes_screen.dart';
+import 'package:gyanvruksh/screens/student_progress_report_screen.dart';
+import 'package:gyanvruksh/screens/teacher_features_screen.dart';
+import 'package:gyanvruksh/screens/teacher_quiz_management.dart';
+import 'package:gyanvruksh/theme/futuristic_theme.dart';
+import 'package:intl/intl.dart';
 
 class TeacherDashboard extends StatefulWidget {
   const TeacherDashboard({super.key});
@@ -606,21 +611,48 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
         'subtitle': 'Track student performance',
         'icon': FontAwesomeIcons.chartLine,
         'color': FuturisticColors.secondary,
-        'onTap': () {},
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const StudentProgressReportScreen()),
+          );
+        },
       },
       {
         'title': 'Assignments',
         'subtitle': 'Create and evaluate',
         'icon': FontAwesomeIcons.tasks,
         'color': FuturisticColors.accent,
-        'onTap': () {},
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const TeacherAssignmentsScreen()),
+          );
+        },
       },
       {
         'title': 'Schedule Classes',
         'subtitle': 'Manage your timetable',
         'icon': FontAwesomeIcons.calendar,
         'color': FuturisticColors.warning,
-        'onTap': () {},
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ScheduleClassesScreen()),
+          );
+        },
+      },
+      {
+        'title': 'Quiz Management',
+        'subtitle': 'Create and manage quizzes',
+        'icon': FontAwesomeIcons.questionCircle,
+        'color': FuturisticColors.success,
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const TeacherQuizManagementScreen()),
+          );
+        },
       },
     ];
 

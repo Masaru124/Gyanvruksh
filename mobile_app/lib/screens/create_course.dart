@@ -39,7 +39,15 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
     }
 
     try {
-      final ok = await ApiService().createCourse(titleCtrl.text, descCtrl.text);
+      final totalHours = int.tryParse(totalHoursCtrl.text.trim());
+      final ok = await ApiService().createCourseWithDetails(
+        title: titleCtrl.text.trim(),
+        description: descCtrl.text.trim(),
+        totalHours: totalHours,
+        difficulty: selectedDifficulty,
+        thumbnailUrl: thumbnailUrlCtrl.text.trim().isEmpty ? null : thumbnailUrlCtrl.text.trim(),
+        isPublished: isPublished,
+      );
 
       if (ok) {
         if (!mounted) {

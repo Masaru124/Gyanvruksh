@@ -1,20 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from app.database import get_db
-from app.models.user import User
-from app.schemas.auth import UserCreate, UserLogin, UserOut, Token
-from app.services.security import hash_password, verify_password, create_access_token
-from app.services.deps import get_current_user
+from ..database import get_db
+from ..models.user import User
+from ..schemas.auth import UserCreate, UserLogin, UserOut, Token, TokenRefresh
+from ..services.security import hash_password, verify_password, create_access_token, create_refresh_token, verify_token_type, get_token_subject
+from ..services.deps import get_current_user
+from ..utils.errors import auth_error, authz_error, not_found_error, conflict_error
+from ..settings import settings
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 @router.post("/register", response_model=UserOut, status_code=201)
 def register(payload: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == payload.email).first():
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise conflict_error("Email already registered")
     if payload.role == "admin":
-        raise HTTPException(status_code=403, detail="Admin registration is not allowed")
+        raise authz_error("Admin registration is not allowed")
     user = User(
         email=payload.email,
         full_name=payload.full_name,
@@ -50,9 +52,17 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
 def login(payload: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email).first()
     if not user or not verify_password(payload.password, user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    token = create_access_token(user.email)
-    return Token(access_token=token)
+        raise auth_error("Invalid credentials")
+
+    access_token = create_access_token(user.email)
+    refresh_token = create_refresh_token(user.email)
+
+    return Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer",
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60  # Convert to seconds
+    )
 
 @router.get("/me", response_model=UserOut)
 def me(user: User = Depends(get_current_user)):
@@ -119,6 +129,34 @@ def logout(user: User = Depends(get_current_user)):
     # In a production app, you might want to implement token blacklisting
     return {"message": "Logged out successfully"}
 
+@router.post("/refresh", response_model=Token)
+def refresh_token(payload: TokenRefresh, db: Session = Depends(get_db)):
+    """Refresh access token using refresh token"""
+    # Verify refresh token
+    if not verify_token_type(payload.refresh_token, "refresh"):
+        raise auth_error("Invalid refresh token")
+
+    # Get user email from token
+    email = get_token_subject(payload.refresh_token)
+    if not email:
+        raise auth_error("Invalid refresh token")
+
+    # Verify user exists
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise auth_error("User not found")
+
+    # Generate new tokens
+    access_token = create_access_token(user.email)
+    refresh_token = create_refresh_token(user.email)
+
+    return Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer",
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    )
+
 @router.put("/me", response_model=UserOut)
 def update_profile(payload: UserCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """Update current user's profile"""
@@ -126,7 +164,7 @@ def update_profile(payload: UserCreate, db: Session = Depends(get_db), user: Use
     for key, value in payload.model_dump(exclude_unset=True).items():
         if key == "password":
             # Hash password if being updated
-            from app.services.security import hash_password
+            from ..services.security import hash_password
             setattr(user, "hashed_password", hash_password(value))
         elif key != "email":  # Don't allow email updates for security
             setattr(user, key, value)

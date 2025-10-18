@@ -87,14 +87,14 @@ class _FlashcardWidgetState extends State<FlashcardWidget>
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isFront
-                      ? FuturisticColors.primary.withOpacity(0.5)
-                      : FuturisticColors.primary.withOpacity(0.3),
+                      ? FuturisticColors.primary.withValues(alpha: 0.5)
+                      : FuturisticColors.primary.withValues(alpha: 0.3),
                   width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: (isFront ? FuturisticColors.primary : FuturisticColors.surface)
-                        .withOpacity(0.3),
+                        .withValues(alpha: 0.3),
                     blurRadius: 12,
                     spreadRadius: 2,
                     offset: const Offset(0, 4),
@@ -140,7 +140,7 @@ class _FlashcardWidgetState extends State<FlashcardWidget>
                             isFront ? widget.question : widget.answer,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: isFront
-                                  ? Colors.white.withOpacity(0.9)
+                                  ? Colors.white.withValues(alpha: 0.9)
                                   : theme.colorScheme.onSurface,
                               height: 1.4,
                             ),
@@ -158,13 +158,13 @@ class _FlashcardWidgetState extends State<FlashcardWidget>
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             '💡 ${widget.hint}',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontStyle: FontStyle.italic,
                             ),
                           ),
@@ -178,7 +178,7 @@ class _FlashcardWidgetState extends State<FlashcardWidget>
                         isFront ? 'Tap to reveal answer' : 'Tap to see question',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: isFront
-                              ? Colors.white.withOpacity(0.7)
+                              ? Colors.white.withValues(alpha: 0.7)
                               : theme.colorScheme.onSurfaceVariant,
                         ),
                       ),

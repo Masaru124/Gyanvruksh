@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from app.database import get_db
-from app.models.user import User
-from app.models.course import Course
-from app.models.enrollment import Enrollment
-from app.models.lesson import Lesson
-from app.models.attendance import Attendance, AttendanceSession
-from app.services.deps import get_current_user
+from ..database import get_db
+from ..models.user import User
+from ..models.course import Course
+from ..models.enrollment import Enrollment
+from ..models.lesson import Lesson
+from ..models.attendance import Attendance, AttendanceSession
+from ..services.deps import get_current_user
+from ..utils.errors import authz_error, not_found_error
 from pydantic import BaseModel
 from datetime import datetime, date
 
@@ -22,6 +23,10 @@ class AttendanceMarkRequest(BaseModel):
 class AttendanceSessionCreate(BaseModel):
     lesson_id: int
     course_id: int
+    session_date: datetime
+
+class AttendanceSessionCreateForCourse(BaseModel):
+    session_name: str
     session_date: datetime
 
 def verify_teacher(user: User = Depends(get_current_user)):
@@ -86,7 +91,7 @@ def mark_attendance(
     teacher: User = Depends(verify_teacher)
 ):
     """Mark attendance for students in a lesson"""
-    
+
     # Verify teacher owns the course
     course = db.query(Course).filter(
         Course.id == request.course_id,
@@ -94,14 +99,14 @@ def mark_attendance(
     ).first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found or not owned by teacher")
-    
+
     # Get or create attendance session
     session = db.query(AttendanceSession).filter(
         AttendanceSession.lesson_id == request.lesson_id,
         AttendanceSession.course_id == request.course_id,
         AttendanceSession.teacher_id == teacher.id
     ).first()
-    
+
     if not session:
         # Create session if it doesn't exist
         enrolled_students = db.query(Enrollment).filter(Enrollment.course_id == request.course_id).count()
@@ -118,32 +123,32 @@ def mark_attendance(
         db.add(session)
         db.commit()
         db.refresh(session)
-    
+
     # Mark attendance for each student
     present_count = 0
     attendance_records = []
-    
+
     for student_attendance in request.student_attendances:
         student_id = student_attendance["student_id"]
         is_present = student_attendance["is_present"]
         notes = student_attendance.get("notes", "")
-        
+
         # Verify student is enrolled in the course
         enrollment = db.query(Enrollment).filter(
             Enrollment.student_id == student_id,
             Enrollment.course_id == request.course_id
         ).first()
-        
+
         if not enrollment:
             continue  # Skip non-enrolled students
-        
+
         # Check if attendance already exists for this student/lesson
         existing_attendance = db.query(Attendance).filter(
             Attendance.student_id == student_id,
             Attendance.lesson_id == request.lesson_id,
             Attendance.course_id == request.course_id
         ).first()
-        
+
         if existing_attendance:
             # Update existing attendance
             existing_attendance.is_present = is_present
@@ -162,23 +167,67 @@ def mark_attendance(
             )
             db.add(attendance)
             attendance_records.append(attendance)
-        
+
         if is_present:
             present_count += 1
-    
+
     # Update session statistics
     session.present_students = present_count
     session.attendance_percentage = (present_count / session.total_students) * 100 if session.total_students > 0 else 0
     session.is_completed = True
-    
+
     db.commit()
-    
+
     return {
         "message": "Attendance marked successfully",
         "session_id": session.id,
         "total_students": session.total_students,
         "present_students": present_count,
         "attendance_percentage": round(session.attendance_percentage, 2)
+    }
+
+# Additional endpoint for course-specific attendance session creation (matches frontend expectation)
+@router.post("/course/{course_id}/sessions")
+def create_course_attendance_session(
+    course_id: int,
+    request: AttendanceSessionCreateForCourse,
+    db: Session = Depends(get_db),
+    teacher: User = Depends(verify_teacher)
+):
+    """Create attendance session for a course (matches frontend API expectation)"""
+
+    # Verify teacher owns the course
+    course = db.query(Course).filter(
+        Course.id == course_id,
+        Course.teacher_id == teacher.id
+    ).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found or not owned by teacher")
+
+    # Get enrolled students count
+    enrolled_students = db.query(Enrollment).filter(Enrollment.course_id == course_id).count()
+
+    # Create attendance session without specific lesson (general course session)
+    session = AttendanceSession(
+        lesson_id=None,  # General course session, not tied to specific lesson
+        course_id=course_id,
+        teacher_id=teacher.id,
+        session_date=request.session_date,
+        total_students=enrolled_students,
+        present_students=0,
+        attendance_percentage=0.0,
+        is_completed=False
+    )
+
+    db.add(session)
+    db.commit()
+    db.refresh(session)
+
+    return {
+        "message": "Attendance session created successfully",
+        "session_id": session.id,
+        "session_name": request.session_name,
+        "total_students": enrolled_students
     }
 
 @router.get("/course/{course_id}/sessions")

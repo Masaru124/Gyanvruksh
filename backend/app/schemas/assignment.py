@@ -24,6 +24,25 @@ class AssignmentRead(AssignmentBase):
     class Config:
         from_attributes = True
 
+class AssignmentSubmissionBase(BaseModel):
+    assignment_id: int
+    student_id: int
+    content: str
+    attachment_url: Optional[str] = None
+
+class AssignmentSubmissionCreate(AssignmentSubmissionBase):
+    pass
+
+class AssignmentSubmissionRead(AssignmentSubmissionBase):
+    id: int
+    submitted_at: datetime
+    status: str
+    grade: Optional[int] = None
+    feedback: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
 class GradeBase(BaseModel):
     assignment_id: int
     student_id: int

@@ -95,23 +95,29 @@ class _CoursesScreenState extends State<CoursesScreen> {
   Future<void> _enrollInCourse(int courseId, String courseTitle) async {
     setState(() => isEnrolling = true);
     try {
-      final success = await ApiService().enrollInCourse(courseId);
+      // Try the fixed enrollment method first
+      bool success = await ApiService().enrollInCourseFixed(courseId);
+      
+      // Fallback to original method if fixed one fails
+      if (!success) {
+        success = await ApiService().enrollInCourse(courseId);
+      }
+      
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Successfully enrolled in $courseTitle')),
+          SnackBar(content: Text('Successfully enrolled in $courseTitle!')),
         );
-        // Refresh both lists
-        await _loadCourses();
-        await _loadAvailableCourses();
+        _loadCourses(); // Refresh to update enrollment status
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to enroll in course')),
+          const SnackBar(content: Text('Failed to enroll in course. Please try again.')),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error enrolling in course: $e')),
+        SnackBar(content: Text('Enrollment error: Please check your connection and try again')),
       );
+      print('Enrollment error: $e'); // For debugging
     } finally {
       setState(() => isEnrolling = false);
     }

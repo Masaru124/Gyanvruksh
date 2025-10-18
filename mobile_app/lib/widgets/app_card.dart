@@ -80,7 +80,7 @@ class AppCard extends StatelessWidget {
             boxShadow: showShadow
                 ? [
                     BoxShadow(
-                      color: theme.shadowColor.withOpacity(0.1),
+                      color: theme.shadowColor.withValues(alpha: 0.1),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -94,12 +94,12 @@ class AppCard extends StatelessWidget {
         return Container(
           padding: effectivePadding,
           decoration: BoxDecoration(
-            color: backgroundColor ?? theme.colorScheme.surfaceVariant.withOpacity(0.3),
+            color: backgroundColor ?? theme.colorScheme.surfaceVariant.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(effectiveBorderRadius),
             boxShadow: showShadow
                 ? [
                     BoxShadow(
-                      color: theme.shadowColor.withOpacity(0.1),
+                      color: theme.shadowColor.withValues(alpha: 0.1),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),

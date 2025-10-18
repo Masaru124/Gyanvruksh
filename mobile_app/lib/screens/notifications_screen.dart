@@ -29,79 +29,26 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     setState(() => isLoading = true);
     
     try {
-      final result = await ApiService().get('/api/notifications').catchError((_) => []);
+      final result = await ApiService().getNotifications();
       
       setState(() {
-        notifications = result as List<dynamic>;
+        notifications = result.map((n) {
+          final m = n as Map<String, dynamic>;
+          return {
+            'id': m['id'],
+            'title': m['title'] ?? 'Notification',
+            'message': m['message'] ?? m['content'] ?? '',
+            'type': m['type'] ?? 'general',
+            'time': m['created_at'] ?? m['time'] ?? 'Recently',
+            'isRead': m['is_read'] ?? m['isRead'] ?? false,
+          };
+        }).toList();
         isLoading = false;
-        
-        // Fallback data
-        if (notifications.isEmpty) {
-          notifications = [
-            {
-              'id': 1,
-              'title': 'New Assignment Posted',
-              'message': 'Mathematics Problem Set 3 has been posted. Due date: Jan 20, 2024',
-              'type': 'assignment',
-              'time': '2 hours ago',
-              'isRead': false,
-            },
-            {
-              'id': 2,
-              'title': 'Quiz Reminder',
-              'message': 'Physics Quiz scheduled for tomorrow at 10:00 AM',
-              'type': 'quiz',
-              'time': '4 hours ago',
-              'isRead': false,
-            },
-            {
-              'id': 3,
-              'title': 'Grade Updated',
-              'message': 'Your Chemistry Lab Report has been graded: 92/100',
-              'type': 'grade',
-              'time': '1 day ago',
-              'isRead': true,
-            },
-            {
-              'id': 4,
-              'title': 'Course Announcement',
-              'message': 'New study materials uploaded for Advanced Mathematics',
-              'type': 'announcement',
-              'time': '2 days ago',
-              'isRead': true,
-            },
-            {
-              'id': 5,
-              'title': 'Achievement Unlocked',
-              'message': 'Congratulations! You\'ve earned the "Quick Learner" badge',
-              'type': 'achievement',
-              'time': '3 days ago',
-              'isRead': true,
-            },
-          ];
-        }
       });
     } catch (e) {
       setState(() {
         isLoading = false;
-        notifications = [
-          {
-            'id': 1,
-            'title': 'New Assignment Posted',
-            'message': 'Mathematics Problem Set 3 has been posted. Due date: Jan 20, 2024',
-            'type': 'assignment',
-            'time': '2 hours ago',
-            'isRead': false,
-          },
-          {
-            'id': 2,
-            'title': 'Quiz Reminder',
-            'message': 'Physics Quiz scheduled for tomorrow at 10:00 AM',
-            'type': 'quiz',
-            'time': '4 hours ago',
-            'isRead': false,
-          },
-        ];
+        notifications = [];
       });
     }
   }
@@ -306,13 +253,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  void _markAsRead(int notificationId) {
-    setState(() {
-      final index = notifications.indexWhere((n) => n['id'] == notificationId);
-      if (index != -1) {
-        notifications[index]['isRead'] = true;
-      }
-    });
+  Future<void> _markAsRead(int notificationId) async {
+    try {
+      await ApiService().markNotificationRead(notificationId);
+      setState(() {
+        final index = notifications.indexWhere((n) => n['id'] == notificationId);
+        if (index != -1) {
+          notifications[index]['isRead'] = true;
+        }
+      });
+    } catch (e) {
+      // Fallback to local update if API fails
+      setState(() {
+        final index = notifications.indexWhere((n) => n['id'] == notificationId);
+        if (index != -1) {
+          notifications[index]['isRead'] = true;
+        }
+      });
+    }
   }
 
   void _markAllAsRead() {

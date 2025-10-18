@@ -1,7 +1,7 @@
 from sqlalchemy import String, Text, ForeignKey, DateTime, Integer, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
-from app.database import Base
+from ..database import Base
 
 class Assignment(Base):
     __tablename__ = "assignments"
@@ -22,6 +22,22 @@ class Assignment(Base):
     course = relationship("Course")
     teacher = relationship("User", foreign_keys=[teacher_id])
     lesson = relationship("Lesson")
+
+class AssignmentSubmission(Base):
+    __tablename__ = "assignment_submissions"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    assignment_id: Mapped[int] = mapped_column(ForeignKey("assignments.id"))
+    student_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    content: Mapped[str] = mapped_column(Text)
+    attachment_url: Mapped[str] = mapped_column(String(500), nullable=True)
+    submitted_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    status: Mapped[str] = mapped_column(String(20), default="submitted")  # submitted, graded, late
+    grade: Mapped[int] = mapped_column(Integer, nullable=True)
+    feedback: Mapped[str] = mapped_column(Text, nullable=True)
+
+    # Relationships
+    assignment = relationship("Assignment")
+    student = relationship("User", foreign_keys=[student_id])
 
 class Grade(Base):
     __tablename__ = "grades"
