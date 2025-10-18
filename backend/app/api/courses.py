@@ -239,53 +239,22 @@ def unenroll_student(course_id: int, db: Session = Depends(get_db), user: User =
     return {"message": "Successfully unenrolled from course"}
 
 @router.get("/available-for-enrollment", response_model=List[CourseOut])
-def get_available_courses_for_enrollment(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def get_available_courses_for_enrollment(db: Session = Depends(get_db)):
     """Get courses available for students and teachers to enroll (have assigned teachers)"""
-    if not ((user.role == "service_seeker" and user.sub_role == "student") or user.is_teacher or user.role == "admin"):
-        raise HTTPException(status_code=403, detail="Only students and teachers can view available courses")
-
-    # For teachers and admins, return all courses with assigned teachers
-    if user.is_teacher or user.role == "admin":
-        return db.query(Course).filter(
-            Course.teacher_id.isnot(None)
-        ).all()
-
-    # For students, return courses that have teachers assigned and student is not already enrolled
+    # Public endpoint - no authentication required for browsing
+    # Get all courses that have teachers assigned
     available_courses = db.query(Course).filter(
         Course.teacher_id.isnot(None)
-    ).outerjoin(Enrollment, (Enrollment.course_id == Course.id) & (Enrollment.student_id == user.id)).filter(
-        Enrollment.id.is_(None)
     ).all()
     return available_courses
 
 @router.get("/recommended", response_model=List[CourseOut])
-def get_recommended_courses(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    """Get personalized course recommendations for the current user"""
-    if user.role != "service_seeker" or user.sub_role != "student":
-        raise HTTPException(status_code=403, detail="Only students can get course recommendations")
-
-    # Get user's enrolled courses to understand preferences
-    enrolled_courses = db.query(Course).join(Enrollment).filter(
-        Enrollment.student_id == user.id
-    ).all()
-
-    # Get categories from enrolled courses
-    enrolled_categories = [course.category_id for course in enrolled_courses if course.category_id]
-
-    # Recommend courses from similar categories that student hasn't enrolled in
-    enrolled_course_ids = [course.id for course in enrolled_courses]
-
+def get_recommended_courses(db: Session = Depends(get_db)):
+    """Get course recommendations (public endpoint for browsing)"""
+    # Public endpoint - return popular courses as recommendations
     recommended_courses = db.query(Course).filter(
-        Course.is_published == True,
-        Course.id.notin_(enrolled_course_ids)
-    )
-
-    if enrolled_categories:
-        recommended_courses = recommended_courses.filter(
-            Course.category_id.in_(enrolled_categories)
-        )
-
-    recommended_courses = recommended_courses.order_by(
+        Course.is_published == True
+    ).order_by(
         Course.rating.desc(),
         Course.enrollment_count.desc()
     ).limit(10).all()
@@ -526,8 +495,67 @@ def get_course_videos(course_id: int, db: Session = Depends(get_db)):
         })
     return updated_videos
 
-@router.get("/{course_id}/notes")
-def get_course_notes(course_id: int, db: Session = Depends(get_db)):
-    """Get all notes for a course"""
-    notes = db.query(CourseNote).filter(CourseNote.course_id == course_id).order_by(CourseNote.uploaded_at.desc()).all()
-    return [{"id": n.id, "title": n.title, "content": n.content, "uploaded_at": n.uploaded_at.isoformat()} for n in notes]
+@router.get("/{course_id}/enrollments")
+def get_course_enrollments(course_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Get all enrollments for a specific course (Teachers and Admins only)"""
+    # Check if user is teacher of this course or admin
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    if user.role != "admin" and course.teacher_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to view enrollments for this course")
+
+    enrollments = db.query(Enrollment).filter(Enrollment.course_id == course_id).all()
+
+    result = []
+    for enrollment in enrollments:
+        student = db.query(User).filter(User.id == enrollment.student_id).first()
+        if student:
+            result.append({
+                "id": enrollment.id,
+                "student_id": student.id,
+                "student_name": student.full_name,
+                "student_email": student.email,
+                "enrolled_at": enrollment.enrolled_at.isoformat(),
+                "hours_completed": enrollment.hours_completed,
+                "progress_percentage": enrollment.progress
+            })
+
+    return result
+
+
+@router.get("/{course_id}/attendance/sessions")
+def get_course_attendance_sessions(course_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Get all attendance sessions for a specific course (Teachers and Admins only)"""
+    # Check if user is teacher of this course or admin
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    if user.role != "admin" and course.teacher_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to view attendance sessions for this course")
+
+    try:
+        # Get attendance sessions for lessons in this course
+        sessions = db.query(AttendanceSession).join(Lesson).filter(Lesson.course_id == course_id).all()
+
+        result = []
+        for session in sessions:
+            lesson = db.query(Lesson).filter(Lesson.id == session.lesson_id).first()
+            result.append({
+                "id": session.id,
+                "lesson_id": session.lesson_id,
+                "lesson_title": lesson.title if lesson else "Unknown Lesson",
+                "session_date": session.session_date.isoformat(),
+                "created_at": session.created_at.isoformat(),
+                "total_students": session.total_students,
+                "present_students": session.present_students,
+                "attendance_percentage": session.attendance_percentage,
+                "is_completed": session.is_completed
+            })
+
+        return result
+    except Exception as e:
+        # If AttendanceSession table doesn't exist or query fails, return empty list
+        return []

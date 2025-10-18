@@ -10,6 +10,7 @@ import 'package:gyanvruksh/viewmodels/progress_viewmodel.dart';
 import 'package:gyanvruksh/utils/responsive_utils.dart';
 import 'package:gyanvruksh/theme/app_theme.dart';
 import 'package:gyanvruksh/theme/theme_provider.dart';
+import 'package:gyanvruksh/services/permission_service.dart';
 // Import all screen widgets
 import 'package:gyanvruksh/screens/login.dart';
 import 'package:gyanvruksh/screens/onboarding_screen.dart';
@@ -41,6 +42,9 @@ import 'package:gyanvruksh/screens/teacher_course_management.dart';
 void main() {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize permissions
+  PermissionService.initializePermissions();
 
   // Set preferred orientations
   SystemChrome.setPreferredOrientations([

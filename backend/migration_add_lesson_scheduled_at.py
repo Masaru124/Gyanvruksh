@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, text
 from app.settings import settings
 
 def run_migration():
-    engine = create_engine(settings.database_url)
+    engine = create_engine(settings.DATABASE_URL)
     
     with engine.connect() as conn:
         # Add scheduled_at column to lessons table

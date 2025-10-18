@@ -4,9 +4,114 @@ import 'package:http/http.dart' as http;
 import 'auth_storage.dart';
 
 class ApiService {
-  // Local API URL for development
-  static String baseUrl = const String.fromEnvironment('API_BASE_URL',
-      defaultValue: 'https://gyanvruksh.onrender.com');
+  // Flexible API configuration for different environments
+  static String get baseUrl {
+    // Check for environment variable first (never null, but could be empty)
+    const String envUrl = String.fromEnvironment('API_BASE_URL');
+    if (envUrl.isNotEmpty) {
+      return envUrl;
+    }
+
+    // For development, try localhost first, then fallback to common IPs
+    const String defaultLocalUrl = 'http://10.0.2.2:8000'; // Android emulator uses 10.0.2.2 for host
+
+    // You can also configure this based on platform or other conditions
+    return defaultLocalUrl;
+  }
+
+  // Alternative configuration for different environments
+  static const Map<String, String> _environmentUrls = {
+    'development': 'http://10.0.2.2:8000', // Android emulator host
+    'development_local': 'http://localhost:8000', // Direct localhost for web/desktop
+    'staging': 'https://staging.gyanvruksh.com',
+    'production': 'https://gyanvruksh.onrender.com',
+  };
+
+  // Helper method to get URL for specific environment
+  static String getUrlForEnvironment(String environment) {
+    return _environmentUrls[environment] ?? _environmentUrls['development']!;
+  }
+
+  // Helper method to check if we're in development mode
+  static bool get isDevelopment {
+    return baseUrl.contains('10.0.2.2') || baseUrl.contains('localhost') || baseUrl.contains('127.0.0.1');
+  }
+
+  // Helper method to check if we're using Android emulator
+  static bool get isAndroidEmulator {
+    return baseUrl.contains('10.0.2.2');
+  }
+
+  // Helper method to check if we're using direct localhost (web/desktop)
+  static bool get isDirectLocalhost {
+    return baseUrl.contains('localhost:8000');
+  }
+
+  // Helper method to check if we're in production
+  static bool get isProduction {
+    return baseUrl.contains('render.com') || baseUrl.contains('gyanvruksh.com');
+  }
+
+  // Network connectivity helper
+  static Future<bool> checkNetworkConnectivity() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/healthz')).timeout(const Duration(seconds: 5));
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Runtime URL switching for testing
+  static void setBaseUrl(String newUrl) {
+    // This would require making baseUrl non-const, but for now we'll use environment variables
+    print('⚠️  To change base URL, use --dart-define=API_BASE_URL=<new_url> when running the app');
+    print('Example: flutter run --dart-define=API_BASE_URL=http://192.168.1.100:8000');
+  }
+
+  // Get helpful error message for network issues
+  static String getNetworkErrorMessage(dynamic error) {
+    if (error is SocketException) {
+      if (isDevelopment) {
+        return 'Cannot connect to development server at $baseUrl. Make sure the backend is running and accessible from your device.';
+      } else {
+        return 'No internet connection. Please check your network and try again.';
+      }
+    }
+    if (error is HttpException) {
+      return 'Server connection failed. Please try again later.';
+    }
+    return 'Network error occurred. Please try again.';
+  }
+
+  // Debug helper for development
+  static void printDebugInfo() {
+    print('🔧 API Debug Info:');
+    print('Base URL: $baseUrl');
+    print('Environment: ${isDevelopment ? 'Development' : 'Production'}');
+    print('Token: ${_token != null ? 'Present' : 'Not present'}');
+  }
+
+  // Helper for local development setup
+  static void printLocalDevelopmentInstructions() {
+    print('🚀 Local Development Setup Instructions:');
+    print('1. Make sure your backend server is running:');
+    print('   cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload');
+    print('');
+    print('2. Find your computer\'s IP address:');
+    print('   Windows: ipconfig (look for IPv4 Address)');
+    print('   Mac/Linux: ifconfig or ip addr (look for inet)');
+    print('');
+    print('3. Update your Flutter app to use your IP:');
+    print('   flutter run --dart-define=API_BASE_URL=http://YOUR_IP_ADDRESS:8000');
+    print('');
+    print('4. Common IP addresses to try:');
+    print('   - 192.168.1.xxx (most common for home networks)');
+    print('   - 10.0.2.2 (Android emulator localhost)');
+    print('   - 127.0.0.1 (computer localhost - won\'t work on mobile)');
+    print('');
+    print('Current configuration: $baseUrl');
+  }
 
   static String? _token;
   static Map<String, dynamic>? _me;
@@ -104,10 +209,10 @@ class ApiService {
       } else {
         return {'success': false, 'error': 'Login failed. Please try again.'};
       }
-    } on SocketException {
-      return {'success': false, 'error': 'No internet connection'};
-    } on HttpException {
-      return {'success': false, 'error': 'Server error occurred'};
+    } on SocketException catch (e) {
+      return {'success': false, 'error': getNetworkErrorMessage(e)};
+    } on HttpException catch (e) {
+      return {'success': false, 'error': getNetworkErrorMessage(e)};
     } on FormatException {
       return {'success': false, 'error': 'Invalid response from server'};
     } catch (e) {

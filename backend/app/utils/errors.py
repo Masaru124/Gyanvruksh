@@ -155,9 +155,14 @@ def rate_limit_error(message: str = "Rate limit exceeded") -> HTTPException:
 # Custom exception handler for FastAPI
 def custom_http_exception_handler(request, exc: HTTPException):
     """Custom HTTP exception handler that standardizes error responses"""
+    from fastapi.responses import JSONResponse
+
     if isinstance(exc.detail, dict) and "error" in exc.detail:
         # Already in standardized format
-        return exc
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=exc.detail
+        )
 
     # Convert to standardized format
     error_response = {
@@ -169,7 +174,7 @@ def custom_http_exception_handler(request, exc: HTTPException):
         }
     }
 
-    return HTTPException(
+    return JSONResponse(
         status_code=exc.status_code,
-        detail=error_response
+        content=error_response
     )

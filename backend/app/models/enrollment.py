@@ -9,4 +9,5 @@ class Enrollment(Base):
     student_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"))
     hours_completed: Mapped[int] = mapped_column(Integer, default=0)
+    progress: Mapped[int] = mapped_column(Integer, default=0)  # Progress percentage (0-100)
     enrolled_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
