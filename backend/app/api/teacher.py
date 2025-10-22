@@ -222,6 +222,47 @@ async def create_announcement(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/quizzes")
+async def get_teacher_quizzes(
+    current_user: User = Depends(verify_teacher),
+    db: Session = Depends(get_db)
+):
+    """Get quizzes created by the teacher"""
+    try:
+        # Get teacher's courses
+        courses = db.query(Course).filter(Course.teacher_id == current_user.id).all()
+        course_ids = [course.id for course in courses]
+
+        # Get all quizzes for teacher's courses
+        quizzes = db.query(Quiz).filter(
+            Quiz.course_id.in_(course_ids)
+        ).all()
+
+        # Format response
+        quiz_data = []
+        for quiz in quizzes:
+            course = next((c for c in courses if c.id == quiz.course_id), None)
+            quiz_data.append({
+                "id": quiz.id,
+                "title": quiz.title,
+                "course_id": quiz.course_id,
+                "course_title": course.title if course else "Unknown",
+                "is_published": quiz.is_published,
+                "total_questions": len(quiz.questions) if hasattr(quiz, 'questions') else 0,
+                "passing_score": quiz.passing_score,
+                "time_limit": quiz.time_limit,
+                "created_at": quiz.created_at.isoformat() if quiz.created_at else None,
+                "attempts_count": len(quiz.attempts) if hasattr(quiz, 'attempts') else 0
+            })
+
+        return {
+            "quizzes": quiz_data,
+            "total_count": len(quiz_data)
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/communication/messages")
 async def get_teacher_messages(
     current_user: User = Depends(verify_teacher),
@@ -371,31 +412,136 @@ async def get_content_library(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/content/upload")
-async def upload_content(
-    title: str,
-    content_type: str,
-    description: str,
+@router.get("/courses/teacher/stats")
+async def teacher_stats(
     current_user: User = Depends(verify_teacher),
     db: Session = Depends(get_db)
 ):
-    """Upload new content to teacher's library"""
+    """Get teacher statistics for courses"""
     try:
-        # Mock content upload
-        uploaded_content = {
-            "id": 3,
-            "title": title,
-            "type": content_type,
-            "description": description,
-            "upload_date": datetime.now().isoformat(),
-            "uploaded_by": current_user.full_name,
-            "status": "processing"
-        }
-        
+        # Get teacher's courses
+        courses = db.query(Course).filter(Course.teacher_id == current_user.id).all()
+
+        total_courses = len(courses)
+        published_courses = len([c for c in courses if c.is_published])
+
+        # Get total enrollments across all courses
+        course_ids = [course.id for course in courses]
+        total_enrollments = db.query(Enrollment).filter(
+            Enrollment.course_id.in_(course_ids)
+        ).count() if course_ids else 0
+
+        # Get recent enrollments (last 30 days)
+        thirty_days_ago = datetime.now() - timedelta(days=30)
+        recent_enrollments = db.query(Enrollment).filter(
+            Enrollment.course_id.in_(course_ids),
+            Enrollment.enrolled_at >= thirty_days_ago
+        ).count() if course_ids else 0
+
+        # Calculate average rating (mock data for now)
+        average_rating = 4.2
+
+        # Calculate completion rate (mock data for now)
+        completion_rate = 78.5
+
         return {
-            "message": "Content uploaded successfully",
-            "content": uploaded_content
+            "total_courses": total_courses,
+            "published_courses": published_courses,
+            "total_enrollments": total_enrollments,
+            "recent_enrollments": recent_enrollments,
+            "average_rating": average_rating,
+            "completion_rate": completion_rate
         }
-        
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/courses/teacher/upcoming-classes")
+async def upcoming_classes(
+    current_user: User = Depends(verify_teacher),
+    db: Session = Depends(get_db)
+):
+    """Get upcoming classes for teacher"""
+    try:
+        # Get teacher's courses
+        courses = db.query(Course).filter(Course.teacher_id == current_user.id).all()
+        course_ids = [course.id for course in courses]
+
+        # Get lessons scheduled for the next 7 days
+        upcoming_date = datetime.now() + timedelta(days=7)
+
+        upcoming_lessons = []
+        for course in courses:
+            lessons = db.query(Lesson).filter(
+                Lesson.course_id == course.id,
+                Lesson.scheduled_at <= upcoming_date,
+                Lesson.scheduled_at >= datetime.now()
+            ).order_by(Lesson.scheduled_at).all()
+
+            for lesson in lessons:
+                upcoming_lessons.append({
+                    "id": lesson.id,
+                    "title": lesson.title,
+                    "course_title": course.title,
+                    "scheduled_at": lesson.scheduled_at.isoformat() if lesson.scheduled_at else None,
+                    "duration_minutes": lesson.duration_minutes,
+                    "is_live": lesson.scheduled_at is not None
+                })
+
+        # Sort by scheduled time
+        upcoming_lessons.sort(key=lambda x: x.get("scheduled_at") or "")
+
+        return {
+            "upcoming_classes": upcoming_lessons,
+            "total_count": len(upcoming_lessons)
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/courses/teacher/student-queries")
+async def student_queries(
+    current_user: User = Depends(verify_teacher),
+    db: Session = Depends(get_db)
+):
+    """Get student queries for teacher's courses"""
+    try:
+        # Mock student queries data - in a real implementation,
+        # this would come from a questions/doubts system
+        queries = [
+            {
+                "id": 1,
+                "student_name": "John Doe",
+                "course_title": "Python Programming",
+                "question": "How do I handle exceptions in Python?",
+                "asked_at": (datetime.now() - timedelta(hours=2)).isoformat(),
+                "status": "unanswered"
+            },
+            {
+                "id": 2,
+                "student_name": "Jane Smith",
+                "course_title": "Web Development",
+                "question": "What's the difference between margin and padding in CSS?",
+                "asked_at": (datetime.now() - timedelta(days=1)).isoformat(),
+                "status": "answered"
+            },
+            {
+                "id": 3,
+                "student_name": "Mike Johnson",
+                "course_title": "Python Programming",
+                "question": "Can you explain list comprehensions?",
+                "asked_at": (datetime.now() - timedelta(hours=5)).isoformat(),
+                "status": "unanswered"
+            }
+        ]
+
+        return {
+            "queries": queries,
+            "total_count": len(queries),
+            "unanswered_count": len([q for q in queries if q["status"] == "unanswered"])
+        }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

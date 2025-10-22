@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/app_card.dart';
 import 'package:gyanvruksh/widgets/app_button.dart';
 import 'package:gyanvruksh/theme/app_theme.dart';
@@ -29,9 +29,9 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
       _error = null;
     });
     try {
-      final list = await ApiService().getAssignmentGrades(widget.assignment['id'] as int);
+      final response = await ApiService.get('/api/assignments/${widget.assignment['id']}/grades');
       setState(() {
-        _grades = list;
+        _grades = response.isSuccess ? (response.data as List<dynamic>?) ?? [] : [];
       });
     } catch (e) {
       setState(() {

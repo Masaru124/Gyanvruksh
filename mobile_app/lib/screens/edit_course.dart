@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/app_button.dart';
 import 'package:gyanvruksh/widgets/app_text_field.dart';
 import 'package:gyanvruksh/widgets/app_card.dart';
@@ -54,7 +54,7 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
 
     try {
       final totalHours = int.tryParse(_totalHoursCtrl.text.trim());
-      final ok = await ApiService().updateCourseDetails(
+      final response = await ApiService.updateCourseDetails(
         courseId: widget.course['id'] as int,
         title: _titleCtrl.text.trim(),
         description: _descCtrl.text.trim(),
@@ -65,7 +65,7 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
       );
 
       if (!mounted) return;
-      if (ok) {
+      if (response.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Course updated successfully')),
         );
@@ -109,9 +109,9 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
     });
 
     try {
-      final ok = await ApiService().deleteCourse(widget.course['id'] as int);
+      final response = await ApiService.deleteCourse(widget.course['id'] as int);
       if (!mounted) return;
-      if (ok) {
+      if (response.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Course deleted')),
         );

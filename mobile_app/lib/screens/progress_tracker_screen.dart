@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
 import 'package:gyanvruksh/widgets/backgrounds/cinematic_background.dart';
 import 'package:gyanvruksh/widgets/particle_background.dart';
@@ -31,38 +31,45 @@ class _ProgressTrackerScreenState extends State<ProgressTrackerScreen> {
     setState(() => isLoading = true);
     
     try {
-      final report = await ApiService().getStudentProgressReport();
+      final response = await ApiService.getStudentProgressReport();
 
-      // Map backend report to current UI structures
-      final summary = report['summary'] as Map<String, dynamic>? ?? {};
-      final courseList = report['course_progress'] as List<dynamic>? ?? [];
+      if (response.isSuccess) {
+        final report = response.data as Map<String, dynamic>;
 
-      overallProgress = {
-        'totalCourses': summary['total_courses'] ?? 0,
-        'completedCourses': summary['completed_courses'] ?? 0,
-        'totalHours': report['total_study_hours'] ?? 0,
-        'completedHours': (report['total_study_hours'] ?? 0) * 0.6, // estimate if not provided
-        'averageScore': (summary['overall_progress'] ?? 0).round(),
-        'streak': report['study_streak'] ?? 0,
-      };
+        // Map backend report to current UI structures
+        final summary = report['summary'] as Map<String, dynamic>? ?? {};
+        final courseList = report['course_progress'] as List<dynamic>? ?? [];
 
-      courseProgress = courseList.map((c) {
-        final m = c as Map<String, dynamic>;
-        return {
-          'name': m['course_title'] ?? 'Course',
-          'progress': (m['progress'] ?? 0).round(),
-          'totalLessons': 0,
-          'completedLessons': 0,
-          'score': ((m['progress'] ?? 0) as num).round(),
+        overallProgress = {
+          'totalCourses': summary['total_courses'] ?? 0,
+          'completedCourses': summary['completed_courses'] ?? 0,
+          'totalHours': report['total_study_hours'] ?? 0,
+          'completedHours': (report['total_study_hours'] ?? 0) * 0.6, // estimate if not provided
+          'averageScore': (summary['overall_progress'] ?? 0).round(),
+          'streak': report['study_streak'] ?? 0,
         };
-      }).toList();
 
-      // Skills not yet provided by backend; keep empty for now
-      skillProgress = [];
+        courseProgress = courseList.map((c) {
+          final m = c as Map<String, dynamic>;
+          return {
+            'name': m['course_title'] ?? 'Course',
+            'progress': (m['progress'] ?? 0).round(),
+            'totalLessons': 0,
+            'completedLessons': 0,
+            'score': ((m['progress'] ?? 0) as num).round(),
+          };
+        }).toList();
 
-      setState(() {
-        isLoading = false;
-      });
+        // Skills not yet provided by backend; keep empty for now
+        skillProgress = [];
+      } else {
+        setState(() {
+          isLoading = false;
+          overallProgress = {};
+          courseProgress = [];
+          skillProgress = [];
+        });
+      }
     } catch (e) {
       setState(() {
         isLoading = false;

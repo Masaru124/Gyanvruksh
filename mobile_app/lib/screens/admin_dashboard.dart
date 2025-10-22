@@ -2,17 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/services/auth_storage.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
-import 'package:gyanvruksh/widgets/custom_animated_button.dart';
-import 'package:gyanvruksh/widgets/neumorphism_container.dart';
 import 'package:gyanvruksh/widgets/backgrounds/cinematic_background.dart';
 import 'package:gyanvruksh/widgets/particle_background.dart';
-import 'package:gyanvruksh/widgets/floating_elements.dart';
-import 'package:gyanvruksh/widgets/animated_wave_background.dart';
 import 'package:gyanvruksh/widgets/micro_interactions.dart';
-import 'package:gyanvruksh/widgets/animated_text_widget.dart';
 import 'package:gyanvruksh/theme/futuristic_theme.dart';
 import 'package:intl/intl.dart';
 
@@ -47,26 +42,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
       final prefs = await SharedPreferences.getInstance();
       adminName = prefs.getString('user_name') ?? 'Admin';
       
-      // Use existing API methods with fallback
-      final results = await Future.wait([
-        ApiService().getAdminDashboardStats().catchError((_) => {}),
-      ]);
+      // Use enhanced API service with proper error handling
+      final response = await ApiService.get('/api/admin/dashboard/stats');
+      final Map<String, dynamic> stats = response.isSuccess
+          ? (response.data as Map<String, dynamic>?) ?? {}
+          : {};
 
       setState(() {
-        dashboardStats = results[0] as Map<String, dynamic>;
+        dashboardStats = stats;
         isLoading = false;
-        
-        // Set fallback data for demo
-        if (dashboardStats.isEmpty) {
-          dashboardStats = {
-            'total_users': 1250,
-            'active_students': 980,
-            'total_teachers': 45,
-            'total_courses': 125,
-            'revenue_this_month': 45000,
-            'platform_uptime': 99.8,
-          };
-        }
         
         recentActivities = [
           {'type': 'user_registration', 'message': '15 new students registered today', 'time': '2 hours ago'},
@@ -108,7 +92,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Future<void> _logout() async {
     try {
       // Call API logout
-      await ApiService().logout();
+      await ApiService.logout();
       // Clear local auth data
       await AuthStorage.clearAuthData();
       
@@ -144,8 +128,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                FuturisticColors.primary.withOpacity(0.1),
-                FuturisticColors.secondary.withOpacity(0.1),
+                FuturisticColors.primary.withValues(alpha: 0.1),
+                FuturisticColors.secondary.withValues(alpha: 0.1),
               ],
             ),
           ),
@@ -236,7 +220,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 size: 20,
               ),
               style: IconButton.styleFrom(
-                backgroundColor: Colors.red.withOpacity(0.2),
+                backgroundColor: Colors.red.withValues(alpha: 0.2),
                 padding: const EdgeInsets.all(12),
               ),
               tooltip: 'Logout',
@@ -248,8 +232,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  FuturisticColors.primary.withOpacity(0.3),
-                  FuturisticColors.secondary.withOpacity(0.3),
+                  FuturisticColors.primary.withValues(alpha: 0.3),
+                  FuturisticColors.secondary.withValues(alpha: 0.3),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
@@ -279,7 +263,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       {
         'title': 'Teachers',
         'value': '${dashboardStats['total_teachers'] ?? 0}',
-        'icon': FontAwesomeIcons.chalkboardTeacher,
+        'icon': FontAwesomeIcons.chalkboardUser,
         'color': FuturisticColors.secondary,
         'subtitle': 'Active educators',
       },
@@ -347,7 +331,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: (stat['color'] as Color).withOpacity(0.2),
+                            color: (stat['color'] as Color).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -420,8 +404,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            _getAlertColor(alert['type']).withOpacity(0.3),
-                            _getAlertColor(alert['type']).withOpacity(0.1),
+                            _getAlertColor(alert['type']).withValues(alpha: 0.3),
+                            _getAlertColor(alert['type']).withValues(alpha: 0.1),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),
@@ -457,7 +441,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: _getAlertColor(alert['type']).withOpacity(0.2),
+                        color: _getAlertColor(alert['type']).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
@@ -507,8 +491,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            _getActivityColor(activity['type']).withOpacity(0.3),
-                            _getActivityColor(activity['type']).withOpacity(0.1),
+                            _getActivityColor(activity['type']).withValues(alpha: 0.3),
+                            _getActivityColor(activity['type']).withValues(alpha: 0.1),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),
@@ -558,7 +542,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       {
         'title': 'User Management',
         'subtitle': 'Manage students & teachers',
-        'icon': FontAwesomeIcons.usersCog,
+        'icon': FontAwesomeIcons.usersGear,
         'color': FuturisticColors.primary,
         'onTap': () {},
       },
@@ -579,7 +563,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       {
         'title': 'System Settings',
         'subtitle': 'Platform configuration',
-        'icon': FontAwesomeIcons.cogs,
+        'icon': FontAwesomeIcons.gears,
         'color': FuturisticColors.warning,
         'onTap': () {},
       },
@@ -621,8 +605,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            (action['color'] as Color).withOpacity(0.3),
-                            (action['color'] as Color).withOpacity(0.1),
+                            (action['color'] as Color).withValues(alpha: 0.3),
+                            (action['color'] as Color).withValues(alpha: 0.1),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),
@@ -667,11 +651,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
   IconData _getAlertIcon(String type) {
     switch (type) {
       case 'warning':
-        return FontAwesomeIcons.exclamationTriangle;
+        return FontAwesomeIcons.triangleExclamation;
       case 'error':
-        return FontAwesomeIcons.exclamationCircle;
+        return FontAwesomeIcons.circleExclamation;
       case 'info':
-        return FontAwesomeIcons.infoCircle;
+        return FontAwesomeIcons.circleInfo;
       default:
         return FontAwesomeIcons.bell;
     }
@@ -697,7 +681,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       case 'course_creation':
         return FontAwesomeIcons.plus;
       case 'system_update':
-        return FontAwesomeIcons.sync;
+        return FontAwesomeIcons.arrowsRotate;
       default:
         return FontAwesomeIcons.bell;
     }

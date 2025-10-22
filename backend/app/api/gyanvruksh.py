@@ -423,45 +423,48 @@ def _generate_advanced_path(db: Session) -> List[Dict]:
         "order": idx + 1
     } for idx, course in enumerate(courses)]
 
-@router.get("/trending-courses")
-def get_trending_courses(
-    limit: int = 10,
-    days: int = 7,
+@router.get("/personalization")
+def get_personalization_data(current_user: User = Depends(get_current_user)):
+    """
+    Get user's personalization data including interests, skill levels, and learning goals.
+    For now, returns default data structure with some basic info from user profile.
+    """
+    # Return a basic personalization structure
+    # In a production app, this would be stored in a separate table or as JSON in user profile
+    return {
+        "interests": [],  # User interests (Academics, Skills, Sports, Creativity)
+        "skill_levels": {},  # Skill levels for each category
+        "learning_goals": [],  # Learning goals
+        "preferred_language": current_user.preferred_language,
+        "educational_qualification": current_user.educational_qualification,
+    }
+
+
+@router.put("/personalization")
+def update_personalization_data(
+    personalization_data: dict,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Get trending courses based on recent enrollments.
+    Update user's personalization data.
+    For now, this is a placeholder that validates the data structure.
+    In a production app, this would be stored in a separate table or as JSON in user profile.
     """
-    cutoff_date = datetime.utcnow() - timedelta(days=days)
+    # Validate the data structure
+    allowed_fields = {"interests", "skill_levels", "learning_goals", "preferred_language", "educational_qualification"}
 
-    # Get courses with most enrollments in the last N days
-    trending_courses = db.query(
-        Enrollment.course_id,
-        func.count(Enrollment.id).label('enrollment_count')
-    ).filter(
-        Enrollment.enrolled_at >= cutoff_date
-    ).group_by(
-        Enrollment.course_id
-    ).subquery()
+    for key in personalization_data.keys():
+        if key not in allowed_fields:
+            raise HTTPException(status_code=400, detail=f"Invalid field: {key}")
 
-    courses = db.query(Course).join(
-        trending_courses,
-        Course.id == trending_courses.c.course_id
-    ).filter(
-        Course.is_published == True
-    ).order_by(
-        trending_courses.c.enrollment_count.desc()
-    ).limit(limit).all()
+    # For now, just return success
+    # In a production app, you would:
+    # 1. Store this data in a Personalization model
+    # 2. Or store as JSON in the User model
+    # 3. Or create separate columns for each field
 
-    return [{
-        "course_id": course.id,
-        "title": course.title,
-        "description": course.description,
-        "difficulty": course.difficulty,
-        "total_hours": course.total_hours,
-        "enrollment_count": db.query(Enrollment).filter(
-            Enrollment.course_id == course.id,
-            Enrollment.enrolled_at >= cutoff_date
-        ).count(),
-        "category": course.category.name if course.category else "General"
-    } for course in courses]
+    return {
+        "message": "Personalization data updated successfully",
+        "data": personalization_data
+    }

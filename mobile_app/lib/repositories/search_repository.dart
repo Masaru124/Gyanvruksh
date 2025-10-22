@@ -1,8 +1,6 @@
-import '../services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 
 class SearchRepository {
-  final ApiService _apiService = ApiService();
-
   Future<Map<String, dynamic>> search({
     required String query,
     Map<String, dynamic>? filters,
@@ -12,7 +10,7 @@ class SearchRepository {
     int limit = 20,
   }) async {
     try {
-      final response = await _apiService.post('/api/search', {
+      final response = await ApiService.post('/api/search', {
         'query': query,
         'filters': filters ?? {},
         'sort_by': sortBy,
@@ -20,7 +18,11 @@ class SearchRepository {
         'page': page,
         'limit': limit,
       });
-      return response;
+      return response.isSuccess ? (response.data as Map<String, dynamic>? ?? {}) : {
+        'results': [],
+        'metadata': {},
+        'total': 0,
+      };
     } catch (e) {
       return {
         'results': [],
@@ -32,8 +34,8 @@ class SearchRepository {
 
   Future<List<String>> getSearchSuggestions(String query) async {
     try {
-      final response = await _apiService.get('/api/search/suggestions?q=$query');
-      return List<String>.from(response['suggestions'] ?? []);
+      final response = await ApiService.get('/api/search/suggestions?q=$query');
+      return response.isSuccess ? List<String>.from(response.data['suggestions'] ?? []) : [];
     } catch (e) {
       return [];
     }
@@ -41,8 +43,8 @@ class SearchRepository {
 
   Future<List<Map<String, dynamic>>> getAvailableCategories() async {
     try {
-      final response = await _apiService.get('/api/search/categories');
-      return List<Map<String, dynamic>>.from(response['categories'] ?? []);
+      final response = await ApiService.get('/api/search/categories');
+      return response.isSuccess ? List<Map<String, dynamic>>.from(response.data['categories'] ?? []) : [];
     } catch (e) {
       return [];
     }
@@ -50,8 +52,8 @@ class SearchRepository {
 
   Future<List<String>> getSearchHistory() async {
     try {
-      final response = await _apiService.get('/api/search/history');
-      return List<String>.from(response['history'] ?? []);
+      final response = await ApiService.get('/api/search/history');
+      return response.isSuccess ? List<String>.from(response.data['history'] ?? []) : [];
     } catch (e) {
       return [];
     }
@@ -59,8 +61,8 @@ class SearchRepository {
 
   Future<List<String>> getPopularSearches() async {
     try {
-      final response = await _apiService.get('/api/search/popular');
-      return List<String>.from(response['popular'] ?? []);
+      final response = await ApiService.get('/api/search/popular');
+      return response.isSuccess ? List<String>.from(response.data['popular'] ?? []) : [];
     } catch (e) {
       return [];
     }
@@ -68,8 +70,8 @@ class SearchRepository {
 
   Future<List<Map<String, dynamic>>> getTrendingTopics() async {
     try {
-      final response = await _apiService.get('/api/search/trending');
-      return List<Map<String, dynamic>>.from(response['trending'] ?? []);
+      final response = await ApiService.get('/api/search/trending');
+      return response.isSuccess ? List<Map<String, dynamic>>.from(response.data['trending'] ?? []) : [];
     } catch (e) {
       return [];
     }
@@ -77,8 +79,8 @@ class SearchRepository {
 
   Future<List<Map<String, dynamic>>> getRecentSearches() async {
     try {
-      final response = await _apiService.get('/api/search/recent');
-      return List<Map<String, dynamic>>.from(response['recent'] ?? []);
+      final response = await ApiService.get('/api/search/recent');
+      return response.isSuccess ? List<Map<String, dynamic>>.from(response.data['recent'] ?? []) : [];
     } catch (e) {
       return [];
     }
@@ -86,8 +88,8 @@ class SearchRepository {
 
   Future<List<Map<String, dynamic>>> getBookmarkedResults() async {
     try {
-      final response = await _apiService.get('/api/search/bookmarks');
-      return List<Map<String, dynamic>>.from(response['bookmarks'] ?? []);
+      final response = await ApiService.get('/api/search/bookmarks');
+      return response.isSuccess ? List<Map<String, dynamic>>.from(response.data['bookmarks'] ?? []) : [];
     } catch (e) {
       return [];
     }
@@ -95,7 +97,7 @@ class SearchRepository {
 
   Future<void> addToSearchHistory(String query) async {
     try {
-      await _apiService.post('/api/search/history/add', {'query': query});
+      await ApiService.post('/api/search/history/add', {'query': query});
     } catch (e) {
       // silently fail
     }
@@ -103,7 +105,7 @@ class SearchRepository {
 
   Future<void> removeFromSearchHistory(String query) async {
     try {
-      await _apiService.post('/api/search/history/remove', {'query': query});
+      await ApiService.post('/api/search/history/remove', {'query': query});
     } catch (e) {
       // silently fail
     }
@@ -111,7 +113,7 @@ class SearchRepository {
 
   Future<void> clearSearchHistory() async {
     try {
-      await _apiService.post('/api/search/history/clear', {});
+      await ApiService.post('/api/search/history/clear', {});
     } catch (e) {
       // silently fail
     }
@@ -119,8 +121,8 @@ class SearchRepository {
 
   Future<bool> toggleBookmark(Map<String, dynamic> result) async {
     try {
-      final response = await _apiService.post('/api/search/bookmarks/toggle', {'result': result});
-      return response['bookmarked'] ?? false;
+      final response = await ApiService.post('/api/search/bookmarks/toggle', {'result': result});
+      return response.isSuccess ? (response.data['bookmarked'] ?? false) : false;
     } catch (e) {
       return false;
     }
@@ -131,11 +133,15 @@ class SearchRepository {
     required Map<String, dynamic> filters,
   }) async {
     try {
-      final response = await _apiService.post('/api/search/advanced', {
+      final response = await ApiService.post('/api/search/advanced', {
         'query': query,
         'filters': filters,
       });
-      return response;
+      return response.isSuccess ? (response.data as Map<String, dynamic>? ?? {}) : {
+        'results': [],
+        'metadata': {},
+        'total': 0,
+      };
     } catch (e) {
       return {
         'results': [],

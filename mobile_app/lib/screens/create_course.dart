@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/app_button.dart';
 import 'package:gyanvruksh/widgets/app_text_field.dart';
 import 'package:gyanvruksh/widgets/app_card.dart';
@@ -40,21 +40,17 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
 
     try {
       final totalHours = int.tryParse(totalHoursCtrl.text.trim());
-      final ok = await ApiService().createCourseWithDetails(
-        title: titleCtrl.text.trim(),
-        description: descCtrl.text.trim(),
-        totalHours: totalHours,
-        difficulty: selectedDifficulty,
-        thumbnailUrl: thumbnailUrlCtrl.text.trim().isEmpty ? null : thumbnailUrlCtrl.text.trim(),
-        isPublished: isPublished,
-      );
+      final response = await ApiService.post('/api/courses/create', {
+        'title': titleCtrl.text.trim(),
+        'description': descCtrl.text.trim(),
+        'total_hours': totalHours,
+        'difficulty': selectedDifficulty,
+        'thumbnail_url': thumbnailUrlCtrl.text.trim().isEmpty ? null : thumbnailUrlCtrl.text.trim(),
+        'is_published': isPublished,
+      });
 
-      if (ok) {
-        if (!mounted) {
-          return;
-        }
-
-        // Clear the form
+      if (response.isSuccess) {
+        // Clear form and navigate back
         titleCtrl.clear();
         descCtrl.clear();
         totalHoursCtrl.clear();
@@ -62,21 +58,14 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
         setState(() {
           selectedDifficulty = 'beginner';
           isPublished = false;
+          loading = false;
         });
 
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Course created successfully')),
-        );
-
-        // Navigate back after showing the message
-        await Future.delayed(const Duration(seconds: 1));
-        if (mounted) {
-          Navigator.of(context).pop(true); // Pass true to indicate success
-        }
+        Navigator.pop(context, true);
       } else {
         setState(() {
-          error = "Failed to create course";
+          error = response.userMessage;
+          loading = false;
         });
       }
     } catch (e) {

@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/services/auth_storage.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
-import 'package:gyanvruksh/widgets/custom_animated_button.dart';
-import 'package:gyanvruksh/widgets/neumorphism_container.dart';
 import 'package:gyanvruksh/widgets/backgrounds/cinematic_background.dart';
 import 'package:gyanvruksh/widgets/particle_background.dart';
 import 'package:gyanvruksh/widgets/floating_elements.dart';
@@ -55,19 +53,19 @@ class _StudentDashboardState extends State<StudentDashboard> {
       userName = prefs.getString('user_name') ?? 'Student';
       
       final results = await Future.wait([
-        ApiService().getStudentStats(),
-        ApiService().getTodaySchedule(),
-        ApiService().listCourses(),
-        ApiService().getStudentAssignments(),
-        ApiService().getLearningStreak(),
+        ApiService.getStudentDashboard(),
+        ApiService.get('/api/student/schedule/today'),
+        ApiService.listCourses(),
+        ApiService.get('/api/student/assignments'),
+        ApiService.get('/api/gamification/streak'),
       ]);
 
       setState(() {
-        dashboardData = results[0] as Map<String, dynamic>;
-        todaySchedule = results[1] as List<dynamic>;
-        courses = results[2] as List<dynamic>;
-        assignments = results[3] as List<dynamic>;
-        learningStreak = results[4] as Map<String, dynamic>;
+        dashboardData = results[0].isSuccess ? (results[0].data as Map<String, dynamic>?) ?? {} : {};
+        todaySchedule = results[1].isSuccess ? (results[1].data as List<dynamic>?) ?? [] : [];
+        courses = results[2].isSuccess ? (results[2].data as List<dynamic>?) ?? [] : [];
+        assignments = results[3].isSuccess ? (results[3].data as List<dynamic>?) ?? [] : [];
+        learningStreak = results[4].isSuccess ? (results[4].data as Map<String, dynamic>?) ?? {} : {};
         isLoading = false;
       });
     } catch (e) {
@@ -94,7 +92,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   Future<void> _logout() async {
     try {
       // Call API logout
-      await ApiService().logout();
+      await ApiService.logout();
       // Clear local auth data
       await AuthStorage.clearAuthData();
       

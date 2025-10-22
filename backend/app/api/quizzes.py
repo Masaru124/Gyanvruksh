@@ -136,13 +136,20 @@ def submit_quiz_attempt(quiz_id: int, attempt: QuizAttemptCreate, db: Session = 
     
     return db_attempt
 
-@router.get("/{quiz_id}/attempts", response_model=List[QuizAttemptOut])
-def get_quiz_attempts(quiz_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+@router.patch("/{quiz_id}", response_model=QuizSchema)
+def update_quiz_status(quiz_id: int, is_published: bool, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
-    Get user's attempts for a quiz
+    Update quiz publication status (Teacher/Admin only)
     """
-    attempts = db.query(QuizAttempt).filter(
-        QuizAttempt.quiz_id == quiz_id,
-        QuizAttempt.user_id == current_user.id
-    ).order_by(QuizAttempt.completed_at.desc()).all()
-    return attempts
+    quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+
+    course = db.query(Course).filter(Course.id == quiz.course_id).first()
+    if current_user.role != "admin" and course.teacher_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this quiz")
+
+    quiz.is_published = is_published
+    db.commit()
+    db.refresh(quiz)
+    return quiz

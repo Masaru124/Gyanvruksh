@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 
 class ManageCoursesScreen extends StatefulWidget {
   const ManageCoursesScreen({super.key});
@@ -29,11 +29,19 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
       error = null;
     });
     try {
-      final coursesData = await ApiService().listCourses();
-      final usersData = await ApiService().listUsers();
+      final coursesResponse = await ApiService.listCourses();
+      final usersResponse = await ApiService.get('/api/admin/users');
+
       setState(() {
-        courses = coursesData;
-        teachers = usersData.where((user) => user['is_teacher'] == true).toList();
+        courses = coursesResponse.isSuccess
+            ? (coursesResponse.data as List<dynamic>?) ?? []
+            : [];
+        teachers = usersResponse.isSuccess
+            ? (usersResponse.data as List<dynamic>?)
+                ?.where((user) => user['is_teacher'] == true)
+                .toList() ??
+                []
+            : [];
       });
     } catch (e) {
       setState(() {
@@ -49,8 +57,8 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
   Future<void> _assignTeacher(int courseId, int teacherId) async {
     setState(() => loading = true);
     try {
-      final result = await ApiService().assignTeacherToCourse(courseId, teacherId);
-      if (result.isNotEmpty) {
+      final response = await ApiService.assignTeacherToCourse(courseId, teacherId);
+      if (response.isSuccess) {
         if (mounted) {
           ScaffoldMessenger.of(_mainContext).showSnackBar(
             const SnackBar(content: Text('Teacher assigned successfully')),
@@ -114,14 +122,14 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                 Navigator.pop(context);
                 setState(() => loading = true);
                 try {
-                  final success = await ApiService().uploadCourseVideo(
+                  final response = await ApiService.uploadCourseVideo(
                     courseId,
                     titleCtrl.text,
                     urlCtrl.text,
                     description: descCtrl.text.isNotEmpty ? descCtrl.text : null,
                   );
 
-                  if (success) {
+                  if (response.isSuccess) {
                     if (mounted) {
                       ScaffoldMessenger.of(_mainContext).showSnackBar(
                         const SnackBar(content: Text('Video uploaded successfully')),
@@ -187,13 +195,13 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                 Navigator.pop(context);
                 setState(() => loading = true);
                 try {
-                  final success = await ApiService().uploadCourseNote(
+                  final response = await ApiService.uploadCourseNote(
                     courseId,
                     titleCtrl.text,
                     contentCtrl.text,
                   );
 
-                  if (success) {
+                  if (response.isSuccess) {
                     if (mounted) {
                       ScaffoldMessenger.of(_mainContext).showSnackBar(
                         const SnackBar(content: Text('Note uploaded successfully')),
@@ -227,10 +235,10 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
   }
 
   Future<void> _loadCourseMaterials(int courseId) async {
-    final notes = await ApiService().getCourseNotes(courseId);
+    final response = await ApiService.getCourseNotes(courseId);
     setState(() {
       courseVideos = []; // Empty list since getCourseVideos was removed
-      courseNotes = notes;
+      courseNotes = response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
     });
   }
 
@@ -267,12 +275,12 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                 Navigator.pop(context);
                 setState(() => loading = true);
                 try {
-                  final success = await ApiService().updateCourse(
+                  final response = await ApiService.updateCourse(
                     course['id'],
                     titleCtrl.text,
                     descCtrl.text,
                   );
-                  if (success) {
+                  if (response.isSuccess) {
                     if (mounted) {
                       ScaffoldMessenger.of(_mainContext).showSnackBar(
                         const SnackBar(content: Text('Course updated successfully')),
@@ -329,8 +337,8 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
     if (confirm == true) {
       setState(() => loading = true);
       try {
-        final success = await ApiService().deleteCourse(course['id']);
-        if (success) {
+        final response = await ApiService.deleteCourse(course['id']);
+        if (response.isSuccess) {
           if (mounted) {
             ScaffoldMessenger.of(_mainContext).showSnackBar(
               const SnackBar(content: Text('Course deleted successfully')),
@@ -395,14 +403,14 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                 Navigator.pop(context);
                 setState(() => loading = true);
                 try {
-                  final success = await ApiService().updateCourseVideo(
+                  final response = await ApiService.updateCourseVideo(
                     courseId,
                     video['id'],
                     titleCtrl.text,
                     urlCtrl.text,
                     description: descCtrl.text.isNotEmpty ? descCtrl.text : null,
                   );
-                  if (success) {
+                  if (response.isSuccess) {
                     if (mounted) {
                       ScaffoldMessenger.of(_mainContext).showSnackBar(
                         const SnackBar(content: Text('Video updated successfully')),
@@ -459,8 +467,8 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
     if (confirm == true) {
       setState(() => loading = true);
       try {
-        final success = await ApiService().deleteCourseVideo(courseId, videoId);
-        if (success) {
+        final response = await ApiService.deleteCourseVideo(courseId, videoId);
+        if (response.isSuccess) {
           if (mounted) {
             ScaffoldMessenger.of(_mainContext).showSnackBar(
               const SnackBar(content: Text('Video deleted successfully')),
@@ -521,13 +529,13 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
                 Navigator.pop(context);
                 setState(() => loading = true);
                 try {
-                  final success = await ApiService().updateCourseNote(
+                  final response = await ApiService.updateCourseNote(
                     courseId,
                     note['id'],
                     titleCtrl.text,
                     contentCtrl.text,
                   );
-                  if (success) {
+                  if (response.isSuccess) {
                     if (mounted) {
                       ScaffoldMessenger.of(_mainContext).showSnackBar(
                         const SnackBar(content: Text('Note updated successfully')),
@@ -584,8 +592,8 @@ class _ManageCoursesScreenState extends State<ManageCoursesScreen> {
     if (confirm == true) {
       setState(() => loading = true);
       try {
-        final success = await ApiService().deleteCourseNote(courseId, noteId);
-        if (success) {
+        final response = await ApiService.deleteCourseNote(courseId, noteId);
+        if (response.isSuccess) {
           if (mounted) {
             ScaffoldMessenger.of(_mainContext).showSnackBar(
               const SnackBar(content: Text('Note deleted successfully')),

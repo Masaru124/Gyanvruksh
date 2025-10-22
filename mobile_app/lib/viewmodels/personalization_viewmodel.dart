@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import '../repositories/personalization_repository.dart';
-import '../services/api.dart';
 
 class PersonalizationViewModel extends ChangeNotifier {
   final PersonalizationRepository _repository = PersonalizationRepository();
-  final ApiService _apiService = ApiService();
 
   // Loading states
   bool _isLoading = false;

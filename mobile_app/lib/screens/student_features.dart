@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
 
 class StudentFeaturesScreen extends StatefulWidget {
@@ -42,11 +42,11 @@ class _StudentFeaturesScreenState extends State<StudentFeaturesScreen>
     
     try {
       final results = await Future.wait([
-        ApiService().getStudentStats(),
-        ApiService().getStudentRecommendedCourses(),
-        ApiService().getLearningPath(),
-        ApiService().getStudentAchievements(),
-        ApiService().getUpcomingDeadlines(),
+        ApiService.getStudentStats(),
+        ApiService.getStudentRecommendedCourses(),
+        ApiService.getLearningPath(),
+        ApiService.getStudentAchievements(),
+        ApiService.getUpcomingDeadlines(),
       ]);
 
       setState(() {
@@ -312,7 +312,7 @@ class _StudentFeaturesScreenState extends State<StudentFeaturesScreen>
       icon: Icon(icon, size: 20),
       label: Text(title),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white.withOpacity(0.2),
+        backgroundColor: Colors.white.withValues(alpha: 0.2),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 12),
       ),
@@ -376,7 +376,7 @@ class _StudentFeaturesScreenState extends State<StudentFeaturesScreen>
           ),
         ),
         const SizedBox(height: 16),
-        ..._recommendations.map((course) => _buildCourseCard(course)).toList(),
+        ..._recommendations.map((course) => _buildCourseCard(course)),
       ],
     );
   }
@@ -437,7 +437,7 @@ class _StudentFeaturesScreenState extends State<StudentFeaturesScreen>
           ),
         ),
         const SizedBox(height: 16),
-        ..._learningPath.map((item) => _buildLearningPathItem(item)).toList(),
+        ..._learningPath.map((item) => _buildLearningPathItem(item)),
       ],
     );
   }
@@ -479,7 +479,7 @@ class _StudentFeaturesScreenState extends State<StudentFeaturesScreen>
             const SizedBox(height: 8),
             LinearProgressIndicator(
               value: progress / 100,
-              backgroundColor: Colors.white.withOpacity(0.3),
+              backgroundColor: Colors.white.withValues(alpha: 0.3),
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
             ),
             const SizedBox(height: 8),
@@ -521,7 +521,7 @@ class _StudentFeaturesScreenState extends State<StudentFeaturesScreen>
             ),
           )
         else
-          ..._achievements.map((achievement) => _buildAchievementItem(achievement)).toList(),
+          ..._achievements.map((achievement) => _buildAchievementItem(achievement)),
       ],
     );
   }
@@ -583,7 +583,7 @@ class _StudentFeaturesScreenState extends State<StudentFeaturesScreen>
             ),
           )
         else
-          ..._upcomingDeadlines.map((deadline) => _buildDeadlineItem(deadline)).toList(),
+          ..._upcomingDeadlines.map((deadline) => _buildDeadlineItem(deadline)),
       ],
     );
   }
@@ -682,31 +682,90 @@ class _StudentFeaturesScreenState extends State<StudentFeaturesScreen>
 
   void _viewProgressReport() async {
     try {
-      final report = await ApiService().getProgressReport();
-      if (report.isNotEmpty) {
+      final report = await ApiService.getProgressReport();
+      if (report.isSuccess && report.data != null) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Progress Report'),
+              content: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Overall Progress: ${report.data['summary']?['overall_progress'] ?? 0}%'),
+                    const SizedBox(height: 8),
+                    Text('Total Courses: ${report.data['summary']?['total_courses'] ?? 0}'),
+                    Text('Completed: ${report.data['summary']?['completed_courses'] ?? 0}'),
+                    Text('In Progress: ${report.data['summary']?['in_progress_courses'] ?? 0}'),
+                    const SizedBox(height: 16),
+                    const Text('Course Progress:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ...((report.data['course_progress'] as List?) ?? []).map((course) => 
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text('${course['course_title']}: ${course['progress']}%'),
+                      )
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load progress report')),
+        );
+      }
+    }
+  }
+
+  void _findStudyGroup() async {
+    try {
+      final groups = await ApiService.getStudyGroups();
+      final studyGroups = (groups.data?['study_groups'] as List?) ?? [];
+      
+      if (mounted) {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Progress Report'),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Overall Progress: ${report['summary']?['overall_progress'] ?? 0}%'),
-                  const SizedBox(height: 8),
-                  Text('Total Courses: ${report['summary']?['total_courses'] ?? 0}'),
-                  Text('Completed: ${report['summary']?['completed_courses'] ?? 0}'),
-                  Text('In Progress: ${report['summary']?['in_progress_courses'] ?? 0}'),
-                  const SizedBox(height: 16),
-                  const Text('Course Progress:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ...((report['course_progress'] as List?) ?? []).map((course) => 
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Text('${course['course_title']}: ${course['progress']}%'),
-                    )
-                  ),
-                ],
+            title: const Text('Study Groups'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: studyGroups.length,
+                itemBuilder: (context, index) {
+                  final group = studyGroups[index];
+                  return Card(
+                    child: ListTile(
+                      title: Text(group['name'] ?? 'Unknown Group'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(group['description'] ?? ''),
+                          Text('Members: ${group['members_count']}/${group['max_members']}'),
+                          Text('Schedule: ${group['meeting_schedule'] ?? 'TBD'}'),
+                        ],
+                      ),
+                      trailing: group['is_member'] == true 
+                          ? const Icon(Icons.check, color: Colors.green)
+                          : ElevatedButton(
+                              onPressed: () => _joinStudyGroup(group['id']),
+                              child: const Text('Join'),
+                            ),
+                    ),
+                  );
+                },
               ),
             ),
             actions: [
@@ -719,62 +778,11 @@ class _StudentFeaturesScreenState extends State<StudentFeaturesScreen>
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to load progress report')),
-      );
-    }
-  }
-
-  void _findStudyGroup() async {
-    try {
-      final groups = await ApiService().getStudyGroups();
-      final studyGroups = (groups['study_groups'] as List?) ?? [];
-      
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Study Groups'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: studyGroups.length,
-              itemBuilder: (context, index) {
-                final group = studyGroups[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(group['name'] ?? 'Unknown Group'),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(group['description'] ?? ''),
-                        Text('Members: ${group['members_count']}/${group['max_members']}'),
-                        Text('Schedule: ${group['meeting_schedule'] ?? 'TBD'}'),
-                      ],
-                    ),
-                    trailing: group['is_member'] == true 
-                        ? const Icon(Icons.check, color: Colors.green)
-                        : ElevatedButton(
-                            onPressed: () => _joinStudyGroup(group['id']),
-                            child: const Text('Join'),
-                          ),
-                  ),
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-          ],
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to load study groups')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load study groups')),
+        );
+      }
     }
   }
 
@@ -830,29 +838,33 @@ class _StudentFeaturesScreenState extends State<StudentFeaturesScreen>
 
   void _enrollInCourse(int courseId) async {
     try {
-      final result = await ApiService().enrollInCourseDetailed(courseId);
-      if (result.isNotEmpty) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Enrollment Successful'),
-            content: Text('Successfully enrolled in ${result['course_title'] ?? 'course'}!'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _loadStudentData(); // Refresh data
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
+      final result = await ApiService.enrollInCourseDetailed(courseId);
+      if (result.isSuccess && result.data != null) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Enrollment Successful'),
+              content: Text('Successfully enrolled in ${result.data?['course_title'] ?? 'course'}!'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _loadStudentData(); // Refresh data
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to enroll in course')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to enroll in course')),
+        );
+      }
     }
   }
 
@@ -861,53 +873,65 @@ class _StudentFeaturesScreenState extends State<StudentFeaturesScreen>
     if (_selectedCourseId != null) {
       try {
         final targetDate = DateTime.now().add(const Duration(days: 30)); // Default 30 days
-        final studyPlan = await ApiService().generateStudyPlan(
+        final studyPlan = await ApiService.generateStudyPlan(
           _selectedCourseId!,
           targetDate,
           _dailyStudyHours,
         );
         
-        if (studyPlan.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Study plan generated for ${studyPlan['course_title']}')),
-          );
+        if (studyPlan.isSuccess && studyPlan.data != null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Study plan generated for ${studyPlan.data['course_title']}')),
+            );
+          }
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to generate study plan')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to generate study plan')),
+          );
+        }
       }
     }
   }
 
   void _joinStudyGroup(int groupId) async {
     try {
-      final result = await ApiService().joinStudyGroup(groupId);
-      if (result.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Joined study group successfully')),
-        );
-        Navigator.pop(context); // Close dialog
+      final result = await ApiService.joinStudyGroup(groupId);
+      if (result.isSuccess && result.data != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result.data?['message'] ?? 'Joined study group successfully')),
+          );
+          Navigator.pop(context); // Close dialog
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to join study group')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to join study group')),
+        );
+      }
     }
   }
 
   void _submitDoubt(String question, int courseId) async {
     try {
-      final result = await ApiService().askDoubt(question, courseId);
-      if (result.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Doubt submitted successfully')),
-        );
+      final result = await ApiService.askDoubt(question, courseId);
+      if (result.isSuccess && result.data != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result.data?['message'] ?? 'Doubt submitted successfully')),
+          );
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to submit doubt')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to submit doubt')),
+        );
+      }
     }
   }
 }

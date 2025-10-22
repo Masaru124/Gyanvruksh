@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/app_card.dart';
 import 'package:gyanvruksh/widgets/app_button.dart';
 import 'package:gyanvruksh/widgets/app_text_field.dart';
@@ -30,7 +30,8 @@ class _TeacherQuizManagementScreenState extends State<TeacherQuizManagementScree
     });
 
     try {
-      final quizzes = await ApiService().getTeacherQuizzes();
+      final quizzesResult = await ApiService.getTeacherQuizzes();
+      final quizzes = quizzesResult.isSuccess ? (quizzesResult.data as List<dynamic>?) ?? [] : [];
       setState(() {
         _quizzes = quizzes;
         _isLoading = false;
@@ -53,20 +54,22 @@ class _TeacherQuizManagementScreenState extends State<TeacherQuizManagementScree
 
     if (result != null) {
       try {
-        await ApiService().createQuiz(
+        final apiResult = await ApiService.createQuiz(
           title: result['title'],
           description: result['description'],
           courseId: result['courseId'],
           timeLimit: result['timeLimit'],
           questions: result['questions'],
         );
-        
-        _loadQuizzes(); // Refresh list
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Quiz created successfully!')),
-          );
+
+        if (apiResult.isSuccess) {
+          _loadQuizzes(); // Refresh list
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Quiz created successfully!')),
+            );
+          }
         }
       } catch (e) {
         if (mounted) {
@@ -246,18 +249,26 @@ class _TeacherQuizManagementScreenState extends State<TeacherQuizManagementScree
   Future<void> _togglePublish(Map<String, dynamic> quiz) async {
     try {
       final newStatus = !(quiz['is_published'] ?? false);
-      await ApiService().updateQuizStatus(quiz['id'], newStatus);
-      
-      setState(() {
-        quiz['is_published'] = newStatus;
-      });
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(newStatus ? 'Quiz published!' : 'Quiz unpublished!'),
-          ),
-        );
+      final result = await ApiService.updateQuizStatus(quiz['id'], newStatus);
+
+      if (result.isSuccess) {
+        setState(() {
+          quiz['is_published'] = newStatus;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(newStatus ? 'Quiz published!' : 'Quiz unpublished!'),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to update quiz: ${result.userMessage}')),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

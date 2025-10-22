@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/app_card.dart';
 import 'package:gyanvruksh/widgets/app_text_field.dart';
 import 'package:gyanvruksh/widgets/app_button.dart';
@@ -30,10 +30,16 @@ class _ScheduleClassesScreenState extends State<ScheduleClassesScreen> {
     });
     try {
       // Use teacher's upcoming schedule endpoint
-      final list = await ApiService().getTodaySchedule();
-      setState(() {
-        _classes = list;
-      });
+      final response = await ApiService.getTodaySchedule();
+      if (response.isSuccess) {
+        setState(() {
+          _classes = response.data as List<dynamic>;
+        });
+      } else {
+        setState(() {
+          _error = response.userMessage;
+        });
+      }
     } catch (e) {
       setState(() {
         _error = e.toString();

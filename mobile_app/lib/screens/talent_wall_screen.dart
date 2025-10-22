@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
 import 'package:gyanvruksh/widgets/backgrounds/cinematic_background.dart';
 import 'package:gyanvruksh/widgets/particle_background.dart';
@@ -29,37 +29,91 @@ class _TalentWallScreenState extends State<TalentWallScreen> {
 
   Future<void> _loadTalentData() async {
     setState(() => isLoading = true);
-    
+
     try {
       final results = await Future.wait([
-        ApiService().get('/api/leaderboard').catchError((_) => []),
-        ApiService().get('/api/achievements').catchError((_) => []),
+        ApiService.getLeaderboard().catchError((_) => []),
+        ApiService.getStudentAchievements().catchError((_) => []),
       ]);
-      
+
       setState(() {
         leaderboard = results[0] as List<dynamic>;
         achievements = results[1] as List<dynamic>;
         isLoading = false;
-        
+
         // Fallback data
         if (leaderboard.isEmpty) {
           leaderboard = [
-            {'rank': 1, 'name': 'Arjun Sharma', 'points': 2450, 'avatar': '🏆', 'subject': 'Mathematics'},
-            {'rank': 2, 'name': 'Priya Patel', 'points': 2380, 'avatar': '🥈', 'subject': 'Physics'},
-            {'rank': 3, 'name': 'Rahul Kumar', 'points': 2320, 'avatar': '🥉', 'subject': 'Chemistry'},
-            {'rank': 4, 'name': 'Sneha Gupta', 'points': 2280, 'avatar': '⭐', 'subject': 'Biology'},
-            {'rank': 5, 'name': 'Vikram Singh', 'points': 2250, 'avatar': '🌟', 'subject': 'Computer Science'},
+            {
+              'rank': 1,
+              'name': 'Arjun Sharma',
+              'points': 2450,
+              'avatar': '🏆',
+              'subject': 'Mathematics'
+            },
+            {
+              'rank': 2,
+              'name': 'Priya Patel',
+              'points': 2380,
+              'avatar': '🥈',
+              'subject': 'Physics'
+            },
+            {
+              'rank': 3,
+              'name': 'Rahul Kumar',
+              'points': 2320,
+              'avatar': '🥉',
+              'subject': 'Chemistry'
+            },
+            {
+              'rank': 4,
+              'name': 'Sneha Gupta',
+              'points': 2280,
+              'avatar': '⭐',
+              'subject': 'Biology'
+            },
+            {
+              'rank': 5,
+              'name': 'Vikram Singh',
+              'points': 2250,
+              'avatar': '🌟',
+              'subject': 'Computer Science'
+            },
           ];
         }
-        
+
         topPerformers = leaderboard.take(3).toList();
-        
+
         if (achievements.isEmpty) {
           achievements = [
-            {'title': 'Perfect Score', 'description': 'Scored 100% in Mathematics Quiz', 'student': 'Arjun Sharma', 'date': '2024-01-15', 'badge': '🏆'},
-            {'title': 'Speed Demon', 'description': 'Completed Physics assignment in record time', 'student': 'Priya Patel', 'date': '2024-01-14', 'badge': '⚡'},
-            {'title': 'Streak Master', 'description': '30-day learning streak achieved', 'student': 'Rahul Kumar', 'date': '2024-01-13', 'badge': '🔥'},
-            {'title': 'Helper', 'description': 'Helped 10+ students with doubts', 'student': 'Sneha Gupta', 'date': '2024-01-12', 'badge': '🤝'},
+            {
+              'title': 'Perfect Score',
+              'description': 'Scored 100% in Mathematics Quiz',
+              'student': 'Arjun Sharma',
+              'date': '2024-01-15',
+              'badge': '🏆'
+            },
+            {
+              'title': 'Speed Demon',
+              'description': 'Completed Physics assignment in record time',
+              'student': 'Priya Patel',
+              'date': '2024-01-14',
+              'badge': '⚡'
+            },
+            {
+              'title': 'Streak Master',
+              'description': '30-day learning streak achieved',
+              'student': 'Rahul Kumar',
+              'date': '2024-01-13',
+              'badge': '🔥'
+            },
+            {
+              'title': 'Helper',
+              'description': 'Helped 10+ students with doubts',
+              'student': 'Sneha Gupta',
+              'date': '2024-01-12',
+              'badge': '🤝'
+            },
           ];
         }
       });
@@ -67,14 +121,44 @@ class _TalentWallScreenState extends State<TalentWallScreen> {
       setState(() {
         isLoading = false;
         leaderboard = [
-          {'rank': 1, 'name': 'Arjun Sharma', 'points': 2450, 'avatar': '🏆', 'subject': 'Mathematics'},
-          {'rank': 2, 'name': 'Priya Patel', 'points': 2380, 'avatar': '🥈', 'subject': 'Physics'},
-          {'rank': 3, 'name': 'Rahul Kumar', 'points': 2320, 'avatar': '🥉', 'subject': 'Chemistry'},
+          {
+            'rank': 1,
+            'name': 'Arjun Sharma',
+            'points': 2450,
+            'avatar': '🏆',
+            'subject': 'Mathematics'
+          },
+          {
+            'rank': 2,
+            'name': 'Priya Patel',
+            'points': 2380,
+            'avatar': '🥈',
+            'subject': 'Physics'
+          },
+          {
+            'rank': 3,
+            'name': 'Rahul Kumar',
+            'points': 2320,
+            'avatar': '🥉',
+            'subject': 'Chemistry'
+          },
         ];
         topPerformers = leaderboard.take(3).toList();
         achievements = [
-          {'title': 'Perfect Score', 'description': 'Scored 100% in Mathematics Quiz', 'student': 'Arjun Sharma', 'date': '2024-01-15', 'badge': '🏆'},
-          {'title': 'Speed Demon', 'description': 'Completed Physics assignment in record time', 'student': 'Priya Patel', 'date': '2024-01-14', 'badge': '⚡'},
+          {
+            'title': 'Perfect Score',
+            'description': 'Scored 100% in Mathematics Quiz',
+            'student': 'Arjun Sharma',
+            'date': '2024-01-15',
+            'badge': '🏆'
+          },
+          {
+            'title': 'Speed Demon',
+            'description': 'Completed Physics assignment in record time',
+            'student': 'Priya Patel',
+            'date': '2024-01-14',
+            'badge': '⚡'
+          },
         ];
       });
     }
@@ -141,11 +225,15 @@ class _TalentWallScreenState extends State<TalentWallScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [FuturisticColors.primary.withOpacity(0.3), FuturisticColors.secondary.withOpacity(0.3)],
+                colors: [
+                  FuturisticColors.primary.withOpacity(0.3),
+                  FuturisticColors.secondary.withOpacity(0.3)
+                ],
               ),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const FaIcon(FontAwesomeIcons.trophy, color: Colors.white, size: 24),
+            child: const FaIcon(FontAwesomeIcons.trophy,
+                color: Colors.white, size: 24),
           ),
         ],
       ),
@@ -186,9 +274,12 @@ class _TalentWallScreenState extends State<TalentWallScreen> {
                           height: 60,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: isFirst 
+                              colors: isFirst
                                   ? [FuturisticColors.warning, Colors.amber]
-                                  : [FuturisticColors.primary, FuturisticColors.secondary],
+                                  : [
+                                      FuturisticColors.primary,
+                                      FuturisticColors.secondary
+                                    ],
                             ),
                             shape: BoxShape.circle,
                           ),
@@ -228,9 +319,12 @@ class _TalentWallScreenState extends State<TalentWallScreen> {
                     ),
                   ),
                 ),
-              ).animate()
-                .fadeIn(duration: 600.ms, delay: Duration(milliseconds: index * 200))
-                .slideY(begin: 0.2, end: 0, duration: 500.ms);
+              )
+                  .animate()
+                  .fadeIn(
+                      duration: 600.ms,
+                      delay: Duration(milliseconds: index * 200))
+                  .slideY(begin: 0.2, end: 0, duration: 500.ms);
             },
           ),
         ),
@@ -265,7 +359,10 @@ class _TalentWallScreenState extends State<TalentWallScreen> {
                       height: 50,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [FuturisticColors.accent.withOpacity(0.3), FuturisticColors.primary.withOpacity(0.3)],
+                          colors: [
+                            FuturisticColors.accent.withOpacity(0.3),
+                            FuturisticColors.primary.withOpacity(0.3)
+                          ],
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -321,9 +418,11 @@ class _TalentWallScreenState extends State<TalentWallScreen> {
                 ),
               ),
             ),
-          ).animate()
-            .fadeIn(duration: 600.ms, delay: Duration(milliseconds: index * 100))
-            .slideX(begin: -0.2, end: 0, duration: 500.ms);
+          )
+              .animate()
+              .fadeIn(
+                  duration: 600.ms, delay: Duration(milliseconds: index * 100))
+              .slideX(begin: -0.2, end: 0, duration: 500.ms);
         }).toList(),
       ],
     );
@@ -356,12 +455,18 @@ class _TalentWallScreenState extends State<TalentWallScreen> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        gradient: isTopThree 
+                        gradient: isTopThree
                             ? LinearGradient(
-                                colors: [FuturisticColors.warning, Colors.amber],
+                                colors: [
+                                  FuturisticColors.warning,
+                                  Colors.amber
+                                ],
                               )
                             : LinearGradient(
-                                colors: [FuturisticColors.primary.withOpacity(0.3), FuturisticColors.secondary.withOpacity(0.3)],
+                                colors: [
+                                  FuturisticColors.primary.withOpacity(0.3),
+                                  FuturisticColors.secondary.withOpacity(0.3)
+                                ],
                               ),
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -419,9 +524,11 @@ class _TalentWallScreenState extends State<TalentWallScreen> {
                 ),
               ),
             ),
-          ).animate()
-            .fadeIn(duration: 600.ms, delay: Duration(milliseconds: index * 50))
-            .slideX(begin: 0.2, end: 0, duration: 500.ms);
+          )
+              .animate()
+              .fadeIn(
+                  duration: 600.ms, delay: Duration(milliseconds: index * 50))
+              .slideX(begin: 0.2, end: 0, duration: 500.ms);
         }).toList(),
       ],
     );

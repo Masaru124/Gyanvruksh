@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../repositories/courses_repository.dart';
 
 class DashboardViewModel extends ChangeNotifier {
-  final CoursesRepository _coursesRepository = CoursesRepository();
-
   bool _isLoading = false;
   List<dynamic> _courses = [];
   String? _error;
@@ -18,7 +16,7 @@ class DashboardViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _courses = await _coursesRepository.getMyCourses();
+      _courses = await CoursesRepository.getMyCourses();
     } catch (e) {
       _error = 'Failed to load courses: $e';
     } finally {

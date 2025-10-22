@@ -1,12 +1,15 @@
-import '../services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 
 class ProgressRepository {
-  final ApiService _apiService = ApiService();
-
   Future<Map<String, dynamic>> getOverallProgress() async {
     try {
-      final response = await _apiService.get('/api/progress/overall');
-      return response;
+      final response = await ApiService.get('/api/progress/overall');
+      return response.isSuccess ? (response.data as Map<String, dynamic>? ?? {}) : {
+        'overall_progress': 0.0,
+        'completed_lessons': 0,
+        'total_lessons': 0,
+        'time_spent_minutes': 0,
+      };
     } catch (e) {
       // Return default values if API fails
       return {
@@ -20,8 +23,17 @@ class ProgressRepository {
 
   Future<Map<String, dynamic>> getDetailedProgress() async {
     try {
-      final response = await _apiService.get('/api/progress/detailed');
-      return response;
+      final response = await ApiService.get('/api/progress/detailed');
+      return response.isSuccess ? (response.data as Map<String, dynamic>? ?? {}) : {
+        'lesson_progress': [],
+        'course_progress': [],
+        'weekly_progress': {},
+        'monthly_progress': {},
+        'analytics': {},
+        'patterns': [],
+        'strengths': [],
+        'improvements': [],
+      };
     } catch (e) {
       // Return default values if API fails
       return {
@@ -39,8 +51,20 @@ class ProgressRepository {
 
   Future<Map<String, dynamic>> getSkillProgress() async {
     try {
-      final response = await _apiService.get('/api/progress/skills');
-      return response;
+      final response = await ApiService.get('/api/progress/skills');
+      return response.isSuccess ? (response.data as Map<String, dynamic>? ?? {}) : {
+        'skills': [
+          {'name': 'Mathematics', 'progress': 0, 'completed': 0, 'total': 0},
+          {'name': 'Science', 'progress': 0, 'completed': 0, 'total': 0},
+          {'name': 'Language', 'progress': 0, 'completed': 0, 'total': 0},
+          {'name': 'Programming', 'progress': 0, 'completed': 0, 'total': 0},
+        ],
+        'categories': [
+          {'name': 'Academics', 'progress': 0, 'completed': 0, 'total': 0},
+          {'name': 'Skills', 'progress': 0, 'completed': 0, 'total': 0},
+          {'name': 'Creativity', 'progress': 0, 'completed': 0, 'total': 0},
+        ],
+      };
     } catch (e) {
       // Return default values if API fails
       return {
@@ -61,8 +85,15 @@ class ProgressRepository {
 
   Future<Map<String, dynamic>> getGamificationData() async {
     try {
-      final response = await _apiService.get('/api/gamification/progress');
-      return response;
+      final response = await ApiService.get('/api/gamification/progress');
+      return response.isSuccess ? (response.data as Map<String, dynamic>? ?? {}) : {
+        'current_streak': 0,
+        'longest_streak': 0,
+        'total_points': 0,
+        'total_badges': 0,
+        'recent_achievements': [],
+        'badges': [],
+      };
     } catch (e) {
       // Return default values if API fails
       return {
@@ -78,8 +109,8 @@ class ProgressRepository {
 
   Future<bool> markCourseCompleted(int courseId) async {
     try {
-      final response = await _apiService.post('/api/progress/course/$courseId/complete', {});
-      return response['success'] ?? false;
+      final response = await ApiService.post('/api/progress/course/$courseId/complete', {});
+      return response.isSuccess;
     } catch (e) {
       return false;
     }
@@ -87,7 +118,7 @@ class ProgressRepository {
 
   Future<void> updateStreak(bool learningActivity) async {
     try {
-      await _apiService.post('/api/gamification/streak', {
+      await ApiService.post('/api/gamification/streak', {
         'learning_activity': learningActivity,
       });
     } catch (e) {
@@ -97,8 +128,8 @@ class ProgressRepository {
 
   Future<List<Map<String, dynamic>>> getLessonHistory({int limit = 50}) async {
     try {
-      final response = await _apiService.get('/api/progress/lessons?limit=$limit');
-      return List<Map<String, dynamic>>.from(response['lessons'] ?? []);
+      final response = await ApiService.get('/api/progress/lessons?limit=$limit');
+      return response.isSuccess ? List<Map<String, dynamic>>.from(response.data['lessons'] ?? []) : [];
     } catch (e) {
       return [];
     }
@@ -106,8 +137,15 @@ class ProgressRepository {
 
   Future<Map<String, dynamic>> getProgressAnalytics() async {
     try {
-      final response = await _apiService.get('/api/progress/analytics');
-      return response;
+      final response = await ApiService.get('/api/progress/analytics');
+      return response.isSuccess ? (response.data as Map<String, dynamic>? ?? {}) : {
+        'total_study_time': 0,
+        'average_session_length': 0,
+        'most_productive_day': 'N/A',
+        'most_productive_time': 'N/A',
+        'completion_rate': 0.0,
+        'consistency_score': 0.0,
+      };
     } catch (e) {
       return {
         'total_study_time': 0,
@@ -122,8 +160,8 @@ class ProgressRepository {
 
   Future<List<Map<String, dynamic>>> getWeeklyProgress() async {
     try {
-      final response = await _apiService.get('/api/progress/weekly');
-      return List<Map<String, dynamic>>.from(response['weekly_data'] ?? []);
+      final response = await ApiService.get('/api/progress/weekly');
+      return response.isSuccess ? List<Map<String, dynamic>>.from(response.data['weekly_data'] ?? []) : [];
     } catch (e) {
       return [];
     }
@@ -131,8 +169,8 @@ class ProgressRepository {
 
   Future<List<Map<String, dynamic>>> getMonthlyProgress() async {
     try {
-      final response = await _apiService.get('/api/progress/monthly');
-      return List<Map<String, dynamic>>.from(response['monthly_data'] ?? []);
+      final response = await ApiService.get('/api/progress/monthly');
+      return response.isSuccess ? List<Map<String, dynamic>>.from(response.data['monthly_data'] ?? []) : [];
     } catch (e) {
       return [];
     }
@@ -140,8 +178,8 @@ class ProgressRepository {
 
   Future<bool> resetProgress() async {
     try {
-      final response = await _apiService.post('/api/progress/reset', {});
-      return response['success'] ?? false;
+      final response = await ApiService.post('/api/progress/reset', {});
+      return response.isSuccess;
     } catch (e) {
       return false;
     }

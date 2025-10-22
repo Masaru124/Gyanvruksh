@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/app_card.dart';
 import 'package:gyanvruksh/theme/app_theme.dart';
 
@@ -31,13 +31,13 @@ class _StudentProgressReportScreenState extends State<StudentProgressReportScree
       // For teachers, we'd need an endpoint to get all students' progress
       // For now, use available endpoints and adapt
       final results = await Future.wait([
-        ApiService().getStudentProgressReport(),
-        ApiService().listCourses(),
+        ApiService.getProgressReport(),
+        ApiService.listCourses(),
       ]);
-      
-      final progressReport = results[0] as Map<String, dynamic>;
-      final courses = results[1] as List<dynamic>;
-      
+
+      final progressReport = results[0].isSuccess ? Map<String, dynamic>.from(results[0].data as Map? ?? {}) : <String, dynamic>{};
+      final courses = results[1].isSuccess ? (results[1].data as List<dynamic>?) ?? <dynamic>[] : <dynamic>[];
+
       setState(() {
         _progressData = progressReport;
         _students = [
@@ -134,7 +134,7 @@ class _StudentProgressReportScreenState extends State<StudentProgressReportScree
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                           decoration: BoxDecoration(
-                                            color: _getProgressColor(s['overall_progress'] ?? 0).withOpacity(0.1),
+                                            color: _getProgressColor(s['overall_progress'] ?? 0).withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(AppBorderRadius.sm),
                                           ),
                                           child: AppText.bodySmall('${s['overall_progress'] ?? 0}%', 

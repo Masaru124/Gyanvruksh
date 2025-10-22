@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
-import '../services/api.dart';
 import '../repositories/gamification_repository.dart';
 
 class GamificationViewModel extends ChangeNotifier {
-  final ApiService _apiService = ApiService();
   final GamificationRepository _gamificationRepository = GamificationRepository();
-
-  // Loading states
   bool _isLoading = false;
   bool _isLoadingAchievements = false;
   String? _error;

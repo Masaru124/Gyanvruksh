@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
 import 'package:gyanvruksh/widgets/backgrounds/cinematic_background.dart';
 import 'package:gyanvruksh/widgets/particle_background.dart';
@@ -29,20 +29,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     setState(() => isLoading = true);
     
     try {
-      final result = await ApiService().getNotifications();
+      final response = await ApiService.getNotifications();
       
       setState(() {
-        notifications = result.map((n) {
-          final m = n as Map<String, dynamic>;
-          return {
-            'id': m['id'],
-            'title': m['title'] ?? 'Notification',
-            'message': m['message'] ?? m['content'] ?? '',
-            'type': m['type'] ?? 'general',
-            'time': m['created_at'] ?? m['time'] ?? 'Recently',
-            'isRead': m['is_read'] ?? m['isRead'] ?? false,
-          };
-        }).toList();
+        notifications = response.isSuccess
+            ? (response.data as List<dynamic>?)
+                ?.map((n) {
+                  final m = n as Map<String, dynamic>;
+                  return {
+                    'id': m['id'],
+                    'title': m['title'] ?? 'Notification',
+                    'message': m['message'] ?? m['content'] ?? '',
+                    'type': m['type'] ?? 'general',
+                    'time': m['created_at'] ?? m['time'] ?? 'Recently',
+                    'isRead': m['is_read'] ?? m['isRead'] ?? false,
+                  };
+                }).toList() ??
+                []
+            : [];
         isLoading = false;
       });
     } catch (e) {
@@ -255,7 +259,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _markAsRead(int notificationId) async {
     try {
-      await ApiService().markNotificationRead(notificationId);
+      await ApiService.post('/api/notifications/$notificationId/read', {});
       setState(() {
         final index = notifications.indexWhere((n) => n['id'] == notificationId);
         if (index != -1) {

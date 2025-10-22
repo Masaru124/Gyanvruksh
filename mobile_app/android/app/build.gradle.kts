@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.gyanvruksh"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -30,27 +30,10 @@ android {
         versionName = flutter.versionName
     }
 
-    signingConfigs {
-        create("release") {
-            // TODO: Add your own signing config for the release build.
-            // To generate a signing key, run:
-            // keytool -genkey -v -keystore ~/key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias key
-            storeFile = file("../key.jks")
-            storePassword = "gyanvruksh123"
-            keyAlias = "key"
-            keyPassword = "gyanvruksh123"
-        }
-    }
-
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
-            // Signing with the release keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("release")
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-        debug {
+            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }

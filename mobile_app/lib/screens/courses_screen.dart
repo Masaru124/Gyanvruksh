@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/screens/video_player_screen.dart';
 import 'package:gyanvruksh/screens/lesson_screen.dart';
 import 'package:gyanvruksh/viewmodels/lesson_viewmodel.dart';
@@ -48,9 +48,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
       });
 
       // Use getEnrolledCourses to get enrolled courses - returns List<dynamic>
-      final courses = await ApiService().getEnrolledCourses();
+      final response = await ApiService.getEnrolledCourses();
       setState(() {
-        myCourses = courses; // courses is already List<dynamic>
+        myCourses = response.isSuccess ? (response.data as List<dynamic>?) ?? [] : [];
         isLoading = false;
       });
     } catch (e) {
@@ -69,17 +69,20 @@ class _CoursesScreenState extends State<CoursesScreen> {
       });
 
       // Use listCourses API to fetch all courses (not only available-for-enrollment)
-      final courses = await ApiService().listCourses();
+      final response = await ApiService.listCourses();
       // Debug log to check the response
-      print('Available courses response: $courses');
-      final List<Map<String, dynamic>> courseList = courses
-          .map((c) {
-            if (c is Map<String, dynamic>) return c;
-            if (c is Map) return Map<String, dynamic>.from(c);
-            return <String, dynamic>{};
-          })
-          .cast<Map<String, dynamic>>()
-          .toList();
+      print('Available courses response: $response');
+      final List<Map<String, dynamic>> courseList = response.isSuccess
+          ? (response.data as List<dynamic>?)
+                  ?.map((c) {
+                    if (c is Map<String, dynamic>) return c;
+                    if (c is Map) return Map<String, dynamic>.from(c);
+                    return <String, dynamic>{};
+                  })
+                  .cast<Map<String, dynamic>>()
+                  .toList() ??
+              []
+          : [];
       setState(() {
         availableCourses = courseList;
         isLoadingAvailable = false;
@@ -95,29 +98,24 @@ class _CoursesScreenState extends State<CoursesScreen> {
   Future<void> _enrollInCourse(int courseId, String courseTitle) async {
     setState(() => isEnrolling = true);
     try {
-      // Try the fixed enrollment method first
-      bool success = await ApiService().enrollInCourseFixed(courseId);
-      
-      // Fallback to original method if fixed one fails
-      if (!success) {
-        success = await ApiService().enrollInCourse(courseId);
-      }
-      
-      if (success) {
+      // Use the enhanced API service enrollment method
+      final response = await ApiService.enrollInCourse(courseId);
+
+      if (response.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Successfully enrolled in $courseTitle!')),
         );
         _loadCourses(); // Refresh to update enrollment status
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to enroll in course. Please try again.')),
+          SnackBar(content: Text(response.userMessage)),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Enrollment error: Please check your connection and try again')),
       );
-      print('Enrollment error: $e'); // For debugging
+      // Enrollment error: $e - logged for debugging
     } finally {
       setState(() => isEnrolling = false);
     }

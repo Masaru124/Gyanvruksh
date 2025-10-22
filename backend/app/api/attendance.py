@@ -425,3 +425,61 @@ def get_course_attendance_analytics(
             "attendance_percentage": round(session.attendance_percentage, 2)
         } for session in sessions]
     }
+
+# Additional missing endpoints that frontend expects
+
+@router.get("/lesson/{lesson_id}")
+def get_lesson_attendance(lesson_id: int, db: Session = Depends(get_db), teacher: User = Depends(verify_teacher)):
+    """Get attendance for a specific lesson (matches frontend API expectation)"""
+
+    # Get lesson and verify teacher access
+    lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+
+    course = db.query(Course).filter(
+        Course.id == lesson.course_id,
+        Course.teacher_id == teacher.id
+    ).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found or not owned by teacher")
+
+    # Get attendance records
+    attendance_records = db.query(Attendance).filter(
+        Attendance.lesson_id == lesson_id
+    ).all()
+
+    # Get all enrolled students
+    enrolled_students = db.query(User).join(Enrollment).filter(
+        Enrollment.course_id == lesson.course_id
+    ).all()
+
+    student_attendance = []
+    for student in enrolled_students:
+        attendance_record = next((a for a in attendance_records if a.student_id == student.id), None)
+        student_attendance.append({
+            "student_id": student.id,
+            "student_name": student.full_name,
+            "student_email": student.email,
+            "is_present": attendance_record.is_present if attendance_record else False,
+            "notes": attendance_record.notes if attendance_record else "",
+            "marked_at": attendance_record.created_at if attendance_record else None
+        })
+
+    # Calculate attendance statistics
+    total_students = len(enrolled_students)
+    present_students = sum(1 for s in student_attendance if s["is_present"])
+    attendance_percentage = (present_students / total_students * 100) if total_students > 0 else 0
+
+    return {
+        "lesson_id": lesson_id,
+        "lesson_title": lesson.title,
+        "course_title": course.title,
+        "total_students": total_students,
+        "present_students": present_students,
+        "absent_students": total_students - present_students,
+        "attendance_percentage": round(attendance_percentage, 2),
+        "student_attendance": student_attendance
+    }
+
+# The /mark endpoint already exists above

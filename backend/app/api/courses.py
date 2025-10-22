@@ -1,5 +1,4 @@
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.course import Course
@@ -11,7 +10,7 @@ from app.models.lesson import Lesson
 from app.models.chat_message import ChatMessage
 from app.schemas.course import CourseCreate, CourseOut, EnrollmentCreate, EnrollmentOut, CourseDetailOut
 from app.services.deps import get_current_user
-from typing import List
+from typing import List, Optional
 from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/api/courses", tags=["courses"])
@@ -559,3 +558,257 @@ def get_course_attendance_sessions(course_id: int, db: Session = Depends(get_db)
     except Exception as e:
         # If AttendanceSession table doesn't exist or query fails, return empty list
         return []
+
+
+@router.post("/admin/{course_id}/upload-video")
+def upload_course_video(
+    course_id: int,
+    title: str,
+    url: str,
+    description: str = None,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Upload a video for a course (Teachers and Admins only)"""
+    if user.role not in ["admin", "teacher"] and user.sub_role != "teacher":
+        raise HTTPException(status_code=403, detail="Only teachers and admins can upload course videos")
+
+    # Verify course exists and user has access
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    # Teachers can only upload to their own courses, admins can upload to any course
+    if user.role != "admin" and course.teacher_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to upload videos for this course")
+
+    # Create video record
+    video = CourseVideo(
+        course_id=course_id,
+        title=title,
+        url=url,
+        description=description
+    )
+    db.add(video)
+    db.commit()
+    db.refresh(video)
+
+    return {
+        "message": "Video uploaded successfully",
+        "video_id": video.id,
+        "title": video.title,
+        "url": video.url,
+        "description": video.description,
+        "uploaded_at": video.uploaded_at.isoformat()
+    }
+
+
+@router.post("/admin/{course_id}/upload-note")
+def upload_course_note(
+    course_id: int,
+    title: str,
+    content: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Upload a note/document for a course (Teachers and Admins only)"""
+    if user.role not in ["admin", "teacher"] and user.sub_role != "teacher":
+        raise HTTPException(status_code=403, detail="Only teachers and admins can upload course notes")
+
+    # Verify course exists and user has access
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    # Teachers can only upload to their own courses, admins can upload to any course
+    if user.role != "admin" and course.teacher_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to upload notes for this course")
+
+    # Create note record
+    note = CourseNote(
+        course_id=course_id,
+        title=title,
+        content=content
+    )
+    db.add(note)
+    db.commit()
+    db.refresh(note)
+
+    return {
+        "message": "Note uploaded successfully",
+        "note_id": note.id,
+        "title": note.title,
+        "content": note.content,
+        "uploaded_at": note.uploaded_at.isoformat()
+    }
+
+
+# Search and Filter endpoints
+@router.get("/search")
+def search_courses(
+    q: str = Query(..., description="Search query"),
+    category: Optional[str] = Query(None, description="Filter by category"),
+    difficulty: Optional[str] = Query(None, description="Filter by difficulty"),
+    min_rating: Optional[float] = Query(None, description="Minimum rating"),
+    max_price: Optional[float] = Query(None, description="Maximum price"),
+    sort_by: str = Query("relevance", description="Sort by: relevance, rating, price, popularity"),
+    limit: int = Query(20, description="Number of results"),
+    db: Session = Depends(get_db)
+):
+    """Search courses with advanced filtering and sorting"""
+    query = db.query(Course).filter(Course.is_published == True)
+
+    # Text search in title and description
+    if q:
+        search_term = f"%{q}%"
+        query = query.filter(
+            Course.title.ilike(search_term) |
+            Course.description.ilike(search_term)
+        )
+
+    # Category filter
+    if category:
+        query = query.filter(Course.category_id == category)
+
+    # Difficulty filter
+    if difficulty:
+        query = query.filter(Course.difficulty == difficulty)
+
+    # Rating filter
+    if min_rating:
+        query = query.filter(Course.rating >= min_rating)
+
+    # Sorting
+    if sort_by == "rating":
+        query = query.order_by(Course.rating.desc())
+    elif sort_by == "popularity":
+        query = query.order_by(Course.enrollment_count.desc())
+    elif sort_by == "price":
+        # Assuming courses have a price field, otherwise sort by rating
+        query = query.order_by(Course.rating.desc())
+    else:  # relevance
+        # For relevance, prioritize exact title matches
+        query = query.order_by(
+            Course.title.ilike(f"{q}%").desc(),
+            Course.rating.desc()
+        )
+
+    courses = query.limit(limit).all()
+
+    # Format results
+    results = []
+    for course in courses:
+        results.append({
+            "id": course.id,
+            "title": course.title,
+            "description": course.description,
+            "difficulty": course.difficulty,
+            "rating": course.rating,
+            "enrollment_count": course.enrollment_count,
+            "total_hours": course.total_hours,
+            "thumbnail_url": course.thumbnail_url,
+            "teacher_name": course.teacher.full_name if course.teacher else "Admin",
+            "category": course.category.name if course.category else None,
+            "is_enrolled": False  # Would need user context for this
+        })
+
+    return {
+        "query": q,
+        "total_results": len(results),
+        "courses": results
+    }
+
+
+@router.get("/filter")
+def filter_courses(
+    category: Optional[str] = Query(None, description="Category ID"),
+    difficulty: Optional[str] = Query(None, description="Difficulty level"),
+    min_rating: Optional[float] = Query(None, description="Minimum rating"),
+    sort_by: str = Query("rating", description="Sort by: rating, popularity, newest"),
+    limit: int = Query(20, description="Number of results"),
+    db: Session = Depends(get_db)
+):
+    """Filter courses with various criteria"""
+    query = db.query(Course).filter(Course.is_published == True)
+
+    # Apply filters
+    if category:
+        query = query.filter(Course.category_id == category)
+
+    if difficulty:
+        query = query.filter(Course.difficulty == difficulty)
+
+    if min_rating:
+        query = query.filter(Course.rating >= min_rating)
+
+    # Sorting
+    if sort_by == "rating":
+        query = query.order_by(Course.rating.desc())
+    elif sort_by == "popularity":
+        query = query.order_by(Course.enrollment_count.desc())
+    elif sort_by == "newest":
+        query = query.order_by(Course.created_at.desc())
+
+    courses = query.limit(limit).all()
+
+    # Format results (same as search)
+    results = []
+    for course in courses:
+        results.append({
+            "id": course.id,
+            "title": course.title,
+            "description": course.description,
+            "difficulty": course.difficulty,
+            "rating": course.rating,
+            "enrollment_count": course.enrollment_count,
+            "total_hours": course.total_hours,
+            "thumbnail_url": course.thumbnail_url,
+            "teacher_name": course.teacher.full_name if course.teacher else "Admin",
+            "category": course.category.name if course.category else None
+        })
+
+    return {
+        "filters_applied": {
+            "category": category,
+            "difficulty": difficulty,
+            "min_rating": min_rating,
+            "sort_by": sort_by
+        },
+        "total_results": len(results),
+        "courses": results
+    }
+
+# Alias endpoint for frontend compatibility - matches fuzzy match expectation
+@router.post("/courses/{course_id}/assign-teacher")
+def assign_teacher_to_course_frontend(
+    course_id: int,
+    teacher_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Assign a teacher to a course (frontend-compatible path)"""
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can assign teachers to courses")
+
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    teacher = db.query(User).filter(
+        User.id == teacher_id,
+        User.sub_role == "teacher",
+        User.is_active == True
+    ).first()
+    if not teacher:
+        raise HTTPException(status_code=404, detail="Active teacher not found")
+
+    course.teacher_id = teacher_id
+    db.commit()
+
+    return {
+        "message": "Teacher assigned successfully",
+        "course_id": course.id,
+        "course_title": course.title,
+        "teacher_id": teacher.id,
+        "teacher_name": teacher.full_name
+    }

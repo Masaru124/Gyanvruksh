@@ -6,6 +6,58 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'auth_storage.dart';
 
+/// API Response wrapper class for consistent error handling
+class ApiResponse {
+  final bool isSuccess;
+  final String userMessage;
+  final String technicalMessage;
+  final String operation;
+  final dynamic data;
+
+  ApiResponse._({
+    required this.isSuccess,
+    required this.userMessage,
+    required this.technicalMessage,
+    required this.operation,
+    this.data,
+  });
+
+  factory ApiResponse.success(String message, {dynamic data}) {
+    return ApiResponse._(
+      isSuccess: true,
+      userMessage: message,
+      technicalMessage: 'Success',
+      operation: 'API Call',
+      data: data,
+    );
+  }
+
+  factory ApiResponse.error({
+    required String userMessage,
+    required String technicalMessage,
+    required String operation,
+    dynamic data,
+  }) {
+    return ApiResponse._(
+      isSuccess: false,
+      userMessage: userMessage,
+      technicalMessage: technicalMessage,
+      operation: operation,
+      data: data,
+    );
+  }
+
+  /// Get the appropriate color for UI feedback
+  Color get feedbackColor {
+    return isSuccess ? Colors.green : Colors.red;
+  }
+
+  /// Get the appropriate icon for UI feedback
+  IconData get feedbackIcon {
+    return isSuccess ? Icons.check_circle : Icons.error;
+  }
+}
+
 /// Enhanced API Service with comprehensive error handling and user feedback
 class ApiService {
   // Local API URL for development
@@ -125,44 +177,17 @@ class ApiService {
     }
   }
 
-  /// Enhanced fetchMe with error handling
-  static Future<ApiResponse> _fetchMe() async {
-    if (_token == null) {
-      return ApiResponse.error(
-        userMessage: 'No authentication token found',
-        technicalMessage: 'Token is null during profile fetch',
-        operation: 'Profile Fetch',
-      );
-    }
-
-    try {
-      final res = await http.get(
-        Uri.parse('$baseUrl/api/auth/me'),
-        headers: {'Authorization': 'Bearer $_token'},
-      );
-
-      if (res.statusCode == 200) {
-        _me = jsonDecode(res.body);
-        return ApiResponse.success('Profile loaded successfully', data: _me);
-      } else if (res.statusCode == 401) {
-        // Token expired or invalid
-        _token = null;
-        _me = null;
-        return ApiResponse.error(
-          userMessage: 'Session expired. Please login again.',
-          technicalMessage: 'Token validation failed',
-          operation: 'Profile Fetch',
+  /// Get current user profile
+  static Future<ApiResponse> me() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/auth/me'),
+          headers: _getAuthHeaders(),
         );
-      } else {
-        return ApiResponse.error(
-          userMessage: 'Failed to load profile. Please try again.',
-          technicalMessage: 'HTTP ${res.statusCode}: ${res.body}',
-          operation: 'Profile Fetch',
-        );
-      }
-    } catch (e) {
-      return _handleError(e, 'Profile Fetch');
-    }
+      },
+      'Profile Fetch',
+    );
   }
 
   /// Enhanced logout with cleanup
@@ -384,8 +409,210 @@ class ApiService {
     }
   }
 
-  // Existing methods with enhanced error handling would go here...
-  // For brevity, I'll show the pattern with a few key methods
+  /// Register a new user
+  static Future<ApiResponse> register({
+    required String email,
+    required String password,
+    required String fullName,
+    int? age,
+    String? gender,
+    required String role,
+    required String subRole,
+    String? educationalQualification,
+    String? preferredLanguage,
+    String? phoneNumber,
+    String? address,
+    String? emergencyContact,
+    String? aadharCard,
+    String? accountDetails,
+    DateTime? dob,
+    String? maritalStatus,
+    int? yearOfExperience,
+    String? parentsContactDetails,
+    String? parentsEmail,
+    String? sellerType,
+    String? companyId,
+    String? sellerRecord,
+    String? companyDetails,
+    bool isTeacher = false,
+  }) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/auth/register'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'email': email,
+            'password': password,
+            'full_name': fullName,
+            'age': age,
+            'gender': gender,
+            'role': role,
+            'sub_role': subRole,
+            'educational_qualification': educationalQualification,
+            'preferred_language': preferredLanguage,
+            'phone_number': phoneNumber,
+            'address': address,
+            'emergency_contact': emergencyContact,
+            'aadhar_card': aadharCard,
+            'account_details': accountDetails,
+            'dob': dob?.toIso8601String(),
+            'marital_status': maritalStatus,
+            'year_of_experience': yearOfExperience,
+            'parents_contact_details': parentsContactDetails,
+            'parents_email': parentsEmail,
+            'seller_type': sellerType,
+            'company_id': companyId,
+            'seller_record': sellerRecord,
+            'company_details': companyDetails,
+            'is_teacher': isTeacher,
+          }),
+        );
+      },
+      'User Registration',
+    );
+  }
+
+  /// Get today's schedule
+  static Future<ApiResponse> getTodaySchedule() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/courses/teacher/upcoming-classes'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Today Schedule',
+    );
+  }
+
+  /// Get student progress report
+  static Future<ApiResponse> getStudentProgressReport() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/progress/report'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Student Progress Report',
+    );
+  }
+
+  /// Get student queries for teachers
+  static Future<ApiResponse> studentQueries() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/courses/teacher/student-queries'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Student Queries',
+    );
+  }
+
+  /// List all users
+  static Future<ApiResponse> listUsers() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/users'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'List Users',
+    );
+  }
+
+  /// Get all available courses
+  static Future<ApiResponse> listCourses() async {
+    return _apiCall(
+      () async {
+        return await http.get(Uri.parse('$baseUrl/api/courses/'));
+      },
+      'List Courses',
+    );
+  }
+
+  /// Get user's enrolled courses
+  static Future<ApiResponse> myCourses() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/courses/mine'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'My Courses',
+    );
+  }
+
+  /// Create a new course
+  static Future<ApiResponse> createCourse(String title, String description) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/courses/'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({'title': title, 'description': description}),
+        );
+      },
+      'Create Course',
+    );
+  }
+
+  /// Get available courses for enrollment
+  static Future<ApiResponse> availableCourses() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/courses/available'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Available Courses',
+    );
+  }
+
+  /// Select a course (for teachers)
+  static Future<ApiResponse> selectCourse(int courseId) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/courses/$courseId/select'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Select Course',
+    );
+  }
+
+  /// Get teacher dashboard statistics
+  static Future<ApiResponse> teacherStats() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/courses/teacher/stats'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Teacher Stats',
+    );
+  }
+
+  /// Get upcoming classes for teachers
+  static Future<ApiResponse> upcomingClasses() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/courses/teacher/upcoming-classes'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Upcoming Classes',
+    );
+  }
 
   /// Enhanced course enrollment with error handling
   static Future<ApiResponse> enrollInCourse(int courseId) async {
@@ -393,42 +620,524 @@ class ApiService {
       () async {
         return await http.post(
           Uri.parse('$baseUrl/api/student/courses/$courseId/enroll'),
-          headers: {
-            'Authorization': 'Bearer ${_token ?? ''}',
-            'Content-Type': 'application/json',
-          },
+          headers: _getAuthHeaders(),
         );
       },
       'Course Enrollment',
     );
   }
 
-  /// Enhanced assignment submission with error handling
-  static Future<ApiResponse> submitAssignment({
-    required int assignmentId,
-    required String content,
-    String? attachmentPath,
-  }) async {
+  /// Get enrolled courses
+  static Future<ApiResponse> getEnrolledCourses() async {
     return _apiCall(
       () async {
-        var request = http.MultipartRequest(
-          'POST',
-          Uri.parse('$baseUrl/api/assignments/$assignmentId/submit'),
+        return await http.get(
+          Uri.parse('$baseUrl/api/courses/enrolled'),
+          headers: _getAuthHeaders(),
         );
-
-        request.headers['Authorization'] = 'Bearer ${_token ?? ''}';
-        request.fields['content'] = content;
-
-        if (attachmentPath != null) {
-          request.files.add(
-            await http.MultipartFile.fromPath('file', attachmentPath),
-          );
-        }
-
-        final streamedResponse = await request.send();
-        return await http.Response.fromStream(streamedResponse);
       },
-      'Assignment Submission',
+      'Enrolled Courses',
+    );
+  }
+
+  /// Unenroll from a course
+  static Future<ApiResponse> unenrollFromCourse(int courseId) async {
+    return _apiCall(
+      () async {
+        return await http.delete(
+          Uri.parse('$baseUrl/api/courses/enroll/$courseId'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Unenroll from Course',
+    );
+  }
+
+  /// Get courses available for enrollment
+  static Future<ApiResponse> getAvailableCoursesForEnrollment() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/courses/available-for-enrollment'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Available for Enrollment',
+    );
+  }
+
+  /// Get course details
+  static Future<ApiResponse> getCourseDetails(int courseId) async {
+    return _apiCall(
+      () async {
+        return await http.get(Uri.parse('$baseUrl/api/courses/$courseId/details'));
+      },
+      'Course Details',
+    );
+  }
+
+  /// Get course notes
+  static Future<ApiResponse> getCourseNotes(int courseId) async {
+    return _apiCall(
+      () async {
+        return await http.get(Uri.parse('$baseUrl/api/courses/$courseId/notes'));
+      },
+      'Course Notes',
+    );
+  }
+
+  /// Get categories
+  static Future<ApiResponse> getCategories() async {
+    return _apiCall(
+      () async {
+        return await http.get(Uri.parse('$baseUrl/api/categories/'));
+      },
+      'Categories',
+    );
+  }
+
+  /// Get lessons for a course
+  static Future<ApiResponse> getLessons({int? courseId}) async {
+    return _apiCall(
+      () async {
+        final uri = Uri.parse('$baseUrl/api/lessons/').replace(queryParameters: {
+          if (courseId != null) 'course_id': courseId.toString(),
+        });
+        return await http.get(uri);
+      },
+      'Course Lessons',
+    );
+  }
+
+  /// Get lesson details
+  static Future<ApiResponse> getLesson(int lessonId) async {
+    return _apiCall(
+      () async {
+        return await http.get(Uri.parse('$baseUrl/api/lessons/$lessonId'));
+      },
+      'Lesson Details',
+    );
+  }
+
+  /// Create a lesson
+  static Future<ApiResponse> createLesson(int courseId, String title, String description, String contentType,
+      {String? contentUrl, String? contentText, int durationMinutes = 0, int orderIndex = 0, bool isFree = false}) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/lessons/'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({
+            'course_id': courseId,
+            'title': title,
+            'description': description,
+            'content_type': contentType,
+            'content_url': contentUrl,
+            'content_text': contentText,
+            'duration_minutes': durationMinutes,
+            'order_index': orderIndex,
+            'is_free': isFree,
+          }),
+        );
+      },
+      'Create Lesson',
+    );
+  }
+
+  /// Get quizzes for a course
+  static Future<ApiResponse> getQuizzes({int? courseId}) async {
+    return _apiCall(
+      () async {
+        final uri = Uri.parse('$baseUrl/api/quizzes/').replace(queryParameters: {
+          if (courseId != null) 'course_id': courseId.toString(),
+        });
+        return await http.get(uri);
+      },
+      'Course Quizzes',
+    );
+  }
+
+  /// Get quiz details
+  static Future<ApiResponse> getQuiz(int quizId) async {
+    return _apiCall(
+      () async {
+        return await http.get(Uri.parse('$baseUrl/api/quizzes/$quizId'));
+      },
+      'Quiz Details',
+    );
+  }
+
+  /// Get quiz questions
+  static Future<ApiResponse> getQuizQuestions(int quizId) async {
+    return _apiCall(
+      () async {
+        return await http.get(Uri.parse('$baseUrl/api/quizzes/$quizId/questions'));
+      },
+      'Quiz Questions',
+    );
+  }
+
+  /// Submit quiz attempt
+  static Future<ApiResponse> submitQuizAttempt(int quizId, Map<String, dynamic> answers) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/quizzes/$quizId/attempt'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({'answers': answers}),
+        );
+      },
+      'Submit Quiz',
+    );
+  }
+
+  /// Get quiz attempts
+  static Future<ApiResponse> getQuizAttempts(int quizId) async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/quizzes/$quizId/attempts'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Quiz Attempts',
+    );
+  }
+
+  /// Get course progress
+  static Future<ApiResponse> getCourseProgress(int courseId) async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/progress/courses/$courseId'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Course Progress',
+    );
+  }
+
+  /// Update lesson progress
+  static Future<ApiResponse> updateLessonProgress(int courseId, int lessonId, double progressPercentage,
+      {bool completed = false, int timeSpentMinutes = 0}) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/progress/courses/$courseId/lessons/$lessonId'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({
+            'progress_percentage': progressPercentage,
+            'completed': completed,
+            'time_spent_minutes': timeSpentMinutes,
+          }),
+        );
+      },
+      'Update Lesson Progress',
+    );
+  }
+
+  /// Get user preferences
+  static Future<ApiResponse> getUserPreferences() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/progress/preferences'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'User Preferences',
+    );
+  }
+
+  /// Update user preferences
+  static Future<ApiResponse> updateUserPreferences({
+    List<String>? preferredCategories,
+    String? skillLevel,
+    List<String>? learningGoals,
+    int? dailyStudyTime,
+    bool? notificationsEnabled,
+  }) async {
+    final updateData = <String, dynamic>{};
+    if (preferredCategories != null) updateData['preferred_categories'] = jsonEncode(preferredCategories);
+    if (skillLevel != null) updateData['skill_level'] = skillLevel;
+    if (learningGoals != null) updateData['learning_goals'] = jsonEncode(learningGoals);
+    if (dailyStudyTime != null) updateData['daily_study_time'] = dailyStudyTime;
+    if (notificationsEnabled != null) updateData['notifications_enabled'] = notificationsEnabled;
+
+    return _apiCall(
+      () async {
+        return await http.put(
+          Uri.parse('$baseUrl/api/progress/preferences'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode(updateData),
+        );
+      },
+      'Update User Preferences',
+    );
+  }
+
+  /// Get recommended courses for student
+  static Future<ApiResponse> getRecommendedCourses() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/courses/recommended'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Recommended Courses',
+    );
+  }
+
+  /// Update course details
+  static Future<ApiResponse> updateCourseDetails({
+    required int courseId,
+    required String title,
+    required String description,
+    int? totalHours,
+    String? difficulty,
+    String? thumbnailUrl,
+    bool? isPublished,
+  }) async {
+    final updateData = <String, dynamic>{
+      'title': title,
+      'description': description,
+    };
+
+    if (totalHours != null) updateData['total_hours'] = totalHours;
+    if (difficulty != null) updateData['difficulty'] = difficulty;
+    if (thumbnailUrl != null) updateData['thumbnail_url'] = thumbnailUrl;
+    if (isPublished != null) updateData['is_published'] = isPublished;
+
+    return _apiCall(
+      () async {
+        return await http.put(
+          Uri.parse('$baseUrl/api/courses/$courseId'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode(updateData),
+        );
+      },
+      'Update Course Details',
+    );
+  }
+
+  /// Update course
+  static Future<ApiResponse> updateCourse(
+    int courseId,
+    String title,
+    String description,
+  ) async {
+    return _apiCall(
+      () async {
+        return await http.put(
+          Uri.parse('$baseUrl/api/courses/$courseId'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({
+            'title': title,
+            'description': description,
+          }),
+        );
+      },
+      'Update Course',
+    );
+  }
+
+  /// Delete course
+  static Future<ApiResponse> deleteCourse(int courseId) async {
+    return _apiCall(
+      () async {
+        return await http.delete(
+          Uri.parse('$baseUrl/api/courses/$courseId'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Delete Course',
+    );
+  }
+
+  /// Delete user
+  static Future<ApiResponse> deleteUser(int userId) async {
+    return _apiCall(
+      () async {
+        return await http.delete(
+          Uri.parse('$baseUrl/api/users/$userId'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Delete User',
+    );
+  }
+
+  /// Assign teacher to course
+  static Future<ApiResponse> assignTeacherToCourse(int courseId, int teacherId) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/courses/$courseId/assign-teacher'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({'teacher_id': teacherId}),
+        );
+      },
+      'Assign Teacher',
+    );
+  }
+
+  /// Upload course video
+  static Future<ApiResponse> uploadCourseVideo(
+    int courseId,
+    String title,
+    String url, {
+    String? description,
+  }) async {
+    final data = <String, dynamic>{
+      'title': title,
+      'url': url,
+    };
+    if (description != null) data['description'] = description;
+
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/courses/$courseId/videos'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode(data),
+        );
+      },
+      'Upload Course Video',
+    );
+  }
+
+  /// Upload course note
+  static Future<ApiResponse> uploadCourseNote(
+    int courseId,
+    String title,
+    String content,
+  ) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/courses/$courseId/notes'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({
+            'title': title,
+            'content': content,
+          }),
+        );
+      },
+      'Upload Course Note',
+    );
+  }
+
+  /// Update course video
+  static Future<ApiResponse> updateCourseVideo(
+    int courseId,
+    int videoId,
+    String title,
+    String url, {
+    String? description,
+  }) async {
+    final data = <String, dynamic>{
+      'title': title,
+      'url': url,
+    };
+    if (description != null) data['description'] = description;
+
+    return _apiCall(
+      () async {
+        return await http.put(
+          Uri.parse('$baseUrl/api/courses/$courseId/videos/$videoId'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode(data),
+        );
+      },
+      'Update Course Video',
+    );
+  }
+
+  /// Delete course video
+  static Future<ApiResponse> deleteCourseVideo(int courseId, int videoId) async {
+    return _apiCall(
+      () async {
+        return await http.delete(
+          Uri.parse('$baseUrl/api/courses/$courseId/videos/$videoId'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Delete Course Video',
+    );
+  }
+
+  /// Update course note
+  static Future<ApiResponse> updateCourseNote(
+    int courseId,
+    int noteId,
+    String title,
+    String content,
+  ) async {
+    return _apiCall(
+      () async {
+        return await http.put(
+          Uri.parse('$baseUrl/api/courses/$courseId/notes/$noteId'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({
+            'title': title,
+            'content': content,
+          }),
+        );
+      },
+      'Update Course Note',
+    );
+  }
+
+  /// Delete course note
+  static Future<ApiResponse> deleteCourseNote(int courseId, int noteId) async {
+    return _apiCall(
+      () async {
+        return await http.delete(
+          Uri.parse('$baseUrl/api/courses/$courseId/notes/$noteId'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Delete Course Note',
+    );
+  }
+
+  /// Get notifications
+  static Future<ApiResponse> getNotifications() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/notifications'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Notifications',
+    );
+  }
+
+  /// Get leaderboard
+  static Future<ApiResponse> getLeaderboard() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/gyanvruksh/leaderboard'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Leaderboard',
+    );
+  }
+
+  /// Get user profile
+  static Future<ApiResponse> getProfile() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/gyanvruksh/profile'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'User Profile',
     );
   }
 
@@ -457,15 +1166,322 @@ class ApiService {
       () async {
         return await http.patch(
           Uri.parse('$baseUrl/api/users/profile'),
-          headers: {
-            'Authorization': 'Bearer ${_token ?? ''}',
-            'Content-Type': 'application/json',
-          },
+          headers: _getAuthHeaders(),
           body: jsonEncode(updateData),
         );
       },
       'Profile Update',
     );
+  }
+
+  /// Get student dashboard statistics
+  static Future<ApiResponse> getStudentDashboard() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/student/dashboard/stats'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Student Dashboard',
+    );
+  }
+
+  /// Generic GET request
+  static Future<ApiResponse> get(String endpoint) async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl$endpoint'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'GET Request',
+    );
+  }
+
+  /// Generic POST request
+  static Future<ApiResponse> post(String endpoint, Map<String, dynamic> data) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl$endpoint'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode(data),
+        );
+      },
+      'POST Request',
+    );
+  }
+
+  /// Get personalization data
+  static Future<ApiResponse> getPersonalizationData() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/gyanvruksh/personalization'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Personalization Data',
+    );
+  }
+
+  /// Update personalization data
+  static Future<ApiResponse> updatePersonalizationData(Map<String, dynamic> data) async {
+    return _apiCall(
+      () async {
+        return await http.put(
+          Uri.parse('$baseUrl/api/gyanvruksh/personalization'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode(data),
+        );
+      },
+      'Update Personalization Data',
+    );
+  }
+
+  /// Get teacher performance analytics
+  static Future<ApiResponse> getTeacherPerformanceAnalytics() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/teacher/performance-analytics'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Teacher Performance Analytics',
+    );
+  }
+
+  /// Get student management data for teachers
+  static Future<ApiResponse> getStudentManagementData() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/teacher/student-management'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Student Management Data',
+    );
+  }
+
+  /// Get teacher messages
+  static Future<ApiResponse> getTeacherMessages() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/teacher/messages'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Teacher Messages',
+    );
+  }
+
+  /// Get content library for teachers
+  static Future<ApiResponse> getContentLibrary() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/teacher/content-library'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Content Library',
+    );
+  }
+
+  /// Create announcement
+  static Future<ApiResponse> createAnnouncement(String title, String content, {int? courseId, int? classId}) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/teacher/announcements'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({
+            'title': title,
+            'content': content,
+            'course_id': courseId,
+            'class_id': classId,
+          }),
+        );
+      },
+      'Create Announcement',
+    );
+  }
+
+  /// Get student assignments
+  static Future<ApiResponse> getStudentAssignments() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/teacher/assignments'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Student Assignments',
+    );
+  }
+
+  /// Grade assignment
+  static Future<ApiResponse> gradeAssignment(int assignmentId, int studentId, double grade, {String? feedback}) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/teacher/assignments/$assignmentId/grade'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({
+            'student_id': studentId,
+            'grade': grade,
+            'feedback': feedback,
+          }),
+        );
+      },
+      'Grade Assignment',
+    );
+  }
+
+  /// Create assignment
+  static Future<ApiResponse> createAssignment(String title, String description, String courseId, DateTime dueDate) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/teacher/assignments'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({
+            'title': title,
+            'description': description,
+            'course_id': courseId,
+            'due_date': dueDate.toIso8601String(),
+          }),
+        );
+      },
+      'Create Assignment',
+    );
+  }
+
+  /// Upload content
+  static Future<ApiResponse> uploadContent(String title, String description, String contentType, {int? courseId}) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/teacher/upload-content'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({
+            'title': title,
+            'description': description,
+            'content_type': contentType,
+            'course_id': courseId,
+          }),
+        );
+      },
+      'Upload Content',
+    );
+  }
+
+  /// Get teacher quizzes
+  static Future<ApiResponse> getTeacherQuizzes() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/teacher/quizzes'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Get Teacher Quizzes',
+    );
+  }
+
+  /// Create quiz
+  static Future<ApiResponse> createQuiz({
+    required String title,
+    required String description,
+    required int courseId,
+    required int timeLimit,
+    required List<dynamic> questions,
+  }) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/teacher/quizzes'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({
+            'title': title,
+            'description': description,
+            'course_id': courseId,
+            'time_limit': timeLimit,
+            'questions': questions,
+          }),
+        );
+      },
+      'Create Quiz',
+    );
+  }
+
+  /// Update quiz status
+  static Future<ApiResponse> updateQuizStatus(int quizId, bool isPublished) async {
+    return _apiCall(
+      () async {
+        return await http.patch(
+          Uri.parse('$baseUrl/api/teacher/quizzes/$quizId/status'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({
+            'is_published': isPublished,
+          }),
+        );
+      },
+      'Update Quiz Status',
+    );
+  }
+
+  /// Helper method to get authentication headers
+  static Map<String, String> _getAuthHeaders() {
+    return {
+      'Authorization': 'Bearer ${_token ?? ''}',
+      'Content-Type': 'application/json',
+    };
+  }
+
+  /// Enhanced fetchMe with error handling
+  static Future<ApiResponse> _fetchMe() async {
+    if (_token == null) {
+      return ApiResponse.error(
+        userMessage: 'No authentication token found',
+        technicalMessage: 'Token is null during profile fetch',
+        operation: 'Profile Fetch',
+      );
+    }
+
+    try {
+      final res = await http.get(
+        Uri.parse('$baseUrl/api/auth/me'),
+        headers: {'Authorization': 'Bearer $_token'},
+      );
+
+      if (res.statusCode == 200) {
+        _me = jsonDecode(res.body);
+        return ApiResponse.success('Profile loaded successfully', data: _me);
+      } else if (res.statusCode == 401) {
+        // Token expired or invalid
+        _token = null;
+        _me = null;
+        return ApiResponse.error(
+          userMessage: 'Session expired. Please login again.',
+          technicalMessage: 'Token validation failed',
+          operation: 'Profile Fetch',
+        );
+      } else {
+        return ApiResponse.error(
+          userMessage: 'Failed to load profile. Please try again.',
+          technicalMessage: 'HTTP ${res.statusCode}: ${res.body}',
+          operation: 'Profile Fetch',
+        );
+      }
+    } catch (e) {
+      return _handleError(e, 'Profile Fetch');
+    }
   }
 
   // Getter for current user data
@@ -474,58 +1490,168 @@ class ApiService {
   // Getter for current token
   static String? get currentToken => _token;
 
-  // Check if user is authenticated
-  static bool get isAuthenticated => _token != null && _me != null;
-}
-
-/// API Response wrapper class for consistent error handling
-class ApiResponse {
-  final bool isSuccess;
-  final String userMessage;
-  final String technicalMessage;
-  final String operation;
-  final dynamic data;
-
-  ApiResponse._({
-    required this.isSuccess,
-    required this.userMessage,
-    required this.technicalMessage,
-    required this.operation,
-    this.data,
-  });
-
-  factory ApiResponse.success(String message, {dynamic data}) {
-    return ApiResponse._(
-      isSuccess: true,
-      userMessage: message,
-      technicalMessage: 'Success',
-      operation: 'API Call',
-      data: data,
+  /// Get student statistics
+  static Future<ApiResponse> getStudentStats() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/student/stats'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Student Stats',
     );
   }
 
-  factory ApiResponse.error({
-    required String userMessage,
-    required String technicalMessage,
-    required String operation,
-    dynamic data,
-  }) {
-    return ApiResponse._(
-      isSuccess: false,
-      userMessage: userMessage,
-      technicalMessage: technicalMessage,
-      operation: operation,
-      data: data,
+  /// Get student recommended courses
+  static Future<ApiResponse> getStudentRecommendedCourses() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/student/recommended-courses'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Student Recommended Courses',
     );
   }
 
-  /// Get the appropriate color for UI feedback
-  Color get feedbackColor {
-    return isSuccess ? Colors.green : Colors.red;
+  /// Get learning path for student
+  static Future<ApiResponse> getLearningPath() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/student/learning-path'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Learning Path',
+    );
   }
 
-  /// Get the appropriate icon for UI feedback
-  IconData get feedbackIcon {
-    return isSuccess ? Icons.check_circle : Icons.error;
+  /// Get student achievements
+  static Future<ApiResponse> getStudentAchievements() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/student/achievements'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Student Achievements',
+    );
+  }
+
+  /// Get upcoming deadlines for student
+  static Future<ApiResponse> getUpcomingDeadlines() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/student/upcoming-deadlines'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Upcoming Deadlines',
+    );
+  }
+
+  /// Get student progress report
+  static Future<ApiResponse> getProgressReport() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/student/progress-report'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Progress Report',
+    );
+  }
+
+  /// Get study groups
+  static Future<ApiResponse> getStudyGroups() async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/study-groups'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Study Groups',
+    );
+  }
+
+  /// Enhanced course enrollment with detailed response
+  static Future<ApiResponse> enrollInCourseDetailed(int courseId) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/student/courses/$courseId/enroll-detailed'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Detailed Course Enrollment',
+    );
+  }
+
+  /// Generate study plan
+  static Future<ApiResponse> generateStudyPlan(int courseId, DateTime targetDate, int dailyStudyHours) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/student/generate-study-plan'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({
+            'course_id': courseId,
+            'target_date': targetDate.toIso8601String(),
+            'daily_study_hours': dailyStudyHours,
+          }),
+        );
+      },
+      'Generate Study Plan',
+    );
+  }
+
+  /// Join study group
+  static Future<ApiResponse> joinStudyGroup(int groupId) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/study-groups/$groupId/join'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Join Study Group',
+    );
+  }
+
+  /// Ask doubt
+  static Future<ApiResponse> askDoubt(String question, int courseId) async {
+    return _apiCall(
+      () async {
+        return await http.post(
+          Uri.parse('$baseUrl/api/student/ask-doubt'),
+          headers: _getAuthHeaders(),
+          body: jsonEncode({
+            'question': question,
+            'course_id': courseId,
+          }),
+        );
+      },
+      'Ask Doubt',
+    );
+  }
+
+  /// Get course enrollments
+  static Future<ApiResponse> getCourseEnrollments(int courseId) async {
+    return _apiCall(
+      () async {
+        return await http.get(
+          Uri.parse('$baseUrl/api/courses/$courseId/enrollments'),
+          headers: _getAuthHeaders(),
+        );
+      },
+      'Course Enrollments',
+    );
   }
 }

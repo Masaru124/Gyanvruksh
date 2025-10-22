@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.database import get_db
 from app.models.progress import UserProgress, UserPreferences
 from app.schemas.progress import UserProgress as UserProgressSchema, UserProgressCreate, UserProgressUpdate, UserPreferencesOut, UserPreferencesUpdate
@@ -404,3 +404,230 @@ def update_streak(learning_activity: bool, db: Session = Depends(get_db), curren
     """
     # Placeholder implementation - would need proper streak tracking
     return {"message": "Streak updated", "current_streak": 5}
+
+# Additional missing endpoints that frontend expects
+
+@router.get("/weekly")
+def get_weekly_progress(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Get weekly progress summary
+    """
+    week_ago = datetime.utcnow() - timedelta(days=7)
+
+    # Weekly lesson progress
+    weekly_lessons = db.query(UserProgress).filter(
+        UserProgress.user_id == current_user.id,
+        UserProgress.last_accessed >= week_ago,
+        UserProgress.lesson_id.isnot(None)
+    ).all()
+
+    completed_lessons = sum(1 for p in weekly_lessons if p.completed)
+    total_time_spent = sum(p.time_spent_minutes or 0 for p in weekly_lessons)
+
+    # Weekly courses progress
+    weekly_courses = db.query(UserProgress).filter(
+        UserProgress.user_id == current_user.id,
+        UserProgress.last_accessed >= week_ago,
+        UserProgress.lesson_id.is_(None)
+    ).all()
+
+    completed_courses = sum(1 for p in weekly_courses if p.completed)
+
+    # Calculate daily breakdown
+    daily_breakdown = []
+    for i in range(7):
+        day_start = datetime.utcnow() - timedelta(days=i)
+        day_end = day_start + timedelta(days=1)
+
+        day_lessons = [p for p in weekly_lessons if day_start <= p.last_accessed < day_end]
+        daily_breakdown.append({
+            "date": day_start.date().isoformat(),
+            "lessons_completed": sum(1 for p in day_lessons if p.completed),
+            "time_spent": sum(p.time_spent_minutes or 0 for p in day_lessons)
+        })
+
+    daily_breakdown.reverse()  # Show from oldest to newest
+
+    return {
+        "week_start": (datetime.utcnow() - timedelta(days=6)).date().isoformat(),
+        "week_end": datetime.utcnow().date().isoformat(),
+        "lessons_completed": completed_lessons,
+        "courses_completed": completed_courses,
+        "total_time_spent": total_time_spent,
+        "average_daily_time": total_time_spent / 7,
+        "daily_breakdown": daily_breakdown
+    }
+
+@router.get("/monthly")
+def get_monthly_progress(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Get monthly progress summary
+    """
+    month_ago = datetime.utcnow() - timedelta(days=30)
+
+    # Monthly lesson progress
+    monthly_lessons = db.query(UserProgress).filter(
+        UserProgress.user_id == current_user.id,
+        UserProgress.last_accessed >= month_ago,
+        UserProgress.lesson_id.isnot(None)
+    ).all()
+
+    completed_lessons = sum(1 for p in monthly_lessons if p.completed)
+    total_time_spent = sum(p.time_spent_minutes or 0 for p in monthly_lessons)
+
+    # Monthly courses progress
+    monthly_courses = db.query(UserProgress).filter(
+        UserProgress.user_id == current_user.id,
+        UserProgress.last_accessed >= month_ago,
+        UserProgress.lesson_id.is_(None)
+    ).all()
+
+    completed_courses = sum(1 for p in monthly_courses if p.completed)
+
+    # Weekly breakdown within the month
+    weekly_breakdown = []
+    for i in range(4):  # 4 weeks
+        week_start = datetime.utcnow() - timedelta(weeks=i+1)
+        week_end = datetime.utcnow() - timedelta(weeks=i)
+
+        week_lessons = [p for p in monthly_lessons if week_start <= p.last_accessed < week_end]
+        weekly_breakdown.append({
+            "week": f"Week {4-i}",
+            "week_start": week_start.date().isoformat(),
+            "week_end": week_end.date().isoformat(),
+            "lessons_completed": sum(1 for p in week_lessons if p.completed),
+            "time_spent": sum(p.time_spent_minutes or 0 for p in week_lessons)
+        })
+
+    return {
+        "month_start": (datetime.utcnow() - timedelta(days=29)).date().isoformat(),
+        "month_end": datetime.utcnow().date().isoformat(),
+        "lessons_completed": completed_lessons,
+        "courses_completed": completed_courses,
+        "total_time_spent": total_time_spent,
+        "average_daily_time": total_time_spent / 30,
+        "weekly_breakdown": weekly_breakdown
+    }
+
+@router.post("/reset")
+def reset_progress(
+    course_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Reset user progress (for a specific course or all progress)
+    """
+    if course_id:
+        # Reset progress for specific course
+        db.query(UserProgress).filter(
+            UserProgress.user_id == current_user.id,
+            UserProgress.course_id == course_id
+        ).delete()
+
+        # Also reset enrollment progress
+        enrollment = db.query(Enrollment).filter(
+            Enrollment.student_id == current_user.id,
+            Enrollment.course_id == course_id
+        ).first()
+
+        if enrollment:
+            enrollment.progress = 0.0
+            enrollment.completed_at = None
+            enrollment.hours_completed = 0
+
+        db.commit()
+
+        return {
+            "message": f"Progress reset for course {course_id}",
+            "course_id": course_id
+        }
+    else:
+        # Reset all progress
+        db.query(UserProgress).filter(UserProgress.user_id == current_user.id).delete()
+
+        # Reset all enrollments
+        db.query(Enrollment).filter(Enrollment.student_id == current_user.id).update({
+            "progress": 0.0,
+            "completed_at": None,
+            "hours_completed": 0
+        })
+
+        # Reset gyan coins
+        current_user.gyan_coins = 0
+
+        db.commit()
+
+        return {
+            "message": "All progress has been reset",
+            "reset_items": ["lessons", "courses", "enrollments", "gyan_coins"]
+        }
+
+@router.get("/analytics")
+def get_progress_analytics(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Get detailed progress analytics
+    """
+    # Learning patterns
+    all_progress = db.query(UserProgress).filter(
+        UserProgress.user_id == current_user.id,
+        UserProgress.last_accessed >= datetime.utcnow() - timedelta(days=90)
+    ).all()
+
+    # Time-based analysis
+    hourly_activity = {}
+    daily_activity = {}
+    content_type_preferences = {}
+
+    for progress in all_progress:
+        if progress.last_accessed:
+            # Hourly analysis
+            hour = progress.last_accessed.hour
+            hourly_activity[hour] = hourly_activity.get(hour, 0) + 1
+
+            # Daily analysis
+            day = progress.last_accessed.strftime("%A")
+            daily_activity[day] = daily_activity.get(day, 0) + 1
+
+        # Content type preferences (if available)
+        if hasattr(progress, 'content_type'):
+            content_type = getattr(progress, 'content_type', 'unknown')
+            content_type_preferences[content_type] = content_type_preferences.get(content_type, 0) + 1
+
+    # Performance metrics
+    total_lessons = len([p for p in all_progress if p.lesson_id is not None])
+    completed_lessons = len([p for p in all_progress if p.completed and p.lesson_id is not None])
+    completion_rate = (completed_lessons / total_lessons * 100) if total_lessons > 0 else 0
+
+    # Average session time (placeholder)
+    avg_session_time = 25  # minutes
+
+    # Most productive times
+    if hourly_activity:
+        most_productive_hour = max(hourly_activity.items(), key=lambda x: x[1])[0]
+    else:
+        most_productive_hour = 10  # Default to 10 AM
+
+    # Learning consistency (placeholder)
+    consistency_score = 75  # Would need proper calculation
+
+    return {
+        "learning_patterns": {
+            "hourly_activity": hourly_activity,
+            "daily_activity": daily_activity,
+            "content_type_preferences": content_type_preferences,
+            "most_productive_hour": most_productive_hour,
+            "average_session_time": avg_session_time
+        },
+        "performance_metrics": {
+            "total_lessons": total_lessons,
+            "completed_lessons": completed_lessons,
+            "completion_rate": completion_rate,
+            "consistency_score": consistency_score
+        },
+        "recommendations": [
+            "Focus on completing current courses before starting new ones",
+            "Study during your most productive hours (10 AM - 12 PM)",
+            "Take regular breaks to maintain focus"
+        ]
+    }

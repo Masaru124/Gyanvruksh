@@ -59,7 +59,7 @@ class ChatWebSocketService {
       // Close existing connection if any
       await disconnect();
 
-      final wsUrl = 'ws://${_baseUrl.replaceFirst('https://', '')}/api/chat/ws/$roomId?token=$_accessToken';
+      final wsUrl = 'wss://${_baseUrl.replaceFirst('https://', '').replaceFirst('http://', '')}/api/chat/ws/$roomId?token=$_accessToken';
 
       debugPrint('ChatWebSocket: Connecting to $wsUrl');
 

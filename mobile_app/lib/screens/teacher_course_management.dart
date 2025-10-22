@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
 import 'package:gyanvruksh/screens/attendance_management.dart';
 import 'package:gyanvruksh/screens/create_course.dart';
@@ -9,10 +9,12 @@ class TeacherCourseManagementScreen extends StatefulWidget {
   const TeacherCourseManagementScreen({super.key});
 
   @override
-  State<TeacherCourseManagementScreen> createState() => _TeacherCourseManagementScreenState();
+  State<TeacherCourseManagementScreen> createState() =>
+      _TeacherCourseManagementScreenState();
 }
 
-class _TeacherCourseManagementScreenState extends State<TeacherCourseManagementScreen> {
+class _TeacherCourseManagementScreenState
+    extends State<TeacherCourseManagementScreen> {
   List<dynamic> _myCourses = [];
   bool _isLoading = true;
   String? _error;
@@ -30,13 +32,16 @@ class _TeacherCourseManagementScreenState extends State<TeacherCourseManagementS
     });
 
     try {
-      final courses = await ApiService().myCourses();
-      
+      final coursesResult = await ApiService.myCourses();
+      final courses = coursesResult.isSuccess ? (coursesResult.data as List<dynamic>?) ?? [] : [];
+
       // Load enrollment data for each course
       for (var course in courses) {
         if (course is Map<String, dynamic> && course['id'] != null) {
           try {
-            final enrollments = await ApiService().getCourseEnrollments(course['id']);
+            final enrollmentsResult =
+                await ApiService.getCourseEnrollments(course['id']);
+            final enrollments = enrollmentsResult.isSuccess ? (enrollmentsResult.data as List<dynamic>?) ?? [] : [];
             course['enrollment_count'] = enrollments.length;
             course['enrollments'] = enrollments;
           } catch (e) {
@@ -45,7 +50,7 @@ class _TeacherCourseManagementScreenState extends State<TeacherCourseManagementS
           }
         }
       }
-      
+
       setState(() {
         _myCourses = courses;
         _isLoading = false;
@@ -75,7 +80,7 @@ class _TeacherCourseManagementScreenState extends State<TeacherCourseManagementS
       context,
       MaterialPageRoute(builder: (context) => const CreateCourseScreen()),
     );
-    
+
     if (result == true) {
       _loadMyCourses(); // Refresh the list
     }
@@ -114,7 +119,8 @@ class _TeacherCourseManagementScreenState extends State<TeacherCourseManagementS
           ),
         ),
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: Colors.white))
+            ? const Center(
+                child: CircularProgressIndicator(color: Colors.white))
             : _error != null
                 ? Center(
                     child: Column(
@@ -122,7 +128,8 @@ class _TeacherCourseManagementScreenState extends State<TeacherCourseManagementS
                       children: [
                         Icon(Icons.error, color: Colors.red[300], size: 64),
                         const SizedBox(height: 16),
-                        Text(_error!, style: const TextStyle(color: Colors.white)),
+                        Text(_error!,
+                            style: const TextStyle(color: Colors.white)),
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _loadMyCourses,
@@ -201,8 +208,10 @@ class _TeacherCourseManagementScreenState extends State<TeacherCourseManagementS
 
   Widget _buildStatsCard() {
     final totalCourses = _myCourses.length;
-    final publishedCourses = _myCourses.where((c) => c['is_published'] == true).length;
-    final totalEnrollments = _myCourses.fold<int>(0, (sum, course) => sum + (course['enrollment_count'] as int? ?? 0));
+    final publishedCourses =
+        _myCourses.where((c) => c['is_published'] == true).length;
+    final totalEnrollments = _myCourses.fold<int>(
+        0, (sum, course) => sum + (course['enrollment_count'] as int? ?? 0));
 
     return GlassmorphismCard(
       child: Padding(
@@ -315,109 +324,112 @@ class _TeacherCourseManagementScreenState extends State<TeacherCourseManagementS
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        course['title'] ?? 'Untitled Course',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          course['title'] ?? 'Untitled Course',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        course['description'] ?? 'No description',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
+                        const SizedBox(height: 4),
+                        Text(
+                          course['description'] ?? 'No description',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isPublished
+                          ? Colors.green.withOpacity(0.8)
+                          : Colors.orange.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      isPublished ? 'Published' : 'Draft',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
+                    ),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isPublished ? Colors.green.withOpacity(0.8) : Colors.orange.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(12),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.people, color: Colors.white70, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$enrollmentCount students',
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
-                  child: Text(
-                    isPublished ? 'Published' : 'Draft',
+                  const SizedBox(width: 16),
+                  Icon(Icons.star, color: Colors.amber, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    rating.toStringAsFixed(1),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                  const Spacer(),
+                  Text(
+                    course['difficulty'] ?? 'Beginner',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: Colors.white70,
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.people, color: Colors.white70, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  '$enrollmentCount students',
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                ),
-                const SizedBox(width: 16),
-                Icon(Icons.star, color: Colors.amber, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  rating.toStringAsFixed(1),
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                ),
-                const Spacer(),
-                Text(
-                  course['difficulty'] ?? 'Beginner',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _navigateToAttendance(course),
-                    icon: const Icon(Icons.assignment_turned_in, size: 16),
-                    label: const Text('Attendance'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.withOpacity(0.8),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _navigateToAttendance(course),
+                      icon: const Icon(Icons.assignment_turned_in, size: 16),
+                      label: const Text('Attendance'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.withOpacity(0.8),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _viewCourseDetails(course),
-                    icon: const Icon(Icons.visibility, size: 16),
-                    label: const Text('Manage'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple.withOpacity(0.8),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _viewCourseDetails(course),
+                      icon: const Icon(Icons.visibility, size: 16),
+                      label: const Text('Manage'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple.withOpacity(0.8),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
             ],
           ),
         ),

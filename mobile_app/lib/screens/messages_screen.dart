@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -26,11 +26,18 @@ class _MessagesScreenState extends State<MessagesScreen> {
         error = null;
       });
 
-      final queries = await ApiService().studentQueries();
-      setState(() {
-        studentQueries = queries;
-        isLoading = false;
-      });
+      final response = await ApiService.studentQueries();
+      if (response.isSuccess) {
+        setState(() {
+          studentQueries = response.data as List<dynamic>;
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          error = response.userMessage;
+          isLoading = false;
+        });
+      }
     } catch (e) {
       setState(() {
         error = e.toString();

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:gyanvruksh/screens/splash_screen.dart';
 import 'package:gyanvruksh/blocs/theme_bloc.dart';
 import 'package:gyanvruksh/viewmodels/personalization_viewmodel.dart';
 import 'package:gyanvruksh/viewmodels/progress_viewmodel.dart';
+import 'package:gyanvruksh/viewmodels/lesson_viewmodel.dart';
 import 'package:gyanvruksh/utils/responsive_utils.dart';
 import 'package:gyanvruksh/theme/app_theme.dart';
 import 'package:gyanvruksh/theme/theme_provider.dart';
@@ -76,6 +76,7 @@ class GyanvrukshApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => PersonalizationViewModel()),
         ChangeNotifierProvider(create: (_) => ProgressViewModel()),
+        ChangeNotifierProvider(create: (_) => LessonViewModel()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         BlocProvider(create: (_) => ThemeBloc()),
       ],
@@ -121,11 +122,15 @@ class GyanvrukshApp extends StatelessWidget {
               // New screens added
               '/skill_tree': (context) => const SkillTreeScreen(),
               '/progress_dashboard': (context) => const ProgressDashboardScreen(),
-              '/lesson': (context) => LessonScreen(lessonId: 0),
-              '/register': (context) => RegisterScreen(role: '', subRole: ''),
-              '/sub_role_selection': (context) => SubRoleSelectionScreen(selectedRole: ''),
-              '/video_player': (context) => VideoPlayerScreen(courseId: 0, courseTitle: ''),
-              '/navigation': (context) => NavigationScreen(user: {}),
+              '/lesson': (context) {
+                final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+                final lessonId = args?['lessonId'] ?? 0;
+                return LessonScreen(lessonId: lessonId);
+              },
+              '/register': (context) => const RegisterScreen(role: '', subRole: ''),
+              '/sub_role_selection': (context) => const SubRoleSelectionScreen(selectedRole: ''),
+              '/video_player': (context) => const VideoPlayerScreen(courseId: 0, courseTitle: ''),
+              '/navigation': (context) => const NavigationScreen(user: {}),
               '/student_features': (context) => const StudentFeaturesScreen(),
               '/teacher_advanced_features': (context) => const TeacherAdvancedFeaturesScreen(),
               '/teacher_course_management': (context) => const TeacherCourseManagementScreen(),

@@ -14,6 +14,9 @@ dependencies:
   http: ^1.2.2
   google_fonts: ^6.1.0
 
+  # Storage and persistence
+  shared_preferences: ^2.2.3
+
   # State management
   flutter_bloc: ^8.1.6
   provider: ^6.1.2
@@ -47,7 +50,7 @@ dependencies:
   flutter_staggered_animations: ^1.1.1
   lottie: ^3.0.0
   flutter_svg: ^2.0.9
-  intl: ^0.19.0
+  intl: 0.20.2
 
   # Permission handling
   permission_handler: ^11.3.1
@@ -55,8 +58,13 @@ dependencies:
   # Toast notifications
   fluttertoast: ^8.2.4
 
-  # Storage and persistence
-  shared_preferences: ^2.2.3
+  # Network connectivity
+  connectivity_plus: ^6.0.3
+
+  # Local storage and caching
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.1
 
   # Advanced animation libraries for futuristic UI
   rive: ^0.13.0

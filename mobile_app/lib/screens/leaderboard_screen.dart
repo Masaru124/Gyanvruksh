@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
@@ -25,9 +25,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       error = null;
     });
     try {
-      final data = await ApiService().getLeaderboard();
+      final response = await ApiService.getLeaderboard();
       setState(() {
-        leaderboard = data;
+        leaderboard = response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
         isLoading = false;
       });
     } catch (e) {

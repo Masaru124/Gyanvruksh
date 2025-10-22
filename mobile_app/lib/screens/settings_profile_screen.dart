@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
 import 'package:gyanvruksh/widgets/backgrounds/cinematic_background.dart';
 import 'package:gyanvruksh/widgets/particle_background.dart';
@@ -34,15 +34,16 @@ class _SettingsProfileScreenState extends State<SettingsProfileScreen> {
     
     try {
       final prefs = await SharedPreferences.getInstance();
-      final result = await ApiService().get('/api/user/profile').catchError((_) => {});
-      
+      final result = await ApiService.me();
+      final profileData = result.isSuccess ? (result.data as Map<String, dynamic>?) ?? {} : {};
+
       setState(() {
-        userProfile = result as Map<String, dynamic>;
+        userProfile = profileData.isNotEmpty ? Map<String, dynamic>.from(profileData) : <String, dynamic>{};
         notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
         darkModeEnabled = prefs.getBool('dark_mode_enabled') ?? true;
         soundEnabled = prefs.getBool('sound_enabled') ?? true;
         isLoading = false;
-        
+
         // Fallback data
         if (userProfile.isEmpty) {
           userProfile = {
@@ -204,7 +205,7 @@ class _SettingsProfileScreenState extends State<SettingsProfileScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [FuturisticColors.accent.withOpacity(0.3), FuturisticColors.primary.withOpacity(0.3)],
+                          colors: [FuturisticColors.accent.withValues(alpha: 0.3), FuturisticColors.primary.withValues(alpha: 0.3)],
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -235,7 +236,7 @@ class _SettingsProfileScreenState extends State<SettingsProfileScreen> {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -323,7 +324,7 @@ class _SettingsProfileScreenState extends State<SettingsProfileScreen> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [FuturisticColors.primary.withOpacity(0.3), FuturisticColors.secondary.withOpacity(0.3)],
+              colors: [FuturisticColors.primary.withValues(alpha: 0.3), FuturisticColors.secondary.withValues(alpha: 0.3)],
             ),
             borderRadius: BorderRadius.circular(12),
           ),
@@ -354,7 +355,7 @@ class _SettingsProfileScreenState extends State<SettingsProfileScreen> {
           value: value,
           onChanged: onChanged,
           activeColor: FuturisticColors.accent,
-          activeTrackColor: FuturisticColors.accent.withOpacity(0.3),
+          activeTrackColor: FuturisticColors.accent.withValues(alpha: 0.3),
         ),
       ],
     );
@@ -364,9 +365,9 @@ class _SettingsProfileScreenState extends State<SettingsProfileScreen> {
     final accountItems = [
       {'icon': FontAwesomeIcons.lock, 'title': 'Change Password', 'subtitle': 'Update your password'},
       {'icon': FontAwesomeIcons.shield, 'title': 'Privacy Settings', 'subtitle': 'Manage your privacy'},
-      {'icon': FontAwesomeIcons.questionCircle, 'title': 'Help & Support', 'subtitle': 'Get help and support'},
-      {'icon': FontAwesomeIcons.infoCircle, 'title': 'About', 'subtitle': 'App version and info'},
-      {'icon': FontAwesomeIcons.signOutAlt, 'title': 'Logout', 'subtitle': 'Sign out of your account'},
+      {'icon': FontAwesomeIcons.circleQuestion, 'title': 'Help & Support', 'subtitle': 'Get help and support'},
+      {'icon': FontAwesomeIcons.circleInfo, 'title': 'About', 'subtitle': 'App version and info'},
+      {'icon': FontAwesomeIcons.rightFromBracket, 'title': 'Logout', 'subtitle': 'Sign out of your account'},
     ];
 
     return Column(
@@ -396,11 +397,13 @@ class _SettingsProfileScreenState extends State<SettingsProfileScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: isLogout 
-                              ? [FuturisticColors.error.withOpacity(0.3), FuturisticColors.error.withOpacity(0.1)]
-                              : [FuturisticColors.accent.withOpacity(0.3), FuturisticColors.primary.withOpacity(0.3)],
-                        ),
+                        gradient: isLogout 
+                            ? LinearGradient(
+                                colors: [FuturisticColors.error.withValues(alpha: 0.3), FuturisticColors.error.withValues(alpha: 0.1)],
+                              )
+                            : LinearGradient(
+                                colors: [FuturisticColors.accent.withValues(alpha: 0.3), FuturisticColors.primary.withValues(alpha: 0.3)],
+                              ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: FaIcon(

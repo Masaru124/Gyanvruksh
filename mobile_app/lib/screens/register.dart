@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/screens/navigation.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
 import 'package:gyanvruksh/widgets/custom_animated_button.dart';
@@ -99,7 +99,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
 
         try {
-          final ok = await ApiService().register(
+          final response = await ApiService.register(
             email: emailCtrl.text,
             password: passCtrl.text,
             fullName: nameCtrl.text,
@@ -125,24 +125,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
             companyDetails: companyDetailsCtrl.text,
             isTeacher: widget.subRole == 'teacher',
           );
-          if (ok) {
-            final loggedIn = await ApiService().login(emailCtrl.text, passCtrl.text);
+
+          if (response.isSuccess) {
+            final loginResponse = await ApiService.login(emailCtrl.text, passCtrl.text);
             if (!mounted) return;
-            if (loggedIn['success'] == true) {
-              final me = await ApiService().me();
+            if (loginResponse.isSuccess) {
+              final meResponse = await ApiService.me();
               if (!mounted) return;
-              if (me != null) {
+              if (meResponse.isSuccess && meResponse.data != null) {
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
-                    builder: (context) => NavigationScreen(user: me),
+                    builder: (context) => NavigationScreen(user: meResponse.data as Map<String, dynamic>),
                   ),
                 );
               }
             } else {
-              setState(() { error = loggedIn['error'] ?? "Login failed after registration"; });
+              setState(() { error = loginResponse.userMessage; });
             }
           } else {
-            setState(() { error = "Registration failed"; });
+            setState(() { error = response.userMessage; });
           }
         } catch (e) {
           setState(() { error = e.toString(); });

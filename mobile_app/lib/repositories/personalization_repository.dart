@@ -1,15 +1,13 @@
 import 'package:gyanvruksh/repositories/base_repository.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 
 class PersonalizationRepository extends BaseRepository {
-  final ApiService _apiService = ApiService();
-
   // User interests (Academics, Skills, Sports, Creativity)
   Future<List<String>> getUserInterests() async {
     try {
-      final data = await _apiService.getPersonalizationData();
-      if (data != null) {
-        return List<String>.from(data['interests'] ?? []);
+      final response = await ApiService.getPersonalizationData();
+      if (response.isSuccess && response.data != null) {
+        return List<String>.from(response.data['interests'] ?? []);
       }
       return [];
     } catch (e) {
@@ -19,8 +17,8 @@ class PersonalizationRepository extends BaseRepository {
 
   Future<void> updateUserInterests(List<String> interests) async {
     try {
-      final success = await _apiService.updatePersonalizationData({'interests': interests});
-      if (!success) {
+      final response = await ApiService.updatePersonalizationData({'interests': interests});
+      if (!response.isSuccess) {
         throw Exception('Failed to update interests');
       }
     } catch (e) {
@@ -31,9 +29,9 @@ class PersonalizationRepository extends BaseRepository {
   // Skill levels for each category
   Future<Map<String, String>> getSkillLevels() async {
     try {
-      final data = await _apiService.getPersonalizationData();
-      if (data != null) {
-        return Map<String, String>.from(data['skill_levels'] ?? {});
+      final response = await ApiService.getPersonalizationData();
+      if (response.isSuccess && response.data != null) {
+        return Map<String, String>.from(response.data['skill_levels'] ?? {});
       }
       return {};
     } catch (e) {
@@ -43,8 +41,8 @@ class PersonalizationRepository extends BaseRepository {
 
   Future<void> updateSkillLevels(Map<String, String> skillLevels) async {
     try {
-      final success = await _apiService.updatePersonalizationData({'skill_levels': skillLevels});
-      if (!success) {
+      final response = await ApiService.updatePersonalizationData({'skill_levels': skillLevels});
+      if (!response.isSuccess) {
         throw Exception('Failed to update skill levels');
       }
     } catch (e) {
@@ -55,9 +53,9 @@ class PersonalizationRepository extends BaseRepository {
   // Learning goals
   Future<List<String>> getLearningGoals() async {
     try {
-      final data = await _apiService.getPersonalizationData();
-      if (data != null) {
-        return List<String>.from(data['learning_goals'] ?? []);
+      final response = await ApiService.getPersonalizationData();
+      if (response.isSuccess && response.data != null) {
+        return List<String>.from(response.data['learning_goals'] ?? []);
       }
       return [];
     } catch (e) {
@@ -67,8 +65,8 @@ class PersonalizationRepository extends BaseRepository {
 
   Future<void> updateLearningGoals(List<String> goals) async {
     try {
-      final success = await _apiService.updatePersonalizationData({'learning_goals': goals});
-      if (!success) {
+      final response = await ApiService.updatePersonalizationData({'learning_goals': goals});
+      if (!response.isSuccess) {
         throw Exception('Failed to update learning goals');
       }
     } catch (e) {
@@ -79,7 +77,8 @@ class PersonalizationRepository extends BaseRepository {
   // Get personalized course recommendations
   Future<List<dynamic>> getRecommendedCourses() async {
     try {
-      return await _apiService.getRecommendedCourses();
+      final response = await ApiService.getRecommendedCourses();
+      return response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
     } catch (e) {
       throw Exception('Failed to get recommendations: $e');
     }
@@ -92,12 +91,12 @@ class PersonalizationRepository extends BaseRepository {
     required List<String> goals,
   }) async {
     try {
-      final success = await _apiService.updatePersonalizationData({
+      final response = await ApiService.updatePersonalizationData({
         'interests': interests,
         'skill_levels': skillLevels,
         'learning_goals': goals,
       });
-      if (!success) {
+      if (!response.isSuccess) {
         throw Exception('Failed to setup preferences');
       }
     } catch (e) {
@@ -108,8 +107,8 @@ class PersonalizationRepository extends BaseRepository {
   // Get complete user preferences
   Future<Map<String, dynamic>> getUserPreferences() async {
     try {
-      final data = await _apiService.getPersonalizationData();
-      return data ?? {};
+      final response = await ApiService.getPersonalizationData();
+      return response.isSuccess ? (response.data as Map<String, dynamic>? ?? {}) : {};
     } catch (e) {
       throw Exception('Failed to get user preferences: $e');
     }
@@ -118,7 +117,8 @@ class PersonalizationRepository extends BaseRepository {
   // Save complete user preferences
   Future<bool> saveUserPreferences(Map<String, dynamic> preferences) async {
     try {
-      return await _apiService.updatePersonalizationData(preferences);
+      final response = await ApiService.updatePersonalizationData(preferences);
+      return response.isSuccess;
     } catch (e) {
       throw Exception('Failed to save user preferences: $e');
     }
@@ -127,8 +127,24 @@ class PersonalizationRepository extends BaseRepository {
   // Get learning analytics
   Future<Map<String, dynamic>> getLearningAnalytics() async {
     try {
-      final response = await _apiService.get('/api/personalization/analytics');
-      return response;
+      final response = await ApiService.get('/api/personalization/analytics');
+      return response.isSuccess ? (response.data as Map<String, dynamic>? ?? {}) : {
+        'analytics': {
+          'total_study_time': 0,
+          'average_session_length': 0,
+          'preferred_study_times': [],
+          'learning_streak': 0,
+          'completion_rate': 0.0,
+        },
+        'patterns': [],
+        'performance': {
+          'strengths': [],
+          'weaknesses': [],
+          'improvement_trend': 'stable',
+        },
+        'strengths': [],
+        'improvements': [],
+      };
     } catch (e) {
       // Return default analytics if API fails
       return {
@@ -154,8 +170,13 @@ class PersonalizationRepository extends BaseRepository {
   // Get personalized recommendations
   Future<Map<String, dynamic>> getPersonalizedRecommendations() async {
     try {
-      final response = await _apiService.get('/api/personalization/recommendations');
-      return response;
+      final response = await ApiService.get('/api/personalization/recommendations');
+      return response.isSuccess ? (response.data as Map<String, dynamic>? ?? {}) : {
+        'courses': [],
+        'lessons': [],
+        'skill_gaps': [],
+        'adaptive': {},
+      };
     } catch (e) {
       // Return default recommendations if API fails
       return {
@@ -171,24 +192,40 @@ class PersonalizationRepository extends BaseRepository {
   Future<void> trackUserInteraction(String contentType, String contentId,
       String interactionType, {Map<String, dynamic>? metadata}) async {
     try {
-      await _apiService.post('/api/personalization/track', {
+      await ApiService.post('/api/personalization/track', {
         'content_type': contentType,
         'content_id': contentId,
         'interaction_type': interactionType,
         'metadata': metadata ?? {},
         'timestamp': DateTime.now().toIso8601String(),
       });
+      // Success is handled silently for tracking
     } catch (e) {
       // Silently fail for tracking - don't throw exception
-      print('Failed to track user interaction: $e');
+      // User interaction tracking failed: $e
     }
   }
 
   // Get personalized study plan
   Future<Map<String, dynamic>> getStudyPlan() async {
     try {
-      final response = await _apiService.get('/api/personalization/study-plan');
-      return response;
+      final response = await ApiService.get('/api/personalization/study-plan');
+      return response.isSuccess ? (response.data as Map<String, dynamic>? ?? {}) : {
+        'daily_goals': [
+          {'type': 'lessons', 'target': 2, 'completed': 0},
+          {'type': 'practice', 'target': 30, 'completed': 0}, // minutes
+        ],
+        'weekly_targets': [
+          {'type': 'courses', 'target': 1, 'completed': 0},
+          {'type': 'quizzes', 'target': 3, 'completed': 0},
+        ],
+        'skill_focus': [],
+        'recommended_schedule': {
+          'morning': ['theory_lessons'],
+          'afternoon': ['practice_sessions'],
+          'evening': ['review_quizzes'],
+        },
+      };
     } catch (e) {
       // Return default study plan if API fails
       return {
@@ -213,9 +250,10 @@ class PersonalizationRepository extends BaseRepository {
   // Update learning preferences
   Future<bool> updateLearningPreferences(Map<String, dynamic> preferences) async {
     try {
-      return await _apiService.updatePersonalizationData({
+      final response = await ApiService.updatePersonalizationData({
         'learning_preferences': preferences,
       });
+      return response.isSuccess;
     } catch (e) {
       throw Exception('Failed to update learning preferences: $e');
     }
@@ -224,8 +262,21 @@ class PersonalizationRepository extends BaseRepository {
   // Get user learning style assessment
   Future<Map<String, dynamic>> getLearningStyleAssessment() async {
     try {
-      final response = await _apiService.get('/api/personalization/learning-style');
-      return response;
+      final response = await ApiService.get('/api/personalization/learning-style');
+      return response.isSuccess ? (response.data as Map<String, dynamic>? ?? {}) : {
+        'primary_style': 'visual',
+        'secondary_style': 'auditory',
+        'style_scores': {
+          'visual': 0.7,
+          'auditory': 0.6,
+          'reading': 0.4,
+          'kinesthetic': 0.5,
+        },
+        'recommendations': [
+          'Use more diagrams and visual aids',
+          'Incorporate audio explanations',
+        ],
+      };
     } catch (e) {
       return {
         'primary_style': 'visual',
@@ -247,8 +298,12 @@ class PersonalizationRepository extends BaseRepository {
   // Get adaptive difficulty suggestions
   Future<Map<String, dynamic>> getAdaptiveDifficulty(String contentId) async {
     try {
-      final response = await _apiService.get('/api/personalization/adaptive-difficulty/$contentId');
-      return response;
+      final response = await ApiService.get('/api/personalization/adaptive-difficulty/$contentId');
+      return response.isSuccess ? (response.data as Map<String, dynamic>? ?? {}) : {
+        'suggested_difficulty': 'intermediate',
+        'reasoning': 'Based on your current skill level and performance',
+        'adjustments': [],
+      };
     } catch (e) {
       return {
         'suggested_difficulty': 'intermediate',
@@ -261,8 +316,13 @@ class PersonalizationRepository extends BaseRepository {
   // Get content pacing recommendations
   Future<Map<String, dynamic>> getContentPacing() async {
     try {
-      final response = await _apiService.get('/api/personalization/pacing');
-      return response;
+      final response = await ApiService.get('/api/personalization/pacing');
+      return response.isSuccess ? (response.data as Map<String, dynamic>? ?? {}) : {
+        'recommended_pace': 'moderate',
+        'session_length': 25, // minutes
+        'break_frequency': 25, // minutes
+        'daily_limit': 120, // minutes
+      };
     } catch (e) {
       return {
         'recommended_pace': 'moderate',

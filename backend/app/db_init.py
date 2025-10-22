@@ -49,7 +49,7 @@ def init():
 
         # Create default teacher user for testing
         teacher_email = "teacher@example.com"
-        teacher_password = "teacher123"
+        teacher_password = "pass-teacher123"
         existing_teacher = db.query(User).filter(User.email == teacher_email).first()
         if existing_teacher:
             print("⚠️ Default teacher user already exists")
@@ -72,7 +72,7 @@ def init():
 
         # Create default student user for testing
         student_email = "student@example.com"
-        student_password = "student123"
+        student_password = "pass-student123"
         existing_student = db.query(User).filter(User.email == student_email).first()
         if existing_student:
             print("⚠️ Default student user already exists")

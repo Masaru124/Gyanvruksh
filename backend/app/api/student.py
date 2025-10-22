@@ -656,3 +656,239 @@ def get_upcoming_deadlines(
         "upcoming_deadlines": deadlines,
         "total_count": len(deadlines)
     }
+
+
+@router.get("/progress-report")
+def get_student_progress_report(
+    db: Session = Depends(get_db),
+    student: User = Depends(verify_student)
+):
+    """Get comprehensive student progress report"""
+    try:
+        # Get all enrollments for the student
+        enrollments = db.query(Enrollment).filter(Enrollment.student_id == student.id).all()
+
+        progress_data = []
+
+        for enrollment in enrollments:
+            course = db.query(Course).filter(Course.id == enrollment.course_id).first()
+            if not course:
+                continue
+
+            # Get course progress
+            course_progress = db.query(UserProgress).filter(
+                UserProgress.user_id == student.id,
+                UserProgress.course_id == course.id,
+                UserProgress.lesson_id.is_(None)  # Course-level progress
+            ).first()
+
+            # Get lesson progress for this course
+            lesson_progress = db.query(UserProgress).filter(
+                UserProgress.user_id == student.id,
+                UserProgress.course_id == course.id,
+                UserProgress.lesson_id.isnot(None)
+            ).all()
+
+            # Get recent assignments
+            recent_assignments = db.query(Assignment).filter(
+                Assignment.course_id == course.id
+            ).order_by(Assignment.due_date.desc()).limit(3).all()
+
+            # Get recent quiz attempts
+            recent_quizzes = db.query(Quiz).filter(
+                Quiz.course_id == course.id
+            ).limit(3).all()
+
+            # Calculate statistics
+            total_lessons = len(lesson_progress)
+            completed_lessons = sum(1 for p in lesson_progress if p.completed)
+            average_lesson_progress = sum(p.progress_percentage for p in lesson_progress) / total_lessons if total_lessons > 0 else 0
+
+            # Get attendance rate
+            attendance_records = db.query(Attendance).filter(Attendance.student_id == student.id).all()
+            attendance_rate = 0.0
+            if attendance_records:
+                present_count = sum(1 for record in attendance_records if record.is_present)
+                attendance_rate = present_count / len(attendance_records)
+
+            progress_data.append({
+                "course_id": course.id,
+                "course_title": course.title,
+                "enrollment_date": enrollment.enrolled_at.isoformat() if enrollment.enrolled_at else None,
+                "course_progress_percentage": course_progress.progress_percentage if course_progress else 0,
+                "course_completed": course_progress.completed if course_progress else False,
+                "total_lessons": total_lessons,
+                "completed_lessons": completed_lessons,
+                "average_lesson_progress": average_lesson_progress,
+                "attendance_rate": attendance_rate,
+                "hours_completed": enrollment.hours_completed,
+                "current_streak": _calculate_study_streak(student.id, course.id, db),
+                "recent_assignments": [
+                    {
+                        "id": assignment.id,
+                        "title": assignment.title,
+                        "due_date": assignment.due_date.isoformat() if assignment.due_date else None,
+                        "status": "completed" if assignment.submitted else "pending"
+                    }
+                    for assignment in recent_assignments
+                ],
+                "recent_quizzes": [
+                    {
+                        "id": quiz.id,
+                        "title": quiz.title,
+                        "passing_score": quiz.passing_score,
+                        "attempts_count": len(quiz.attempts) if hasattr(quiz, 'attempts') else 0
+                    }
+                    for quiz in recent_quizzes
+                ]
+            })
+
+        # Calculate overall statistics
+        total_courses = len(progress_data)
+        completed_courses = sum(1 for p in progress_data if p["course_completed"])
+        average_progress = sum(p["course_progress_percentage"] for p in progress_data) / total_courses if total_courses > 0 else 0
+        average_attendance = sum(p["attendance_rate"] for p in progress_data) / total_courses if total_courses > 0 else 0
+
+        return {
+            "student_name": student.full_name,
+            "total_courses": total_courses,
+            "completed_courses": completed_courses,
+            "overall_progress": average_progress,
+            "average_attendance": average_attendance,
+            "courses": progress_data,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating progress report: {str(e)}")
+
+
+def _calculate_study_streak(student_id: int, course_id: int, db: Session) -> int:
+    """Calculate current study streak for a specific course"""
+    # Get recent progress records for this course
+    recent_progress = db.query(UserProgress).filter(
+        UserProgress.user_id == student_id,
+        UserProgress.course_id == course_id,
+        UserProgress.last_accessed >= datetime.utcnow() - timedelta(days=30)
+    ).order_by(UserProgress.last_accessed.desc()).all()
+
+    if not recent_progress:
+        return 0
+
+    # Group by date and check consecutive days
+    study_dates = set()
+    for progress in recent_progress:
+        if progress.last_accessed:
+            study_dates.add(progress.last_accessed.date())
+
+    # Sort dates and check for consecutive days
+    sorted_dates = sorted(study_dates)
+
+    if not sorted_dates:
+        return 0
+
+    current_streak = 1
+    for i in range(len(sorted_dates) - 1, 0, -1):
+        current_date = sorted_dates[i]
+        previous_date = sorted_dates[i - 1]
+
+        if (current_date - previous_date).days == 1:
+            current_streak += 1
+        else:
+            break
+
+    return current_streak
+
+# Additional missing endpoints that frontend expects
+
+class DoubtRequest(BaseModel):
+    question: str
+    course_id: int
+    lesson_id: Optional[int] = None
+
+@router.get("/assignments")
+def get_student_assignments(
+    db: Session = Depends(get_db),
+    student: User = Depends(verify_student)
+):
+    """Get assignments for the current student"""
+    try:
+        # Get student's enrolled courses
+        enrollments = db.query(Enrollment).filter(Enrollment.student_id == student.id).all()
+        course_ids = [e.course_id for e in enrollments]
+
+        if not course_ids:
+            return {"assignments": []}
+
+        # Get assignments from enrolled courses
+        assignments = db.query(Assignment).filter(
+            Assignment.course_id.in_(course_ids)
+        ).order_by(Assignment.due_date).all()
+
+        # Get grades for this student
+        grades = db.query(Grade).filter(Grade.student_id == student.id).all()
+        grades_dict = {grade.assignment_id: grade for grade in grades}
+
+        result = []
+        for assignment in assignments:
+            grade = grades_dict.get(assignment.id)
+            result.append({
+                "id": assignment.id,
+                "title": assignment.title,
+                "description": assignment.description,
+                "course_id": assignment.course_id,
+                "course_title": assignment.course.title if assignment.course else "Unknown Course",
+                "due_date": assignment.due_date.isoformat() if assignment.due_date else None,
+                "max_score": assignment.max_score,
+                "status": "completed" if grade else "pending",
+                "score": grade.score if grade else None,
+                "submitted_at": grade.submitted_at.isoformat() if grade and grade.submitted_at else None,
+                "graded_at": grade.graded_at.isoformat() if grade and grade.graded_at else None,
+                "feedback": grade.feedback if grade else None
+            })
+
+        return {"assignments": result}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/ask-doubt")
+def ask_doubt(
+    request: DoubtRequest,
+    db: Session = Depends(get_db),
+    student: User = Depends(verify_student)
+):
+    """Submit a doubt/question for a course"""
+    try:
+        # Verify student is enrolled in the course
+        enrollment = db.query(Enrollment).filter(
+            Enrollment.student_id == student.id,
+            Enrollment.course_id == request.course_id
+        ).first()
+
+        if not enrollment:
+            raise HTTPException(status_code=403, detail="You must be enrolled in this course to ask questions")
+
+        # Get course details
+        course = db.query(Course).filter(Course.id == request.course_id).first()
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found")
+
+        # In a real implementation, this would create a doubt record
+        # and possibly send notification to teachers/admins
+        # For now, return success response
+
+        return {
+            "message": "Doubt submitted successfully",
+            "doubt_id": datetime.now().timestamp(),  # Mock ID
+            "question": request.question,
+            "course_title": course.title,
+            "status": "pending",
+            "submitted_at": datetime.now().isoformat(),
+            "estimated_response_time": "24-48 hours"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

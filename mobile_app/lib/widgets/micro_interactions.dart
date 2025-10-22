@@ -258,7 +258,7 @@ class _RippleEffectState extends State<RippleEffect>
                     painter: RipplePainter(
                       position: _tapPosition!,
                       progress: _animation.value,
-                      color: widget.rippleColor ?? FuturisticColors.primary.withOpacity(0.3),
+                      color: widget.rippleColor ?? FuturisticColors.primary.withValues(alpha: 0.3),
                     ),
                   );
                 },
@@ -415,7 +415,7 @@ class _ShimmerEffectState extends State<ShimmerEffect>
             return LinearGradient(
               colors: [
                 Colors.transparent,
-                widget.shimmerColor.withOpacity(0.4),
+                widget.shimmerColor.withValues(alpha: 0.4),
                 Colors.transparent,
               ],
               stops: const [0.0, 0.5, 1.0],

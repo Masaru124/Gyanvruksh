@@ -42,8 +42,8 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Map<String, dynamic>? getCurrentUser() {
-    return _authRepository.getCurrentUser();
+  Future<Map<String, dynamic>?> getCurrentUser() async {
+    return await _authRepository.getCurrentUser();
   }
 
   Future<bool> login() async {

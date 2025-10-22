@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/api.dart';
 import '../repositories/search_repository.dart';
 
 class SearchViewModel extends ChangeNotifier {
-  final ApiService _apiService = ApiService();
   final SearchRepository _searchRepository = SearchRepository();
 
   // Loading states

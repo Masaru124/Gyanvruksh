@@ -2,23 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/services/auth_storage.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
-import 'package:gyanvruksh/widgets/custom_animated_button.dart';
-import 'package:gyanvruksh/widgets/neumorphism_container.dart';
 import 'package:gyanvruksh/widgets/backgrounds/cinematic_background.dart';
 import 'package:gyanvruksh/widgets/particle_background.dart';
-import 'package:gyanvruksh/widgets/floating_elements.dart';
-import 'package:gyanvruksh/widgets/animated_wave_background.dart';
 import 'package:gyanvruksh/widgets/micro_interactions.dart';
-import 'package:gyanvruksh/widgets/animated_text_widget.dart';
 import 'package:gyanvruksh/screens/teacher_course_management.dart';
 import 'package:gyanvruksh/screens/teacher_assignments_screen.dart';
 import 'package:gyanvruksh/screens/schedule_classes_screen.dart';
 import 'package:gyanvruksh/screens/student_progress_report_screen.dart';
-import 'package:gyanvruksh/screens/teacher_features_screen.dart';
 import 'package:gyanvruksh/screens/teacher_quiz_management.dart';
 import 'package:gyanvruksh/theme/futuristic_theme.dart';
 import 'package:intl/intl.dart';
@@ -56,39 +49,28 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
       final prefs = await SharedPreferences.getInstance();
       teacherName = prefs.getString('user_name') ?? 'Teacher';
       
-      // Use existing API methods with fallback
-      final results = await Future.wait([
-        ApiService().getTeacherDashboardStats().catchError((_) => {}),
-        ApiService().listCourses().catchError((_) => []),
-      ]);
+      // Use enhanced API service with proper error handling
+      final response = await ApiService.get('/api/teacher/dashboard/stats');
+      final Map<String, dynamic> stats = response.isSuccess
+          ? (response.data as Map<String, dynamic>?) ?? {}
+          : {};
+
+      final coursesResponse = await ApiService.myCourses();
+      final courses = coursesResponse.isSuccess ? (coursesResponse.data as List<dynamic>?) ?? [] : [];
 
       setState(() {
-        dashboardStats = results[0] as Map<String, dynamic>;
-        myCourses = results[1] as List<dynamic>;
+        dashboardStats = stats;
+        myCourses = courses.isNotEmpty ? courses : [
+          {'id': 1, 'title': 'Advanced Mathematics', 'students': 25, 'progress': 75},
+          {'id': 2, 'title': 'Physics Fundamentals', 'students': 20, 'progress': 60}
+        ];
         isLoading = false;
-        
-        // Set fallback data for demo
-        if (dashboardStats.isEmpty) {
-          dashboardStats = {
-            'total_students': 45,
-            'active_courses': 3,
-            'avg_scores': 85,
-            'pending_evaluations': 12
-          };
-        }
         
         todaySchedule = [
           {'title': 'Mathematics Class 10A', 'time': '09:00 AM', 'type': 'class'},
           {'title': 'Physics Lab Session', 'time': '11:30 AM', 'type': 'lab'},
           {'title': 'Review Assignments', 'time': '2:00 PM', 'type': 'evaluation'}
         ];
-        
-        if (myCourses.isEmpty) {
-          myCourses = [
-            {'id': 1, 'title': 'Advanced Mathematics', 'students': 25, 'progress': 75},
-            {'id': 2, 'title': 'Physics Fundamentals', 'students': 20, 'progress': 60}
-          ];
-        }
       });
     } catch (e) {
       setState(() {
@@ -117,7 +99,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   Future<void> _logout() async {
     try {
       // Call API logout
-      await ApiService().logout();
+      await ApiService.logout();
       // Clear local auth data
       await AuthStorage.clearAuthData();
       

@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/app_card.dart';
 import 'package:gyanvruksh/widgets/app_text_field.dart';
 import 'package:gyanvruksh/widgets/app_button.dart';
 import 'package:gyanvruksh/theme/app_theme.dart';
 
+// Import enums for type safety
+import '../widgets/app_text_field.dart' show AppTextFieldType;
+import '../widgets/app_button.dart' show AppButtonSize;
+
 class TeacherAssignmentsScreen extends StatefulWidget {
   const TeacherAssignmentsScreen({super.key});
 
   @override
-  State<TeacherAssignmentsScreen> createState() => _TeacherAssignmentsScreenState();
+  State<TeacherAssignmentsScreen> createState() =>
+      _TeacherAssignmentsScreenState();
 }
 
 class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
@@ -29,20 +34,23 @@ class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
       _error = null;
     });
     try {
-      final list = await ApiService().getStudentAssignments(); // returns teacher's assignments when teacher is logged in
+      final result = await ApiService.getStudentAssignments();
+      final assignments =
+          result.isSuccess ? (result.data as List<dynamic>?) ?? [] : [];
+
       setState(() {
-        _assignments = list;
+        _assignments = assignments;
+        _loading = false;
       });
     } catch (e) {
       setState(() {
         _error = e.toString();
+        _loading = false;
       });
-    } finally {
-      if (mounted) setState(() => _loading = false);
     }
   }
 
-  Future<void> _openCreateAssignmentDialog() async {
+  Future<void> _showCreateAssignmentDialog() async {
     final titleCtrl = TextEditingController();
     final descCtrl = TextEditingController();
     final courseIdCtrl = TextEditingController();
@@ -61,48 +69,68 @@ class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                AppTextField(controller: titleCtrl, label: 'Title', required: true),
+                AppTextField(
+                    controller: titleCtrl, label: 'Title', required: true),
                 const SizedBox(height: AppSpacing.sm),
-                AppTextField(controller: descCtrl, label: 'Description', type: AppTextFieldType.multiline, maxLines: 3),
+                AppTextField(
+                    controller: descCtrl,
+                    label: 'Description',
+                    type: AppTextFieldType.multiline,
+                    maxLines: 3),
                 const SizedBox(height: AppSpacing.sm),
-                AppTextField(controller: courseIdCtrl, label: 'Course ID', type: AppTextFieldType.number, required: true),
+                AppTextField(
+                    controller: courseIdCtrl,
+                    label: 'Course ID',
+                    type: AppTextFieldType.number,
+                    required: true),
                 const SizedBox(height: AppSpacing.sm),
-                AppTextField(controller: lessonIdCtrl, label: 'Lesson ID (optional)', type: AppTextFieldType.number),
+                AppTextField(
+                    controller: lessonIdCtrl,
+                    label: 'Lesson ID (optional)',
+                    type: AppTextFieldType.number),
                 const SizedBox(height: AppSpacing.sm),
-                AppTextField(controller: dueDateCtrl, label: 'Due Date (YYYY-MM-DD)', required: true),
+                AppTextField(
+                    controller: dueDateCtrl,
+                    label: 'Due Date (YYYY-MM-DD)',
+                    required: true),
                 const SizedBox(height: AppSpacing.sm),
-                AppTextField(controller: maxScoreCtrl, label: 'Max Score', type: AppTextFieldType.number),
+                AppTextField(
+                    controller: maxScoreCtrl,
+                    label: 'Max Score',
+                    type: AppTextFieldType.number),
                 const SizedBox(height: AppSpacing.sm),
-                AppTextField(controller: instructionsCtrl, label: 'Instructions'),
+                AppTextField(
+                    controller: instructionsCtrl, label: 'Instructions'),
                 const SizedBox(height: AppSpacing.sm),
-                AppTextField(controller: attachmentUrlCtrl, label: 'Attachment URL'),
+                AppTextField(
+                    controller: attachmentUrlCtrl, label: 'Attachment URL'),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+            TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel')),
             ElevatedButton(
               onPressed: () async {
                 final title = titleCtrl.text.trim();
                 final desc = descCtrl.text.trim();
                 final courseId = int.tryParse(courseIdCtrl.text.trim());
                 final lessonId = int.tryParse(lessonIdCtrl.text.trim());
-                final maxScore = int.tryParse(maxScoreCtrl.text.trim()) ?? 100;
+                final maxScore =
+                    int.tryParse(maxScoreCtrl.text.trim()) ?? 100;
                 final dueDateText = dueDateCtrl.text.trim();
-                if (title.isEmpty || courseId == null || dueDateText.isEmpty) return;
+                if (title.isEmpty || courseId == null || dueDateText.isEmpty)
+                  return;
                 try {
                   final dueDate = DateTime.parse(dueDateText);
-                  final res = await ApiService().createAssignment(
-                    title: title,
-                    description: desc,
-                    courseId: courseId,
-                    lessonId: lessonId,
-                    dueDate: dueDate,
-                    maxScore: maxScore,
-                    instructions: instructionsCtrl.text.trim().isEmpty ? null : instructionsCtrl.text.trim(),
-                    attachmentUrl: attachmentUrlCtrl.text.trim().isEmpty ? null : attachmentUrlCtrl.text.trim(),
+                  final res = await ApiService.createAssignment(
+                    title,
+                    desc,
+                    courseId.toString(),
+                    dueDate,
                   );
-                  if (res != null) {
+                  if (res.isSuccess) {
                     if (context.mounted) {
                       Navigator.pop(context, true);
                     }
@@ -135,29 +163,40 @@ class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                AppTextField(controller: studentIdCtrl, label: 'Student ID', type: AppTextFieldType.number, required: true),
+                AppTextField(
+                    controller: studentIdCtrl,
+                    label: 'Student ID',
+                    type: AppTextFieldType.number,
+                    required: true),
                 const SizedBox(height: AppSpacing.sm),
-                AppTextField(controller: scoreCtrl, label: 'Score', type: AppTextFieldType.number, required: true),
+                AppTextField(
+                    controller: scoreCtrl,
+                    label: 'Score',
+                    type: AppTextFieldType.number,
+                    required: true),
                 const SizedBox(height: AppSpacing.sm),
                 AppTextField(controller: feedbackCtrl, label: 'Feedback'),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+            TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel')),
             ElevatedButton(
               onPressed: () async {
                 final studentId = int.tryParse(studentIdCtrl.text.trim());
                 final score = int.tryParse(scoreCtrl.text.trim());
                 if (studentId == null || score == null) return;
-                final courseId = assignment['course_id'] as int? ?? assignment['courseId'] as int? ?? 0;
+                final courseId = assignment['course_id'] as int? ??
+                    assignment['courseId'] as int? ??
+                    0;
                 final feedback = feedbackCtrl.text.trim();
-                await ApiService().gradeAssignment(
-                  studentId,
-                  courseId,
+                await ApiService.gradeAssignment(
                   assignment['id'] as int,
+                  studentId,
                   score.toDouble(),
-                  feedback,
+                  feedback: feedback,
                 );
                 if (context.mounted) {
                   Navigator.pop(context, true);
@@ -173,7 +212,8 @@ class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
     if (graded == true) {
       // No list change needed; optional toast/snack
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Grade submitted')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Grade submitted')));
       }
     }
   }
@@ -185,7 +225,7 @@ class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
         title: const Text('Assignments'),
         actions: [
           IconButton(
-            onPressed: _openCreateAssignmentDialog,
+            onPressed: _showCreateAssignmentDialog,
             icon: const Icon(Icons.add),
             tooltip: 'Create Assignment',
           )
@@ -200,20 +240,32 @@ class _TeacherAssignmentsScreenState extends State<TeacherAssignmentsScreen> {
                 : _assignments.isEmpty
                     ? const Center(child: Text('No assignments yet'))
                     : ListView.builder(
-                        padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                        padding:
+                            const EdgeInsets.all(AppSpacing.screenPadding),
                         itemCount: _assignments.length,
                         itemBuilder: (context, index) {
-                          final a = _assignments[index] as Map<String, dynamic>;
+                          final a =
+                              _assignments[index] as Map<String, dynamic>;
                           return AppCard(
-                            margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                            margin:
+                                const EdgeInsets.only(bottom: AppSpacing.md),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Expanded(child: Text(a['title'] ?? 'Assignment', style: const TextStyle(fontWeight: FontWeight.w600))),
-                                    Text((a['due_date'] ?? a['dueDate'] ?? '').toString(), style: const TextStyle(fontSize: 12)),
+                                    Expanded(
+                                        child: Text(
+                                            a['title'] ?? 'Assignment',
+                                            style: const TextStyle(
+                                                fontWeight:
+                                                    FontWeight.w600))),
+                                    Text(
+                                        (a['due_date'] ?? a['dueDate'] ?? '')
+                                            .toString(),
+                                        style: const TextStyle(fontSize: 12)),
                                   ],
                                 ),
                                 const SizedBox(height: AppSpacing.xs),

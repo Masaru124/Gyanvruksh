@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/screens/login.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -34,16 +34,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         error = null;
       });
 
-      final user = await ApiService().getProfile();
-      if (user != null) {
+      final response = await ApiService.getProfile();
+      if (response.isSuccess) {
         setState(() {
-          userData = user;
+          userData = response.data as Map<String, dynamic>?;
           _populateControllers();
           isLoading = false;
         });
       } else {
         setState(() {
-          error = 'Failed to load user data';
+          error = response.userMessage;
           isLoading = false;
         });
       }
@@ -75,13 +75,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _saveProfile() async {
     try {
-      final success = await ApiService().updateProfile(
+      final response = await ApiService.updateProfile(
         name: fullNameCtrl.text.isNotEmpty ? fullNameCtrl.text : null,
         phone: phoneCtrl.text.isNotEmpty ? phoneCtrl.text : null,
         bio: addressCtrl.text.isNotEmpty ? addressCtrl.text : null,
       );
 
-      if (success) {
+      if (response.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully!')),
         );
@@ -89,7 +89,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         await _loadUserProfile();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update profile')),
+          SnackBar(content: Text(response.userMessage)),
         );
       }
     } catch (e) {
@@ -105,13 +105,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _logout() async {
     try {
-      await ApiService().logout();
-      if (mounted) {
-        // Navigate to login screen and clear navigation stack
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-          (Route<dynamic> route) => false,
-        );
+      final response = await ApiService.logout();
+      if (response.isSuccess) {
+        if (mounted) {
+          // Navigate to login screen and clear navigation stack
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (Route<dynamic> route) => false,
+          );
+        }
+      } else {
+        // Even if logout fails, clear local data and navigate to login
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(response.userMessage)),
+          );
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (Route<dynamic> route) => false,
+          );
+        }
       }
     } catch (e) {
       // Even if logout fails, clear local data and navigate to login

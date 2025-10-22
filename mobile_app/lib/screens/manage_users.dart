@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 
 class ManageUsersScreen extends StatefulWidget {
   const ManageUsersScreen({super.key});
@@ -25,10 +25,16 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
       error = null;
     });
     try {
-      final fetchedUsers = await ApiService().listUsers();
-      setState(() {
-        users = fetchedUsers;
-      });
+      final response = await ApiService.listUsers();
+      if (response.isSuccess) {
+        setState(() {
+          users = response.data as List<dynamic>;
+        });
+      } else {
+        setState(() {
+          error = response.userMessage;
+        });
+      }
     } catch (e) {
       setState(() {
         error = e.toString();
@@ -46,13 +52,13 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
       error = null;
     });
     try {
-      final success = await ApiService().deleteUser(userId);
-      if (success) {
+      final response = await ApiService.deleteUser(userId);
+      if (response.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User deleted successfully')));
         _fetchUsers();
       } else {
         setState(() {
-          error = 'Failed to delete user';
+          error = response.userMessage;
         });
       }
     } catch (e) {

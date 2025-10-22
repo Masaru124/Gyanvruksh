@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
 import 'package:gyanvruksh/widgets/backgrounds/cinematic_background.dart';
 import 'package:gyanvruksh/widgets/particle_background.dart';
@@ -30,16 +30,22 @@ class _AssignmentsQuizzesScreenState extends State<AssignmentsQuizzesScreen> {
 
   Future<void> _loadData() async {
     setState(() => isLoading = true);
-    
+
     try {
-      final api = ApiService();
       final results = await Future.wait([
-        api.getStudentAssignments(),
-        api.getQuizzes(),
+        ApiService.get('/api/student/assignments'),
+        ApiService.getQuizzes(),
       ]);
 
-      final rawAssignments = results[0];
-      final rawQuizzes = results[1];
+      final assignmentsResponse = results[0];
+      final quizzesResponse = results[1];
+
+      final rawAssignments = assignmentsResponse.isSuccess
+          ? (assignmentsResponse.data as List<dynamic>?) ?? []
+          : [];
+      final rawQuizzes = quizzesResponse.isSuccess
+          ? (quizzesResponse.data as List<dynamic>?) ?? []
+          : [];
 
       // Map backend fields to UI-friendly structure
       assignments = rawAssignments.map((a) {
@@ -229,7 +235,7 @@ class _AssignmentsQuizzesScreenState extends State<AssignmentsQuizzesScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: _getStatusColor(assignment['status']).withOpacity(0.2),
+                          color: _getStatusColor(assignment['status']).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
@@ -308,7 +314,7 @@ class _AssignmentsQuizzesScreenState extends State<AssignmentsQuizzesScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: _getStatusColor(quiz['status']).withOpacity(0.2),
+                          color: _getStatusColor(quiz['status']).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
@@ -336,7 +342,7 @@ class _AssignmentsQuizzesScreenState extends State<AssignmentsQuizzesScreen> {
                       ),
                       const SizedBox(width: 24),
                       FaIcon(
-                        FontAwesomeIcons.questionCircle,
+                        FontAwesomeIcons.circleQuestion,
                         color: FuturisticColors.accent,
                         size: 16,
                       ),

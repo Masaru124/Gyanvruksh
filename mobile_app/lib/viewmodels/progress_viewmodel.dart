@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import '../services/api.dart';
 import '../repositories/progress_repository.dart';
+import '../services/enhanced_api_service.dart';
 
 class ProgressViewModel extends ChangeNotifier {
-  final ApiService _apiService = ApiService();
   final ProgressRepository _progressRepository = ProgressRepository();
 
   // Loading states
@@ -174,13 +173,15 @@ class ProgressViewModel extends ChangeNotifier {
   Future<bool> updateLessonProgress(int courseId, int lessonId, double progressPercentage,
       {bool completed = false, int timeSpentMinutes = 0, String? skillArea}) async {
     try {
-      final success = await _apiService.updateLessonProgress(
+      final response = await ApiService.updateLessonProgress(
         courseId,
         lessonId,
         progressPercentage,
         completed: completed,
         timeSpentMinutes: timeSpentMinutes,
       );
+
+      final success = response.isSuccess;
 
       if (success) {
         // Update local state

@@ -1,136 +1,161 @@
-import '../services/api.dart';
+import '../services/enhanced_api_service.dart';
 import 'base_repository.dart';
 
 class CoursesRepository extends BaseRepository {
-  final ApiService _apiService = ApiService();
-
-  Future<List<dynamic>> getAllCourses() async {
-    return await handleApiCall(() => _apiService.listCourses());
+  static Future<List<dynamic>> getAllCourses() async {
+    final response = await ApiService.listCourses();
+    return response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
   }
 
-  Future<List<dynamic>> getMyCourses() async {
-    return await handleApiCall(() => _apiService.myCourses());
+  static Future<List<dynamic>> getMyCourses() async {
+    final response = await ApiService.myCourses();
+    return response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
   }
 
-  Future<bool> createCourse(String title, String description) async {
-    return await handleApiCall(() => _apiService.createCourse(title, description));
+  static Future<bool> createCourse(String title, String description) async {
+    final response = await ApiService.createCourse(title, description);
+    return response.isSuccess;
   }
 
-  Future<List<dynamic>> getAvailableCourses() async {
-    return await handleApiCall(() => _apiService.availableCourses());
+  static Future<List<dynamic>> getAvailableCourses() async {
+    final response = await ApiService.availableCourses();
+    return response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
   }
 
-  Future<bool> selectCourse(int courseId) async {
-    return await handleApiCall(() => _apiService.selectCourse(courseId));
+  static Future<bool> selectCourse(int courseId) async {
+    final response = await ApiService.selectCourse(courseId);
+    return response.isSuccess;
   }
 
-  Future<Map<String, dynamic>> getTeacherStats() async {
-    return await handleApiCall(() => _apiService.teacherStats());
+  static Future<Map<String, dynamic>> teacherStats() async {
+    final response = await ApiService.teacherStats();
+    return response.isSuccess ? (response.data as Map<String, dynamic>? ?? {}) : {};
   }
 
-  Future<List<dynamic>> getUpcomingClasses() async {
-    return await handleApiCall(() => _apiService.upcomingClasses());
+  static Future<List<dynamic>> upcomingClasses() async {
+    final response = await ApiService.upcomingClasses();
+    return response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
   }
 
-  Future<List<dynamic>> getStudentQueries() async {
-    return await handleApiCall(() => _apiService.studentQueries());
+  static Future<List<dynamic>> studentQueries() async {
+    final response = await ApiService.studentQueries();
+    return response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
   }
 
-  Future<bool> enrollInCourse(int courseId) async {
-    return await handleApiCall(() => _apiService.enrollInCourse(courseId));
+  static Future<bool> enrollInCourse(int courseId) async {
+    final response = await ApiService.enrollInCourse(courseId);
+    return response.isSuccess;
   }
 
-  Future<List<dynamic>> getEnrolledCourses() async {
-    return await handleApiCall(() => _apiService.getEnrolledCourses());
+  static Future<List<dynamic>> getEnrolledCourses() async {
+    final response = await ApiService.getEnrolledCourses();
+    return response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
   }
 
-  Future<bool> unenrollFromCourse(int courseId) async {
-    return await handleApiCall(() => _apiService.unenrollFromCourse(courseId));
+  static Future<bool> unenrollFromCourse(int courseId) async {
+    final response = await ApiService.unenrollFromCourse(courseId);
+    return response.isSuccess;
   }
 
-  Future<List<dynamic>> getAvailableCoursesForEnrollment() async {
-    return await handleApiCall(() => _apiService.getAvailableCoursesForEnrollment());
+  static Future<List<dynamic>> getAvailableCoursesForEnrollment() async {
+    final response = await ApiService.getAvailableCoursesForEnrollment();
+    return response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
   }
 
-  Future<Map<String, dynamic>?> getCourseDetails(int courseId) async {
-    return await handleApiCall(() => _apiService.getCourseDetails(courseId));
+  static Future<Map<String, dynamic>?> getCourseDetails(int courseId) async {
+    final response = await ApiService.getCourseDetails(courseId);
+    return response.isSuccess ? response.data as Map<String, dynamic>? : null;
   }
 
-  Future<List<dynamic>> getCourseNotes(int courseId) async {
-    return await handleApiCall(() => _apiService.getCourseNotes(courseId));
+  static Future<List<dynamic>> getCourseNotes(int courseId) async {
+    final response = await ApiService.getCourseNotes(courseId);
+    return response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
   }
 
-  // New methods for extended features
-  Future<List<dynamic>> getCategories() async {
-    return await handleApiCall(() => _apiService.getCategories());
+  static Future<List<dynamic>> getCategories() async {
+    final response = await ApiService.getCategories();
+    return response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
   }
 
-  Future<List<dynamic>> getLessons({int? courseId}) async {
-    return await handleApiCall(() => _apiService.getLessons(courseId: courseId));
+  static Future<List<dynamic>> getLessons({int? courseId}) async {
+    final response = await ApiService.getLessons(courseId: courseId);
+    return response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
   }
 
-  Future<Map<String, dynamic>?> getLesson(int lessonId) async {
-    return await handleApiCall(() => _apiService.getLesson(lessonId));
+  static Future<Map<String, dynamic>?> getLesson(int lessonId) async {
+    final response = await ApiService.getLesson(lessonId);
+    return response.isSuccess ? response.data as Map<String, dynamic>? : null;
   }
 
-  Future<bool> createLesson(int courseId, String title, String description, String contentType,
+  static Future<bool> createLesson(int courseId, String title, String description, String contentType,
       {String? contentUrl, String? contentText, int durationMinutes = 0, int orderIndex = 0, bool isFree = false}) async {
-    return await handleApiCall(() => _apiService.createLesson(courseId, title, description, contentType,
+    final response = await ApiService.createLesson(courseId, title, description, contentType,
         contentUrl: contentUrl, contentText: contentText, durationMinutes: durationMinutes,
-        orderIndex: orderIndex, isFree: isFree));
+        orderIndex: orderIndex, isFree: isFree);
+    return response.isSuccess;
   }
 
-  Future<List<dynamic>> getQuizzes({int? courseId}) async {
-    return await handleApiCall(() => _apiService.getQuizzes(courseId: courseId));
+  static Future<List<dynamic>> getQuizzes({int? courseId}) async {
+    final response = await ApiService.getQuizzes(courseId: courseId);
+    return response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
   }
 
-  Future<Map<String, dynamic>?> getQuiz(int quizId) async {
-    return await handleApiCall(() => _apiService.getQuiz(quizId));
+  static Future<Map<String, dynamic>?> getQuiz(int quizId) async {
+    final response = await ApiService.getQuiz(quizId);
+    return response.isSuccess ? response.data as Map<String, dynamic>? : null;
   }
 
-  Future<List<dynamic>> getQuizQuestions(int quizId) async {
-    return await handleApiCall(() => _apiService.getQuizQuestions(quizId));
+  static Future<List<dynamic>> getQuizQuestions(int quizId) async {
+    final response = await ApiService.getQuizQuestions(quizId);
+    return response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
   }
 
-  Future<Map<String, dynamic>?> submitQuizAttempt(int quizId, Map<String, dynamic> answers) async {
-    return await handleApiCall(() => _apiService.submitQuizAttempt(quizId, answers));
+  static Future<Map<String, dynamic>?> submitQuizAttempt(int quizId, Map<String, dynamic> answers) async {
+    final response = await ApiService.submitQuizAttempt(quizId, answers);
+    return response.isSuccess ? response.data as Map<String, dynamic>? : null;
   }
 
-  Future<List<dynamic>> getQuizAttempts(int quizId) async {
-    return await handleApiCall(() => _apiService.getQuizAttempts(quizId));
+  static Future<List<dynamic>> getQuizAttempts(int quizId) async {
+    final response = await ApiService.getQuizAttempts(quizId);
+    return response.isSuccess ? (response.data as List<dynamic>? ?? []) : [];
   }
 
-  Future<Map<String, dynamic>?> getCourseProgress(int courseId) async {
-    return await handleApiCall(() => _apiService.getCourseProgress(courseId));
+  static Future<Map<String, dynamic>?> getCourseProgress(int courseId) async {
+    final response = await ApiService.getCourseProgress(courseId);
+    return response.isSuccess ? response.data as Map<String, dynamic>? : null;
   }
 
-  Future<bool> updateLessonProgress(int courseId, int lessonId, double progressPercentage,
+  static Future<bool> updateLessonProgress(int courseId, int lessonId, double progressPercentage,
       {bool completed = false, int timeSpentMinutes = 0}) async {
-    return await handleApiCall(() => _apiService.updateLessonProgress(courseId, lessonId, progressPercentage,
-        completed: completed, timeSpentMinutes: timeSpentMinutes));
+    final response = await ApiService.updateLessonProgress(courseId, lessonId, progressPercentage,
+        completed: completed, timeSpentMinutes: timeSpentMinutes);
+    return response.isSuccess;
   }
 
-  Future<Map<String, dynamic>?> getUserPreferences() async {
-    return await handleApiCall(() => _apiService.getUserPreferences());
+  static Future<Map<String, dynamic>?> getUserPreferences() async {
+    final response = await ApiService.getUserPreferences();
+    return response.isSuccess ? response.data as Map<String, dynamic>? : null;
   }
 
-  Future<bool> updateUserPreferences({
+  static Future<bool> updateUserPreferences({
     List<String>? preferredCategories,
     String? skillLevel,
     List<String>? learningGoals,
     int? dailyStudyTime,
     bool? notificationsEnabled,
   }) async {
-    return await handleApiCall(() => _apiService.updateUserPreferences(
-        preferredCategories: preferredCategories,
-        skillLevel: skillLevel,
-        learningGoals: learningGoals,
-        dailyStudyTime: dailyStudyTime,
-        notificationsEnabled: notificationsEnabled));
+    final response = await ApiService.updateUserPreferences(
+      preferredCategories: preferredCategories,
+      skillLevel: skillLevel,
+      learningGoals: learningGoals,
+      dailyStudyTime: dailyStudyTime,
+      notificationsEnabled: notificationsEnabled,
+    );
+    return response.isSuccess;
   }
 
   // Enhanced content type support methods
-  Future<List<dynamic>> getLessonsByContentType(String contentType, {int? courseId}) async {
+  static Future<List<dynamic>> getLessonsByContentType(String contentType, {int? courseId}) async {
     final lessons = await getLessons(courseId: courseId);
     return lessons.where((lesson) => lesson['content_type'] == contentType).toList();
   }
@@ -242,9 +267,6 @@ class CoursesRepository extends BaseRepository {
       if (preferences == null) {
         return await getLessons(courseId: courseId);
       }
-
-      final preferredCategories = preferences['preferred_categories'] as List<dynamic>? ?? [];
-      final skillLevel = preferences['skill_level'] as String?;
 
       // Filter lessons based on preferences
       final allLessons = await getLessons(courseId: courseId);

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import HTTPException
-from .api import auth, courses, lessons, progress, chat, admin, attendance, student, teacher, gyanvruksh
+from .api import auth, courses, lessons, progress, chat, admin, attendance, student, teacher, gyanvruksh, ai_tutor
 from .api.lessons import router as lessons_router
 from .api.quizzes import router as quizzes_router
 from .api.progress import router as progress_router
@@ -11,6 +11,11 @@ from .api.categories import router as categories_router
 from .api.analytics import router as analytics_router
 from .api.dashboard import router as dashboard_router
 from .api.gamification import router as gamification_router
+from .api.attendance import router as attendance_router
+from .api.student import router as student_router
+from .api.ai_tutor import router as ai_tutor_router
+from .api.search import router as search_router
+from .api.personalization import router as personalization_router
 from .utils.errors import custom_http_exception_handler
 from contextlib import asynccontextmanager
 import asyncio
@@ -59,7 +64,18 @@ app.add_exception_handler(HTTPException, custom_http_exception_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://10.0.2.2:8000",  # Android emulator
+        "http://10.0.2.2:3000",  # Android emulator alternative
+        "https://gyanvruksh.onrender.com",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "*",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -77,12 +93,14 @@ app.include_router(assignments_router)
 app.include_router(notifications_router)
 app.include_router(analytics_router)
 app.include_router(dashboard_router)
-app.include_router(gamification_router)
 app.include_router(admin.router)
-app.include_router(attendance.router)
-app.include_router(student.router)
 app.include_router(teacher.router)
+app.include_router(attendance_router)
+app.include_router(student_router)
+app.include_router(gamification_router)
+app.include_router(ai_tutor_router)
+app.include_router(search_router)
+app.include_router(personalization_router)
 
-@app.get("/healthz")
 def health():
     return {"status": "ok"}

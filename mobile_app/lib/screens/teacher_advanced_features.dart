@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
 
 class TeacherAdvancedFeaturesScreen extends StatefulWidget {
   const TeacherAdvancedFeaturesScreen({super.key});
 
   @override
-  State<TeacherAdvancedFeaturesScreen> createState() => _TeacherAdvancedFeaturesScreenState();
+  State<TeacherAdvancedFeaturesScreen> createState() =>
+      _TeacherAdvancedFeaturesScreenState();
 }
 
-class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesScreen>
-    with TickerProviderStateMixin {
+class _TeacherAdvancedFeaturesScreenState
+    extends State<TeacherAdvancedFeaturesScreen> with TickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
-  
+
   Map<String, dynamic> _performanceData = {};
   Map<String, dynamic> _studentData = {};
   Map<String, dynamic> _messages = {};
   Map<String, dynamic> _contentLibrary = {};
-  
+
   // Form variables
   int? _selectedCourseId;
   final _announcementTitleController = TextEditingController();
@@ -46,20 +47,20 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
 
   Future<void> _loadTeacherData() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final results = await Future.wait([
-        ApiService().getTeacherPerformanceAnalytics(),
-        ApiService().getStudentManagementData(),
-        ApiService().getTeacherMessages(),
-        ApiService().getContentLibrary(),
+        ApiService.getTeacherPerformanceAnalytics(),
+        ApiService.getStudentManagementData(),
+        ApiService.getTeacherMessages(),
+        ApiService.getContentLibrary(),
       ]);
 
       setState(() {
-        _performanceData = results[0] as Map<String, dynamic>? ?? {};
-        _studentData = results[1] as Map<String, dynamic>? ?? {};
-        _messages = results[2] as Map<String, dynamic>? ?? {};
-        _contentLibrary = results[3] as Map<String, dynamic>? ?? {};
+        _performanceData = results[0].isSuccess ? (results[0].data as Map<String, dynamic>?) ?? {} : {};
+        _studentData = results[1].isSuccess ? (results[1].data as Map<String, dynamic>?) ?? {} : {};
+        _messages = results[2].isSuccess ? (results[2].data as Map<String, dynamic>?) ?? {} : {};
+        _contentLibrary = results[3].isSuccess ? (results[3].data as Map<String, dynamic>?) ?? {} : {};
         _isLoading = false;
       });
     } catch (e) {
@@ -88,7 +89,8 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
               _buildTabBar(),
               Expanded(
                 child: _isLoading
-                    ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                    ? const Center(
+                        child: CircularProgressIndicator(color: Colors.white))
                     : TabBarView(
                         controller: _tabController,
                         children: [
@@ -148,8 +150,9 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
   }
 
   Widget _buildAnalyticsTab() {
-    final coursePerformance = (_performanceData['course_performance'] as List?) ?? [];
-    
+    final coursePerformance =
+        (_performanceData['course_performance'] as List?) ?? [];
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -182,7 +185,9 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
                       Expanded(
                         child: _buildStatItem(
                           'Top Course',
-                          _performanceData['top_performing_course']?['course_title'] ?? 'N/A',
+                          _performanceData['top_performing_course']
+                                  ?['course_title'] ??
+                              'N/A',
                           Icons.star,
                         ),
                       ),
@@ -209,27 +214,35 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
                   ),
                   const SizedBox(height: 16),
                   ...coursePerformance.map((course) => Card(
-                    color: Colors.white.withOpacity(0.1),
-                    child: ListTile(
-                      title: Text(
-                        course['course_title'] ?? 'Unknown Course',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Enrolled: ${course['total_enrolled']} | Completed: ${course['completed_students']}',
-                              style: const TextStyle(color: Colors.white70)),
-                          Text('Completion Rate: ${course['completion_rate']?.toStringAsFixed(1)}%',
-                              style: const TextStyle(color: Colors.white70)),
-                        ],
-                      ),
-                      trailing: Text(
-                        '\$${course['revenue']}',
-                        style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  )),
+                        color: Colors.white.withOpacity(0.1),
+                        child: ListTile(
+                          title: Text(
+                            course['course_title'] ?? 'Unknown Course',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                  'Enrolled: ${course['total_enrolled']} | Completed: ${course['completed_students']}',
+                                  style:
+                                      const TextStyle(color: Colors.white70)),
+                              Text(
+                                  'Completion Rate: ${course['completion_rate']?.toStringAsFixed(1)}%',
+                                  style:
+                                      const TextStyle(color: Colors.white70)),
+                            ],
+                          ),
+                          trailing: Text(
+                            '\$${course['revenue']}',
+                            style: const TextStyle(
+                                color: Colors.greenAccent,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      )),
                 ],
               ),
             ),
@@ -241,7 +254,7 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
 
   Widget _buildStudentManagementTab() {
     final students = (_studentData['students'] as List?) ?? [];
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -318,47 +331,60 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
                   ),
                   const SizedBox(height: 16),
                   ...students.map((student) => Card(
-                    color: Colors.white.withOpacity(0.1),
-                    child: ExpansionTile(
-                      title: Text(
-                        student['student_name'] ?? 'Unknown Student',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        '${student['course_title']} | Progress: ${student['progress']}%',
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _getGradeColor(student['performance_grade']),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          student['performance_grade'] ?? 'N/A',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Email: ${student['student_email']}', 
-                                  style: const TextStyle(color: Colors.white70)),
-                              Text('Hours Completed: ${student['hours_completed']}', 
-                                  style: const TextStyle(color: Colors.white70)),
-                              Text('Attendance Rate: ${student['attendance_rate']}%', 
-                                  style: const TextStyle(color: Colors.white70)),
-                              Text('Last Activity: ${student['last_activity']?.substring(0, 10)}', 
-                                  style: const TextStyle(color: Colors.white70)),
-                            ],
+                        color: Colors.white.withOpacity(0.1),
+                        child: ExpansionTile(
+                          title: Text(
+                            student['student_name'] ?? 'Unknown Student',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
                           ),
+                          subtitle: Text(
+                            '${student['course_title']} | Progress: ${student['progress']}%',
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color:
+                                  _getGradeColor(student['performance_grade']),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              student['performance_grade'] ?? 'N/A',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Email: ${student['student_email']}',
+                                      style: const TextStyle(
+                                          color: Colors.white70)),
+                                  Text(
+                                      'Hours Completed: ${student['hours_completed']}',
+                                      style: const TextStyle(
+                                          color: Colors.white70)),
+                                  Text(
+                                      'Attendance Rate: ${student['attendance_rate']}%',
+                                      style: const TextStyle(
+                                          color: Colors.white70)),
+                                  Text(
+                                      'Last Activity: ${student['last_activity']?.substring(0, 10)}',
+                                      style: const TextStyle(
+                                          color: Colors.white70)),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  )),
+                      )),
                 ],
               ),
             ),
@@ -370,7 +396,7 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
 
   Widget _buildCommunicationTab() {
     final messages = (_messages['messages'] as List?) ?? [];
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -440,36 +466,45 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
                   ),
                   const SizedBox(height: 16),
                   ...messages.map((message) => Card(
-                    color: Colors.white.withOpacity(0.1),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: message['status'] == 'unread' ? Colors.red : Colors.green,
-                        child: Text(
-                          (message['from_student'] as String?)?.substring(0, 1) ?? '?',
-                          style: const TextStyle(color: Colors.white),
+                        color: Colors.white.withOpacity(0.1),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: message['status'] == 'unread'
+                                ? Colors.red
+                                : Colors.green,
+                            child: Text(
+                              (message['from_student'] as String?)
+                                      ?.substring(0, 1) ??
+                                  '?',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                          title: Text(
+                            message['subject'] ?? 'No Subject',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('From: ${message['from_student']}',
+                                  style:
+                                      const TextStyle(color: Colors.white70)),
+                              Text('Course: ${message['course_title']}',
+                                  style:
+                                      const TextStyle(color: Colors.white70)),
+                              Text(message['message'] ?? '',
+                                  style:
+                                      const TextStyle(color: Colors.white60)),
+                            ],
+                          ),
+                          trailing: Text(
+                            message['received_at']?.substring(0, 10) ?? '',
+                            style: const TextStyle(color: Colors.white70),
+                          ),
                         ),
-                      ),
-                      title: Text(
-                        message['subject'] ?? 'No Subject',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('From: ${message['from_student']}', 
-                              style: const TextStyle(color: Colors.white70)),
-                          Text('Course: ${message['course_title']}', 
-                              style: const TextStyle(color: Colors.white70)),
-                          Text(message['message'] ?? '', 
-                              style: const TextStyle(color: Colors.white60)),
-                        ],
-                      ),
-                      trailing: Text(
-                        message['received_at']?.substring(0, 10) ?? '',
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                    ),
-                  )),
+                      )),
                 ],
               ),
             ),
@@ -483,7 +518,7 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
     final videos = (_contentLibrary['videos'] as List?) ?? [];
     final documents = (_contentLibrary['documents'] as List?) ?? [];
     final quizzes = (_contentLibrary['quizzes'] as List?) ?? [];
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -571,20 +606,22 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
             ),
             const SizedBox(height: 16),
             ...items.map((item) => Card(
-              color: Colors.white.withOpacity(0.1),
-              child: ListTile(
-                leading: Icon(icon, color: Colors.white70),
-                title: Text(
-                  item['title'] ?? 'Unknown Title',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  _getItemSubtitle(item, title),
-                  style: const TextStyle(color: Colors.white70),
-                ),
-                trailing: const Icon(Icons.more_vert, color: Colors.white70),
-              ),
-            )),
+                  color: Colors.white.withOpacity(0.1),
+                  child: ListTile(
+                    leading: Icon(icon, color: Colors.white70),
+                    title: Text(
+                      item['title'] ?? 'Unknown Title',
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      _getItemSubtitle(item, title),
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                    trailing:
+                        const Icon(Icons.more_vert, color: Colors.white70),
+                  ),
+                )),
           ],
         ),
       ),
@@ -618,10 +655,14 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
 
   Color _getGradeColor(String? grade) {
     switch (grade) {
-      case 'A': return Colors.green;
-      case 'B': return Colors.orange;
-      case 'C': return Colors.red;
-      default: return Colors.grey;
+      case 'A':
+        return Colors.green;
+      case 'B':
+        return Colors.orange;
+      case 'C':
+        return Colors.red;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -680,7 +721,8 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Grade Assignment'),
-        content: const Text('Assignment grading feature - select student and assignment to grade.'),
+        content: const Text(
+            'Assignment grading feature - select student and assignment to grade.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -721,7 +763,8 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
                 DropdownMenuItem(value: 'document', child: Text('Document')),
                 DropdownMenuItem(value: 'quiz', child: Text('Quiz')),
               ],
-              onChanged: (value) => setState(() => _selectedContentType = value!),
+              onChanged: (value) =>
+                  setState(() => _selectedContentType = value!),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -749,19 +792,21 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
   }
 
   void _createAnnouncement() async {
-    if (_selectedCourseId != null && 
-        _announcementTitleController.text.isNotEmpty && 
+    if (_selectedCourseId != null &&
+        _announcementTitleController.text.isNotEmpty &&
         _announcementMessageController.text.isNotEmpty) {
       try {
-        final result = await ApiService().createAnnouncement(
-          _selectedCourseId!,
+        final result = await ApiService.createAnnouncement(
           _announcementTitleController.text,
           _announcementMessageController.text,
+          courseId: _selectedCourseId,
         );
-        
-        if (result.isNotEmpty) {
+
+        if (result.isSuccess && result.data != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Announcement created successfully')),
+            SnackBar(
+                content: Text(
+                    result.data?['message'] ?? 'Announcement created successfully')),
           );
           _announcementTitleController.clear();
           _announcementMessageController.clear();
@@ -777,15 +822,18 @@ class _TeacherAdvancedFeaturesScreenState extends State<TeacherAdvancedFeaturesS
   void _uploadContent() async {
     if (_contentTitleController.text.isNotEmpty) {
       try {
-        final result = await ApiService().uploadContent(
+        final result = await ApiService.uploadContent(
           _contentTitleController.text,
-          _selectedContentType,
           _contentDescriptionController.text,
+          _selectedContentType!,
+          courseId: _selectedCourseId,
         );
-        
-        if (result.isNotEmpty) {
+
+        if (result.isSuccess && result.data != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Content uploaded successfully')),
+            SnackBar(
+                content:
+                    Text(result.data?['message'] ?? 'Content uploaded successfully')),
           );
           _contentTitleController.clear();
           _contentDescriptionController.clear();

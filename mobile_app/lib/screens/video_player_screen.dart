@@ -1,9 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
-import 'package:gyanvruksh/services/api.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
@@ -42,10 +42,16 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         error = null;
       });
 
-      final videosData = await ApiService().getCourseNotes(widget.courseId); // Using getCourseNotes as fallback since getCourseVideos was removed
-      print('Fetched videos data: $videosData');
+      // Get lessons for this course and filter for video content
+      final lessonsResult = await ApiService.getLessons(courseId: widget.courseId);
+      final allLessons = lessonsResult.isSuccess ? (lessonsResult.data as List<dynamic>?) ?? [] : [];
+      final videoLessons = allLessons
+          .where((lesson) =>
+              lesson['content_type'] == 'video' &&
+              lesson['url'] != null)
+          .toList();
       setState(() {
-        videos = []; // Empty list since getCourseVideos was removed
+        videos = videoLessons;
         isLoading = false;
       });
     } catch (e) {
@@ -76,7 +82,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     if (videoUrl.contains('youtube.com') || videoUrl.contains('youtu.be')) {
       if (defaultTargetPlatform == TargetPlatform.windows) {
         setState(() {
-          error = 'YouTube playback is not supported on Windows platform. Please use a different video URL or test on Android/iOS.';
+          error =
+              'YouTube playback is not supported on Windows platform. Please use a different video URL or test on Android/iOS.';
         });
         return;
       }
@@ -114,7 +121,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       // Detect if URL is a folder URL and show error
       if (videoUrl.contains('/drive/folders/')) {
         setState(() {
-          error = 'Google Drive folder URLs cannot be streamed. Please provide a direct video file URL.';
+          error =
+              'Google Drive folder URLs cannot be streamed. Please provide a direct video file URL.';
         });
         return;
       }
@@ -138,35 +146,37 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       return;
     }
 
-      try {
-        print('Initializing video player with URL: $processedUrl');
-        _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(processedUrl));
-        await _videoPlayerController!.initialize();
+    try {
+      print('Initializing video player with URL: $processedUrl');
+      _videoPlayerController =
+          VideoPlayerController.network(processedUrl);
+      await _videoPlayerController!.initialize();
 
-        _chewieController = ChewieController(
-          videoPlayerController: _videoPlayerController!,
-          aspectRatio: _videoPlayerController!.value.aspectRatio,
-          autoPlay: true,
-          looping: false,
-          allowPlaybackSpeedChanging: true,
-          allowedScreenSleep: false,
-          autoInitialize: true,
-          showControlsOnInitialize: true,
-        );
+      _chewieController = ChewieController(
+        videoPlayerController: _videoPlayerController!,
+        aspectRatio: _videoPlayerController!.value.aspectRatio,
+        autoPlay: true,
+        looping: false,
+        allowPlaybackSpeedChanging: true,
+        allowedScreenSleep: false,
+        autoInitialize: true,
+        showControlsOnInitialize: true,
+      );
 
-        setState(() {
-          error = null;
-        });
-      } catch (e) {
-        setState(() {
-          error = 'Video player initialization failed: $e';
-        });
-      }
+      setState(() {
+        error = null;
+      });
+    } catch (e) {
+      setState(() {
+        error = 'Video player initialization failed: $e';
+      });
+    }
   }
 
   // Method to test playing a sample public video URL
   void _playSampleVideo() {
-    const sampleUrl = 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4';
+    const sampleUrl =
+        'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4';
     _initializeVideo(sampleUrl);
   }
 
@@ -180,7 +190,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('Building VideoPlayerScreen with ${videos.length} videos, isLoading=$isLoading, error=$error');
+    print(
+        'Building VideoPlayerScreen with ${videos.length} videos, isLoading=$isLoading, error=$error');
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.courseTitle} - Videos'),
@@ -209,7 +220,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.video_library, size: 64, color: Colors.grey),
+                          Icon(Icons.video_library,
+                              size: 64, color: Colors.grey),
                           SizedBox(height: 16),
                           Text(
                             'No videos available',
@@ -246,9 +258,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                               // },
                             ),
                           )
-                        else if (_chewieController != null && _videoPlayerController != null && _videoPlayerController!.value.isInitialized)
+                        else if (_chewieController != null &&
+                            _videoPlayerController != null &&
+                            _videoPlayerController!.value.isInitialized)
                           AspectRatio(
-                            aspectRatio: _videoPlayerController!.value.aspectRatio,
+                            aspectRatio:
+                                _videoPlayerController!.value.aspectRatio,
                             child: Chewie(controller: _chewieController!),
                           ),
                         Expanded(
@@ -261,17 +276,22 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                 margin: const EdgeInsets.only(bottom: 12),
                                 child: ListTile(
                                   leading: CircleAvatar(
-                                    backgroundColor: Theme.of(context).primaryColor,
-                                    child: const Icon(Icons.play_circle_fill, color: Colors.white),
+                                    backgroundColor:
+                                        Theme.of(context).primaryColor,
+                                    child: const Icon(Icons.play_circle_fill,
+                                        color: Colors.white),
                                   ),
                                   title: Text(
                                     video['title'] ?? 'Untitled Video',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
                                   ),
                                   subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      if (video['description'] != null && video['description'].isNotEmpty)
+                                      if (video['description'] != null &&
+                                          video['description'].isNotEmpty)
                                         Text(
                                           video['description'],
                                           maxLines: 2,
@@ -279,13 +299,15 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                         ),
                                       Text(
                                         'Uploaded: ${video['uploaded_at'] ?? 'Unknown'}',
-                                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                        style: const TextStyle(
+                                            fontSize: 12, color: Colors.grey),
                                       ),
                                     ],
                                   ),
                                   trailing: const Icon(Icons.arrow_forward_ios),
                                   onTap: () {
-                                    print('Initializing video: ${video['url']}');
+                                    print(
+                                        'Initializing video: ${video['url']}');
                                     _initializeVideo(video['url']);
                                   },
                                 ),

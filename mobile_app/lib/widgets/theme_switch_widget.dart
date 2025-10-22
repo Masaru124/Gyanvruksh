@@ -93,14 +93,14 @@ class _ThemeSwitchWidgetState extends State<ThemeSwitchWidget>
               gradient: LinearGradient(
                 colors: [
                   _backgroundAnimation.value ?? Colors.blue.shade400,
-                  (_backgroundAnimation.value ?? Colors.blue.shade400).withOpacity(0.8),
+                  (_backgroundAnimation.value ?? Colors.blue.shade400).withValues(alpha: 0.8),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: (_backgroundAnimation.value ?? Colors.blue.shade400).withOpacity(0.3),
+                  color: (_backgroundAnimation.value ?? Colors.blue.shade400).withValues(alpha: 0.3),
                   blurRadius: 8,
                   spreadRadius: 2,
                   offset: const Offset(0, 2),
@@ -114,7 +114,7 @@ class _ThemeSwitchWidgetState extends State<ThemeSwitchWidget>
                   child: CustomPaint(
                     painter: ParticlePainter(
                       animation: _controller.value,
-                      color: (_backgroundAnimation.value ?? Colors.blue.shade400).withOpacity(0.2),
+                      color: (_backgroundAnimation.value ?? Colors.blue.shade400).withValues(alpha: 0.2),
                     ),
                   ),
                 ),

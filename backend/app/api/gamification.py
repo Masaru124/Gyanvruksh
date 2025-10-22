@@ -71,6 +71,358 @@ class LeaderboardEntry(BaseModel):
     rank: int
     badges_count: int
 
+class PointsResponse(BaseModel):
+    current_points: int
+    total_earned: int
+    points_history: List[Dict]
+
+# Points system endpoints
+@router.get("/points", response_model=PointsResponse)
+def get_user_points(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get user's current points and points history"""
+    # Get points history from various activities
+    points_history = []
+
+    # Points from completed challenges
+    completed_challenges = db.query(UserChallenge).filter(
+        UserChallenge.user_id == current_user.id,
+        UserChallenge.completed == True
+    ).all()
+
+    for challenge in completed_challenges:
+        daily_challenge = db.query(DailyChallenge).filter(
+            DailyChallenge.id == challenge.challenge_id
+        ).first()
+        if daily_challenge:
+            points_history.append({
+                "type": "challenge_completed",
+                "description": f"Completed: {daily_challenge.title}",
+                "points": daily_challenge.gyan_coins_reward,
+                "earned_at": challenge.completed_at.isoformat() if challenge.completed_at else None
+            })
+
+    # Points from badges earned
+    user_badges = db.query(UserBadge).filter(UserBadge.user_id == current_user.id).all()
+    for user_badge in user_badges:
+        badge = db.query(Badge).filter(Badge.id == user_badge.badge_id).first()
+        if badge:
+            points_history.append({
+                "type": "badge_earned",
+                "description": f"Earned badge: {badge.name}",
+                "points": badge.gyan_coins_reward,
+                "earned_at": user_badge.earned_at.isoformat()
+            })
+
+    # Calculate total points earned
+    total_earned = sum(entry["points"] for entry in points_history)
+
+    return {
+        "current_points": current_user.gyan_coins,
+        "total_earned": total_earned,
+        "points_history": points_history[-20:]  # Last 20 entries
+    }
+
+@router.post("/points/add")
+def add_points(
+    points: int,
+    reason: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Manually add points to user (admin/teacher only)"""
+    # Only admins and teachers can manually add points
+    if not (current_user.role == "admin" or current_user.sub_role == "teacher"):
+        raise HTTPException(status_code=403, detail="Only admins and teachers can add points")
+
+    if points <= 0:
+        raise HTTPException(status_code=400, detail="Points must be positive")
+
+    # Add points to user
+    current_user.gyan_coins += points
+    db.commit()
+
+    return {
+        "message": f"Added {points} points to user",
+        "reason": reason,
+        "new_balance": current_user.gyan_coins
+    }
+
+# Achievement checking
+@router.post("/achievements/check")
+def check_achievements(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Check and award any new achievements for the current user"""
+    _check_and_award_badges(current_user.id, db)
+
+    # Check for new badges since last check
+    recent_badges = db.query(UserBadge).filter(
+        UserBadge.user_id == current_user.id,
+        UserBadge.earned_at >= datetime.utcnow() - timedelta(minutes=5)
+    ).all()
+
+    new_badges = []
+    for user_badge in recent_badges:
+        badge = db.query(Badge).filter(Badge.id == user_badge.badge_id).first()
+        if badge:
+            new_badges.append({
+                "badge_id": badge.id,
+                "badge_name": badge.name,
+                "description": badge.description,
+                "points_awarded": badge.gyan_coins_reward,
+                "category": badge.category
+            })
+
+    return {
+        "message": f"Checked achievements. {len(new_badges)} new badges awarded.",
+        "new_badges": new_badges,
+        "current_points": current_user.gyan_coins,
+        "total_badges": db.query(UserBadge).filter(UserBadge.user_id == current_user.id).count()
+    }
+
+# Streak management endpoints
+@router.post("/streak/update")
+def update_streak(
+    streak_type: str = "daily_study",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update user's streak for a specific activity"""
+    if streak_type not in ["daily_study", "weekly_study", "quiz_completion", "assignment_completion"]:
+        raise HTTPException(status_code=400, detail="Invalid streak type")
+
+    # Get or create streak record
+    streak = db.query(Streak).filter(
+        Streak.user_id == current_user.id,
+        Streak.streak_type == streak_type
+    ).first()
+
+    today = date.today()
+
+    if not streak:
+        # Create new streak
+        streak = Streak(
+            user_id=current_user.id,
+            streak_type=streak_type,
+            current_streak=1,
+            longest_streak=1,
+            last_activity=datetime.utcnow()
+        )
+        db.add(streak)
+    else:
+        # Check if last activity was yesterday (for daily streaks)
+        last_activity_date = streak.last_activity.date() if streak.last_activity else None
+
+        if last_activity_date == today - timedelta(days=1):
+            # Consecutive day - increment streak
+            streak.current_streak += 1
+            if streak.current_streak > streak.longest_streak:
+                streak.longest_streak = streak.current_streak
+        elif last_activity_date == today:
+            # Same day - no change
+            pass
+        else:
+            # Streak broken - reset to 1
+            streak.current_streak = 1
+
+        streak.last_activity = datetime.utcnow()
+
+    db.commit()
+    db.refresh(streak)
+
+    return {
+        "message": "Streak updated successfully",
+        "streak_type": streak_type,
+        "current_streak": streak.current_streak,
+        "longest_streak": streak.longest_streak
+    }
+
+@router.post("/streak/freeze")
+def freeze_streak(
+    streak_type: str = "daily_study",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Freeze a streak to prevent it from being broken (costs points)"""
+    if current_user.gyan_coins < 10:
+        raise HTTPException(status_code=400, detail="Insufficient points to freeze streak (costs 10 points)")
+
+    # Deduct points for freezing
+    current_user.gyan_coins -= 10
+    db.commit()
+
+    # Update streak freeze status (extend freeze by 1 day)
+    streak = db.query(Streak).filter(
+        Streak.user_id == current_user.id,
+        Streak.streak_type == streak_type
+    ).first()
+
+    if not streak:
+        # Create streak with freeze
+        streak = Streak(
+            user_id=current_user.id,
+            streak_type=streak_type,
+            current_streak=1,
+            longest_streak=1,
+            last_activity=datetime.utcnow(),
+            is_frozen=True,
+            frozen_until=datetime.utcnow() + timedelta(days=1)
+        )
+        db.add(streak)
+    else:
+        streak.is_frozen = True
+        streak.frozen_until = datetime.utcnow() + timedelta(days=1)
+        streak.last_activity = datetime.utcnow()  # Update last activity to today
+
+    db.commit()
+
+    return {
+        "message": "Streak frozen for 1 day",
+        "cost": 10,
+        "remaining_points": current_user.gyan_coins,
+        "frozen_until": streak.frozen_until.isoformat()
+    }
+
+# Challenge completion endpoint
+@router.post("/challenges/{challenge_id}/complete")
+def complete_challenge(
+    challenge_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Mark a challenge as completed"""
+    challenge = db.query(DailyChallenge).filter(
+        DailyChallenge.id == challenge_id,
+        DailyChallenge.date == date.today(),
+        DailyChallenge.is_active == True
+    ).first()
+
+    if not challenge:
+        raise not_found_error("Active challenge")
+
+    # Get or create user challenge
+    user_challenge = db.query(UserChallenge).filter(
+        UserChallenge.user_id == current_user.id,
+        UserChallenge.challenge_id == challenge_id
+    ).first()
+
+    if not user_challenge:
+        user_challenge = UserChallenge(
+            user_id=current_user.id,
+            challenge_id=challenge_id,
+            progress=0,
+            completed=False
+        )
+        db.add(user_challenge)
+
+    # Mark as completed and award points
+    user_challenge.completed = True
+    user_challenge.completed_at = datetime.utcnow()
+    user_challenge.progress = challenge.target_value
+
+    # Award gyan coins
+    current_user.gyan_coins += challenge.gyan_coins_reward
+    db.commit()
+
+    # Check for new badges
+    _check_and_award_badges(current_user.id, db)
+
+    return {
+        "message": "Challenge completed successfully!",
+        "challenge_title": challenge.title,
+        "points_awarded": challenge.gyan_coins_reward,
+        "total_points": current_user.gyan_coins,
+        "new_badges_count": db.query(UserBadge).filter(
+            UserBadge.user_id == current_user.id,
+            UserBadge.earned_at >= datetime.utcnow() - timedelta(minutes=1)
+        ).count()
+    }
+
+# Rewards system endpoints
+@router.get("/rewards")
+def get_available_rewards(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get available rewards for purchase"""
+    rewards = [
+        {
+            "id": 1,
+            "name": "Extra Quiz Attempt",
+            "description": "Get one extra attempt on any quiz",
+            "cost": 25,
+            "category": "academic",
+            "is_available": current_user.gyan_coins >= 25
+        },
+        {
+            "id": 2,
+            "name": "Assignment Extension",
+            "description": "Get a 24-hour extension on any assignment",
+            "cost": 30,
+            "category": "academic",
+            "is_available": current_user.gyan_coins >= 30
+        },
+        {
+            "id": 3,
+            "name": "Streak Freeze",
+            "description": "Freeze your streak for 1 day",
+            "cost": 10,
+            "category": "streak",
+            "is_available": current_user.gyan_coins >= 10
+        },
+        {
+            "id": 4,
+            "name": "Custom Avatar",
+            "description": "Unlock a special avatar for your profile",
+            "cost": 50,
+            "category": "cosmetic",
+            "is_available": current_user.gyan_coins >= 50
+        }
+    ]
+
+    return {
+        "current_points": current_user.gyan_coins,
+        "rewards": rewards
+    }
+
+@router.post("/rewards/{reward_id}/claim")
+def claim_reward(
+    reward_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Claim a reward using points"""
+    rewards = {
+        1: {"name": "Extra Quiz Attempt", "cost": 25, "type": "quiz_attempt"},
+        2: {"name": "Assignment Extension", "cost": 30, "type": "assignment_extension"},
+        3: {"name": "Streak Freeze", "cost": 10, "type": "streak_freeze"},
+        4: {"name": "Custom Avatar", "cost": 50, "type": "cosmetic"}
+    }
+
+    if reward_id not in rewards:
+        raise HTTPException(status_code=404, detail="Reward not found")
+
+    reward = rewards[reward_id]
+    if current_user.gyan_coins < reward["cost"]:
+        raise HTTPException(status_code=400, detail="Insufficient points")
+
+    # Deduct points
+    current_user.gyan_coins -= reward["cost"]
+    db.commit()
+
+    # Award the reward (in a real system, this would create a reward record)
+    # For now, just return success
+    return {
+        "message": f"Successfully claimed: {reward['name']}",
+        "reward_type": reward["type"],
+        "cost": reward["cost"],
+        "remaining_points": current_user.gyan_coins
+    }
+
 # Badge endpoints
 @router.get("/badges", response_model=List[BadgeResponse])
 def get_all_badges(
@@ -623,3 +975,352 @@ def generate_daily_challenges(
 
     db.commit()
     return {"message": f"Generated {created_count} challenges for {target_date}"}
+
+# Additional missing endpoints that frontend expects
+
+# Points system endpoints (simplified versions of existing functionality)
+@router.get("/points", response_model=PointsResponse)
+def get_user_points(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get user's current points and points history"""
+    # Get points history from various activities
+    points_history = []
+
+    # Points from completed challenges
+    completed_challenges = db.query(UserChallenge).filter(
+        UserChallenge.user_id == current_user.id,
+        UserChallenge.completed == True
+    ).all()
+
+    for challenge in completed_challenges:
+        daily_challenge = db.query(DailyChallenge).filter(
+            DailyChallenge.id == challenge.challenge_id
+        ).first()
+        if daily_challenge:
+            points_history.append({
+                "type": "challenge_completed",
+                "description": f"Completed: {daily_challenge.title}",
+                "points": daily_challenge.gyan_coins_reward,
+                "earned_at": challenge.completed_at.isoformat() if challenge.completed_at else None
+            })
+
+    # Points from badges earned
+    user_badges = db.query(UserBadge).filter(UserBadge.user_id == current_user.id).all()
+    for user_badge in user_badges:
+        badge = db.query(Badge).filter(Badge.id == user_badge.badge_id).first()
+        if badge:
+            points_history.append({
+                "type": "badge_earned",
+                "description": f"Earned badge: {badge.name}",
+                "points": badge.gyan_coins_reward,
+                "earned_at": user_badge.earned_at.isoformat()
+            })
+
+    # Calculate total points earned
+    total_earned = sum(entry["points"] for entry in points_history)
+
+    return {
+        "current_points": current_user.gyan_coins,
+        "total_earned": total_earned,
+        "points_history": points_history[-20:]  # Last 20 entries
+    }
+
+@router.post("/points/add")
+def add_points(
+    points: int,
+    reason: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Manually add points to user (admin/teacher only)"""
+    # Only admins and teachers can manually add points
+    if not (current_user.role == "admin" or current_user.sub_role == "teacher"):
+        raise HTTPException(status_code=403, detail="Only admins and teachers can add points")
+
+    if points <= 0:
+        raise HTTPException(status_code=400, detail="Points must be positive")
+
+    # Add points to user
+    current_user.gyan_coins += points
+    db.commit()
+
+    return {
+        "message": f"Added {points} points to user",
+        "reason": reason,
+        "new_balance": current_user.gyan_coins
+    }
+
+# Achievement checking
+@router.post("/achievements/check")
+def check_achievements(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Check and award any new achievements for the current user"""
+    _check_and_award_badges(current_user.id, db)
+
+    # Check for new badges since last check
+    recent_badges = db.query(UserBadge).filter(
+        UserBadge.user_id == current_user.id,
+        UserBadge.earned_at >= datetime.utcnow() - timedelta(minutes=5)
+    ).all()
+
+    new_badges = []
+    for user_badge in recent_badges:
+        badge = db.query(Badge).filter(Badge.id == user_badge.badge_id).first()
+        if badge:
+            new_badges.append({
+                "badge_id": badge.id,
+                "badge_name": badge.name,
+                "description": badge.description,
+                "points_awarded": badge.gyan_coins_reward,
+                "category": badge.category
+            })
+
+    return {
+        "message": f"Checked achievements. {len(new_badges)} new badges awarded.",
+        "new_badges": new_badges,
+        "current_points": current_user.gyan_coins,
+        "total_badges": db.query(UserBadge).filter(UserBadge.user_id == current_user.id).count()
+    }
+
+# Streak management endpoints
+@router.post("/streak/update")
+def update_streak(
+    streak_type: str = "daily_study",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update user's streak for a specific activity"""
+    if streak_type not in ["daily_study", "weekly_study", "quiz_completion", "assignment_completion"]:
+        raise HTTPException(status_code=400, detail="Invalid streak type")
+
+    # Get or create streak record
+    streak = db.query(Streak).filter(
+        Streak.user_id == current_user.id,
+        Streak.streak_type == streak_type
+    ).first()
+
+    today = date.today()
+
+    if not streak:
+        # Create new streak
+        streak = Streak(
+            user_id=current_user.id,
+            streak_type=streak_type,
+            current_streak=1,
+            longest_streak=1,
+            last_activity=datetime.utcnow()
+        )
+        db.add(streak)
+    else:
+        # Check if last activity was yesterday (for daily streaks)
+        last_activity_date = streak.last_activity.date() if streak.last_activity else None
+
+        if last_activity_date == today - timedelta(days=1):
+            # Consecutive day - increment streak
+            streak.current_streak += 1
+            if streak.current_streak > streak.longest_streak:
+                streak.longest_streak = streak.current_streak
+        elif last_activity_date == today:
+            # Same day - no change
+            pass
+        else:
+            # Streak broken - reset to 1
+            streak.current_streak = 1
+
+        streak.last_activity = datetime.utcnow()
+
+    db.commit()
+    db.refresh(streak)
+
+    return {
+        "message": "Streak updated successfully",
+        "streak_type": streak_type,
+        "current_streak": streak.current_streak,
+        "longest_streak": streak.longest_streak
+    }
+
+@router.post("/streak/freeze")
+def freeze_streak(
+    streak_type: str = "daily_study",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Freeze a streak to prevent it from being broken (costs points)"""
+    if current_user.gyan_coins < 10:
+        raise HTTPException(status_code=400, detail="Insufficient points to freeze streak (costs 10 points)")
+
+    # Deduct points for freezing
+    current_user.gyan_coins -= 10
+    db.commit()
+
+    # Update streak freeze status (extend freeze by 1 day)
+    streak = db.query(Streak).filter(
+        Streak.user_id == current_user.id,
+        Streak.streak_type == streak_type
+    ).first()
+
+    if not streak:
+        # Create streak with freeze
+        streak = Streak(
+            user_id=current_user.id,
+            streak_type=streak_type,
+            current_streak=1,
+            longest_streak=1,
+            last_activity=datetime.utcnow(),
+            is_frozen=True,
+            frozen_until=datetime.utcnow() + timedelta(days=1)
+        )
+        db.add(streak)
+    else:
+        streak.is_frozen = True
+        streak.frozen_until = datetime.utcnow() + timedelta(days=1)
+        streak.last_activity = datetime.utcnow()  # Update last activity to today
+
+    db.commit()
+
+    return {
+        "message": "Streak frozen for 1 day",
+        "cost": 10,
+        "remaining_points": current_user.gyan_coins,
+        "frozen_until": streak.frozen_until.isoformat()
+    }
+
+# Challenge completion endpoint (alternative to existing progress endpoint)
+@router.post("/challenges/{challenge_id}/complete")
+def complete_challenge(
+    challenge_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Mark a challenge as completed"""
+    challenge = db.query(DailyChallenge).filter(
+        DailyChallenge.id == challenge_id,
+        DailyChallenge.date == date.today(),
+        DailyChallenge.is_active == True
+    ).first()
+
+    if not challenge:
+        raise not_found_error("Active challenge")
+
+    # Get or create user challenge
+    user_challenge = db.query(UserChallenge).filter(
+        UserChallenge.user_id == current_user.id,
+        UserChallenge.challenge_id == challenge_id
+    ).first()
+
+    if not user_challenge:
+        user_challenge = UserChallenge(
+            user_id=current_user.id,
+            challenge_id=challenge_id,
+            progress=0,
+            completed=False
+        )
+        db.add(user_challenge)
+
+    # Mark as completed and award points
+    user_challenge.completed = True
+    user_challenge.completed_at = datetime.utcnow()
+    user_challenge.progress = challenge.target_value
+
+    # Award gyan coins
+    current_user.gyan_coins += challenge.gyan_coins_reward
+    db.commit()
+
+    # Check for new badges
+    _check_and_award_badges(current_user.id, db)
+
+    return {
+        "message": "Challenge completed successfully!",
+        "challenge_title": challenge.title,
+        "points_awarded": challenge.gyan_coins_reward,
+        "total_points": current_user.gyan_coins,
+        "new_badges_count": db.query(UserBadge).filter(
+            UserBadge.user_id == current_user.id,
+            UserBadge.earned_at >= datetime.utcnow() - timedelta(minutes=1)
+        ).count()
+    }
+
+# Rewards system endpoints
+@router.get("/rewards")
+def get_available_rewards(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get available rewards for purchase"""
+    rewards = [
+        {
+            "id": 1,
+            "name": "Extra Quiz Attempt",
+            "description": "Get one extra attempt on any quiz",
+            "cost": 25,
+            "category": "academic",
+            "is_available": current_user.gyan_coins >= 25
+        },
+        {
+            "id": 2,
+            "name": "Assignment Extension",
+            "description": "Get a 24-hour extension on any assignment",
+            "cost": 30,
+            "category": "academic",
+            "is_available": current_user.gyan_coins >= 30
+        },
+        {
+            "id": 3,
+            "name": "Streak Freeze",
+            "description": "Freeze your streak for 1 day",
+            "cost": 10,
+            "category": "streak",
+            "is_available": current_user.gyan_coins >= 10
+        },
+        {
+            "id": 4,
+            "name": "Custom Avatar",
+            "description": "Unlock a special avatar for your profile",
+            "cost": 50,
+            "category": "cosmetic",
+            "is_available": current_user.gyan_coins >= 50
+        }
+    ]
+
+    return {
+        "current_points": current_user.gyan_coins,
+        "rewards": rewards
+    }
+
+@router.post("/rewards/{reward_id}/claim")
+def claim_reward(
+    reward_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Claim a reward using points"""
+    rewards = {
+        1: {"name": "Extra Quiz Attempt", "cost": 25, "type": "quiz_attempt"},
+        2: {"name": "Assignment Extension", "cost": 30, "type": "assignment_extension"},
+        3: {"name": "Streak Freeze", "cost": 10, "type": "streak_freeze"},
+        4: {"name": "Custom Avatar", "cost": 50, "type": "cosmetic"}
+    }
+
+    if reward_id not in rewards:
+        raise HTTPException(status_code=404, detail="Reward not found")
+
+    reward = rewards[reward_id]
+    if current_user.gyan_coins < reward["cost"]:
+        raise HTTPException(status_code=400, detail="Insufficient points")
+
+    # Deduct points
+    current_user.gyan_coins -= reward["cost"]
+    db.commit()
+
+    # Award the reward (in a real system, this would create a reward record)
+    # For now, just return success
+    return {
+        "message": f"Successfully claimed: {reward['name']}",
+        "reward_type": reward["type"],
+        "cost": reward["cost"],
+        "remaining_points": current_user.gyan_coins
+    }

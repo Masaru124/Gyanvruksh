@@ -1,16 +1,28 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
+import asyncio
+import httpx
+from pydantic import BaseModel
+from datetime import datetime
+
 from ..database import get_db
 from ..models.notification import Notification
 from ..schemas.notification import NotificationRead, NotificationCreate
 from ..services.deps import get_current_user
 from ..models.user import User
 from ..utils.errors import not_found_error
-from pydantic import BaseModel
-from datetime import datetime
 
 router = APIRouter(prefix="/api/notifications", tags=["notifications"])
+
+class FCMNotificationRequest(BaseModel):
+    user_id: int
+    title: str
+    body: str
+    data: Optional[dict] = None
+
+class FCMTokenUpdateRequest(BaseModel):
+    fcm_token: str
 
 class NotificationCreateRequest(BaseModel):
     user_id: int
@@ -187,3 +199,110 @@ def broadcast_notification(
         "message": f"Notification broadcast to {notifications_created} users",
         "recipients_count": notifications_created
     }
+
+
+# FCM (Firebase Cloud Messaging) endpoints
+@router.post("/fcm/send")
+async def send_fcm_notification(
+    request: FCMNotificationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Send FCM push notification to a user"""
+    # Check if user has permission to send notifications
+    if current_user.role not in ["admin"] and current_user.sub_role not in ["teacher"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins and teachers can send FCM notifications"
+        )
+
+    # Get target user
+    target_user = db.query(User).filter(User.id == request.user_id).first()
+    if not target_user:
+        raise not_found_error("User")
+
+    if not target_user.fcm_token:
+        return {"message": "User has no FCM token registered", "success": False}
+
+    # FCM server configuration (you would get these from environment variables)
+    FCM_SERVER_KEY = "YOUR_FCM_SERVER_KEY"  # Should be in environment variables
+
+    try:
+        async with httpx.AsyncClient() as client:
+            fcm_response = await client.post(
+                "https://fcm.googleapis.com/fcm/send",
+                headers={
+                    "Authorization": f"key={FCM_SERVER_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "to": target_user.fcm_token,
+                    "notification": {
+                        "title": request.title,
+                        "body": request.body,
+                        "click_action": "FLUTTER_NOTIFICATION_CLICK"
+                    },
+                    "data": request.data or {}
+                },
+                timeout=10.0
+            )
+
+        if fcm_response.status_code == 200:
+            result = fcm_response.json()
+
+            # Create notification record in database
+            notification = Notification(
+                user_id=request.user_id,
+                title=request.title,
+                message=request.body,
+                notification_type="push_notification",
+                is_read=False
+            )
+            db.add(notification)
+            db.commit()
+
+            return {
+                "message": "FCM notification sent successfully",
+                "fcm_result": result,
+                "notification_id": notification.id
+            }
+        else:
+            return {
+                "message": "Failed to send FCM notification",
+                "error": fcm_response.text,
+                "success": False
+            }
+
+    except Exception as e:
+        return {
+            "message": f"Error sending FCM notification: {str(e)}",
+            "success": False
+        }
+
+
+@router.post("/fcm/token")
+def update_fcm_token(
+    request: FCMTokenUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update user's FCM token"""
+    current_user.fcm_token = request.fcm_token
+    db.commit()
+
+    return {
+        "message": "FCM token updated successfully",
+        "fcm_token": request.fcm_token
+    }
+
+
+@router.delete("/fcm/token")
+def remove_fcm_token(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Remove user's FCM token"""
+    current_user.fcm_token = None
+    db.commit()
+
+    return {"message": "FCM token removed successfully"}

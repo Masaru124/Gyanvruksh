@@ -55,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen>
     if (!mounted) return;
 
     if (success) {
-      final me = _viewModel.getCurrentUser();
+      final me = await _viewModel.getCurrentUser();
       if (me != null) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(

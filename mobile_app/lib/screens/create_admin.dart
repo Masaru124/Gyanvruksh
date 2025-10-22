@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 
 class CreateAdminScreen extends StatefulWidget {
   const CreateAdminScreen({super.key});
@@ -41,7 +41,7 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
     }
 
     try {
-      final ok = await ApiService().createAdmin(
+      final response = await ApiService.register(
         email: emailCtrl.text,
         password: passCtrl.text,
         fullName: nameCtrl.text,
@@ -50,13 +50,14 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
         role: 'admin',
         subRole: selectedSubRole!,
       );
-      if (ok) {
+
+      if (response.isSuccess) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Admin user created successfully')));
         Navigator.of(context).pop();
       } else {
         setState(() {
-          error = "Failed to create admin user";
+          error = response.userMessage;
         });
       }
     } catch (e) {

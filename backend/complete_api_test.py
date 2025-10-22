@@ -27,7 +27,7 @@ class CompleteBackendTester:
             },
             'student': {
                 'email': 'student@example.com',
-                'password': 'pass-student123'
+                'password': 'pass-student@example.com'
             }
         }
         self.test_results = {

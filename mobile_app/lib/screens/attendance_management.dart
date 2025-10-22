@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gyanvruksh/services/api.dart';
+import 'package:gyanvruksh/services/enhanced_api_service.dart';
 import 'package:gyanvruksh/widgets/glassmorphism_card.dart';
 
 class AttendanceManagementScreen extends StatefulWidget {
@@ -36,13 +36,20 @@ class _AttendanceManagementScreenState extends State<AttendanceManagementScreen>
 
     try {
       final results = await Future.wait([
-        ApiService().getCourseAttendanceSessions(widget.courseId).catchError((_) => []),
-        ApiService().getLessons(courseId: widget.courseId).catchError((_) => []),
+        ApiService.get('/api/attendance/course/${widget.courseId}/sessions'),
+        ApiService.getLessons(courseId: widget.courseId),
       ]);
-      
+
+      final sessionsResponse = results[0];
+      final lessonsResponse = results[1];
+
       setState(() {
-        _sessions = results[0];
-        _lessons = results[1];
+        _sessions = sessionsResponse.isSuccess
+            ? (sessionsResponse.data as List<dynamic>?) ?? []
+            : [];
+        _lessons = lessonsResponse.isSuccess
+            ? (lessonsResponse.data as List<dynamic>?) ?? []
+            : [];
         _isLoading = false;
       });
     } catch (e) {
@@ -57,18 +64,21 @@ class _AttendanceManagementScreenState extends State<AttendanceManagementScreen>
 
   Future<void> _createAttendanceSession(int lessonId) async {
     try {
-      await ApiService().createAttendanceSession(
-        courseId: widget.courseId,
-        sessionName: 'Session ${DateTime.now().day}/${DateTime.now().month}',
-        sessionDate: DateTime.now(),
-      );
-      
-      _loadData(); // Refresh data
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Attendance session created successfully')),
-        );
+      final response = await ApiService.post('/api/attendance/sessions/create', {
+        'course_id': widget.courseId,
+        'lesson_id': lessonId,
+        'session_name': 'Session ${DateTime.now().day}/${DateTime.now().month}',
+        'session_date': DateTime.now().toIso8601String(),
+      });
+
+      if (response.isSuccess) {
+        _loadData(); // Refresh data
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Attendance session created successfully')),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -81,15 +91,15 @@ class _AttendanceManagementScreenState extends State<AttendanceManagementScreen>
 
   Future<void> _viewAttendanceDetails(int lessonId) async {
     try {
-      final details = await ApiService().getLessonAttendanceDetails(lessonId);
-      
-      if (mounted) {
+      final response = await ApiService.get('/api/attendance/lesson/$lessonId');
+
+      if (response.isSuccess && mounted) {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => AttendanceDetailsScreen(
               lessonId: lessonId,
-              attendanceData: details,
+              attendanceData: response.data as Map<String, dynamic>? ?? {},
             ),
           ),
         );
@@ -273,9 +283,9 @@ class _AttendanceManagementScreenState extends State<AttendanceManagementScreen>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -308,7 +318,7 @@ class _AttendanceManagementScreenState extends State<AttendanceManagementScreen>
               icon: const Icon(Icons.visibility, size: 16),
               label: const Text('View'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.withOpacity(0.8),
+                backgroundColor: Colors.green.withValues(alpha: 0.8),
                 foregroundColor: Colors.white,
               ),
             )
@@ -318,7 +328,7 @@ class _AttendanceManagementScreenState extends State<AttendanceManagementScreen>
               icon: const Icon(Icons.add, size: 16),
               label: const Text('Start'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.withOpacity(0.8),
+                backgroundColor: Colors.blue.withValues(alpha: 0.8),
                 foregroundColor: Colors.white,
               ),
             ),
@@ -366,9 +376,9 @@ class _AttendanceManagementScreenState extends State<AttendanceManagementScreen>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -464,11 +474,12 @@ class _AttendanceDetailsScreenState extends State<AttendanceDetailsScreen> {
 
       // Mark attendance for each student individually
       for (final student in attendanceList) {
-        await ApiService().markAttendance(
-          sessionId: student['session_id'] ?? 1,
-          studentId: student['student_id'],
-          isPresent: student['is_present'],
-        );
+        await ApiService.post('/api/attendance/mark', {
+          'session_id': student['session_id'] ?? 1,
+          'student_id': student['student_id'],
+          'is_present': student['is_present'],
+          'notes': student['notes'] ?? '',
+        });
       }
 
       setState(() {
@@ -633,9 +644,9 @@ class _AttendanceDetailsScreenState extends State<AttendanceDetailsScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
